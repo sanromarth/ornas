@@ -1,11 +1,26 @@
-/** EmptyState — shown when there are no clipboard items. */
+import { EmptyState as SharedEmptyState } from '../../../shared/components/EmptyState';
+import { Clipboard, SearchX } from 'lucide-react';
 
+interface Props {
+  isSearch?: boolean;
+}
 
-/** Renders a friendly empty state with guidance. */
-export function EmptyState() {
+export function EmptyState({ isSearch }: Props) {
   return (
-    <div data-testid="empty-state" className="flex items-center justify-center h-full">
-      <p>Copy something to get started</p>
+    <div data-testid="empty-state" className="flex-1">
+      {isSearch ? (
+        <SharedEmptyState
+          icon={SearchX}
+          title="No results found"
+          description="We couldn't find any clips matching your search query."
+        />
+      ) : (
+        <SharedEmptyState
+          icon={Clipboard}
+          title="Clipboard is empty"
+          description="Copy text or images from any application and they will appear here."
+        />
+      )}
     </div>
   );
 }

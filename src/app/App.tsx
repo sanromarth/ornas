@@ -1,22 +1,49 @@
-/** App — root application component. */
-
-import { MainLayout } from '../shared/layouts/MainLayout';
-import { ClipboardList, ClipboardPreview } from '../features/clipboard';
+import { useEffect } from 'react';
+import { useUIStore } from '../stores/ui-store';
+import { cn } from '../shared/lib/utils';
+import { Toolbar } from '../shared/layout/Toolbar';
 import { SearchBar } from '../features/search';
+import { ClipboardList, ClipboardPreview } from '../features/clipboard';
+import { SettingsPanel } from '../features/settings/components/SettingsPanel';
 
-/** Root application component. */
 export function App() {
+  const { settingsOpen, toggleSettings } = useUIStore();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === ',') {
+        e.preventDefault();
+        toggleSettings();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [settingsOpen, toggleSettings]);
+
   return (
-    <MainLayout>
-      <div className="flex flex-col w-full h-full">
-        <header className="flex items-center gap-2 px-4 py-2 border-b border-border">
-          <SearchBar />
-        </header>
-        <main className="flex flex-1 overflow-hidden">
-          <ClipboardList />
-          <ClipboardPreview />
-        </main>
+    <main className="flex h-screen w-screen overflow-hidden bg-background text-text-primary rounded-xl">
+      <h1 className="sr-only">ORNAS Clipboard Manager</h1>
+      
+      {/* Left Panel - History List */}
+      <div 
+        className={cn(
+          "flex flex-col h-full bg-background border-r border-border shrink-0 transition-[width,transform] duration-200 ease-[var(--ease-snappy)]",
+          settingsOpen ? "w-[30%] -translate-x-full absolute" : "w-[35%] min-w-[280px]"
+        )}
+      >
+        <Toolbar />
+        <SearchBar />
+        <ClipboardList />
       </div>
-    </MainLayout>
+
+      {/* Right Panel - Preview / Settings */}
+      <div className={cn(
+        "flex flex-col flex-1 h-full transition-[width,transform] duration-200 ease-[var(--ease-snappy)]",
+        settingsOpen ? "w-full bg-background" : "w-[65%] bg-surface"
+      )}>
+        <ClipboardPreview />
+        <SettingsPanel onClose={toggleSettings} />
+      </div>
+    </main>
   );
 }

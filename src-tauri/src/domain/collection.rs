@@ -1,6 +1,7 @@
 //! Collection entity — a user-created group of clips.
 //!
 //! Schema is created in V1.0 but the UI is deferred to V1.1.
+#![allow(dead_code)]
 
 use serde::{Deserialize, Serialize};
 

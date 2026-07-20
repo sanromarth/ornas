@@ -16,15 +16,21 @@ impl PipelineRunner {
 
     /// Processes a clip item through all stages.
     pub fn process(&self, item: &mut ClipItem) -> Result<(), AppError> {
+        tracing::info!("Pipeline started");
+
         for stage in &self.stages {
             match stage.process(item)? {
-                StageAction::Continue => {}
+                StageAction::Continue => {
+                    tracing::debug!(stage = stage.name(), "stage completed");
+                }
                 StageAction::Skip { reason } => {
                     tracing::debug!(stage = stage.name(), reason, "pipeline skipped");
                     return Ok(());
                 }
             }
         }
+
+        tracing::info!("Pipeline ended");
         Ok(())
     }
 }

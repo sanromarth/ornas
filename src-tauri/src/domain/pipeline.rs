@@ -11,6 +11,8 @@ use crate::error::AppError;
 /// Each stage may read and mutate this struct as it passes through.
 #[derive(Debug, Clone)]
 pub struct ClipItem {
+    /// Database ID assigned after persistence (set by Persister stage).
+    pub assigned_id: Option<i64>,
     /// Raw text content from the clipboard.
     pub content_text: Option<String>,
     /// HTML content (from rich copy).
@@ -41,12 +43,32 @@ impl ClipItem {
     /// Creates a new pipeline item from raw text content.
     pub fn from_text(text: String) -> Self {
         Self {
+            assigned_id: None,
             content_text: Some(text),
             content_html: None,
             content_rtf: None,
             image_bytes: None,
             image_path: None,
             content_type: "text".into(),
+            category: "plain_text".into(),
+            source_app: None,
+            content_hash: String::new(),
+            preview: None,
+            char_count: 0,
+            line_count: 0,
+        }
+    }
+
+    /// Creates a new pipeline item from image bytes.
+    pub fn from_image(bytes: Vec<u8>) -> Self {
+        Self {
+            assigned_id: None,
+            content_text: None,
+            content_html: None,
+            content_rtf: None,
+            image_bytes: Some(bytes),
+            image_path: None,
+            content_type: "image".into(),
             category: "plain_text".into(),
             source_app: None,
             content_hash: String::new(),

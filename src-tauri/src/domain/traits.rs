@@ -48,20 +48,25 @@ pub trait ClipRepository: Send + Sync {
     fn set_pinned(&self, id: i64, pinned: bool) -> Result<(), AppError>;
     fn touch(&self, id: i64) -> Result<(), AppError>;
     fn prune_older_than(&self, max_age_secs: i64) -> Result<u64, AppError>;
+    #[allow(dead_code)]
     fn count(&self) -> Result<u64, AppError>;
 }
 
 /// Contract for full-text search operations.
 pub trait SearchRepository: Send + Sync {
     fn search(&self, query: &str, limit: u32) -> Result<Vec<Clip>, AppError>;
+    #[allow(dead_code)]
     fn optimize_index(&self) -> Result<(), AppError>;
+    #[allow(dead_code)]
     fn rebuild_index(&self) -> Result<(), AppError>;
 }
 
 /// Contract for application settings persistence.
 pub trait SettingsRepository: Send + Sync {
+    #[allow(dead_code)]
     fn get(&self, key: &str) -> Result<Option<String>, AppError>;
     fn set(&self, key: &str, value: &str) -> Result<(), AppError>;
     fn get_all(&self) -> Result<Vec<(String, String)>, AppError>;
+    #[allow(dead_code)]
     fn delete(&self, key: &str) -> Result<(), AppError>;
 }

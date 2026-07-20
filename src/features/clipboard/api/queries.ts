@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { listClips, getClip } from '../../../services/clipboard';
-import { clipboardKeys } from './keys';
+import { clipboardKeys } from '../../../shared/lib/queryKeys';
 import type { ListParams } from '../../../shared/types';
 
 /** Fetches paginated clipboard items. */

@@ -19,6 +19,7 @@ pub enum AppError {
     NotFound(String),
 
     #[error("Validation error: {0}")]
+    #[allow(dead_code)]
     Validation(String),
 
     #[error("Clipboard error: {0}")]
@@ -29,6 +30,14 @@ pub enum AppError {
 
     #[error("Internal error: {0}")]
     Internal(String),
+
+    #[error("Configuration error: {0}")]
+    #[allow(dead_code)]
+    Config(String),
+
+    #[error("Pipeline error: {0}")]
+    #[allow(dead_code)]
+    Pipeline(String),
 }
 
 /// Tauri requires errors to implement `Serialize` for IPC transport.
@@ -50,5 +59,11 @@ impl From<rusqlite::Error> for AppError {
 impl From<std::io::Error> for AppError {
     fn from(err: std::io::Error) -> Self {
         Self::Io(err.to_string())
+    }
+}
+
+impl From<regex::Error> for AppError {
+    fn from(err: regex::Error) -> Self {
+        Self::Internal(err.to_string())
     }
 }

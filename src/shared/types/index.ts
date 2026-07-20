@@ -4,7 +4,7 @@
 export type ContentType = 'text' | 'image' | 'rich_text';
 
 /** A clipboard entry stored in the database. */
-export interface Clip {
+export interface ClipDto {
   id: number;
   content_text: string | null;
   content_html: string | null;
@@ -35,4 +35,10 @@ export interface ListParams {
 }
 
 /** Application settings as key-value pairs. */
-export type Settings = Record<string, string>;
+export type SettingsDto = Record<string, string>;
+
+
+/** Event payload sent by Tauri when a clip changes. */
+export interface ClipboardEventDto {
+  id: number;
+}

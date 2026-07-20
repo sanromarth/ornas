@@ -2,10 +2,10 @@
 
 import { tauriInvoke } from './invoke';
 import { COMMANDS } from '../shared/lib/constants';
-import type { Settings } from '../shared/types';
+import type { SettingsDto } from '../shared/types';
 
-export async function getSettings(): Promise<Settings> {
-  return tauriInvoke<Settings>(COMMANDS.GET_SETTINGS);
+export async function getSettings(): Promise<SettingsDto> {
+  return tauriInvoke<SettingsDto>(COMMANDS.GET_SETTINGS);
 }
 
 export async function updateSetting(key: string, value: string): Promise<void> {
