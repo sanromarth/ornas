@@ -1,0 +1,144 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&family=Outfit:wght@600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-background: hsl(var(--background));
+  --color-surface: hsl(var(--surface));
+  --color-border: hsl(var(--border));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-text-primary: hsl(var(--text-primary));
+  --color-text-secondary: hsl(var(--text-secondary));
+  --color-muted: hsl(var(--muted));
+  --color-hover: hsl(var(--hover));
+  --color-selection: hsl(var(--selection));
+  --color-focus-ring: hsl(var(--focus-ring));
+  
+  --color-success: hsl(var(--success));
+  --color-warning: hsl(var(--warning));
+  --color-danger: hsl(var(--danger));
+  --color-info: hsl(var(--info));
+
+  --spacing-micro: 0.25rem;
+  --spacing-standard: 0.5rem;
+  --spacing-component: 1rem;
+  --spacing-layout: 1.5rem;
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.75rem;
+
+  --z-base: 0;
+  --z-sticky: 10;
+  --z-dropdown: 20;
+  --z-overlay: 30;
+  --z-dialog: 40;
+  --z-toast: 50;
+  --z-tooltip: 60;
+  
+  --default-transition-duration: 150ms;
+  --default-transition-timing-function: ease-out;
+
+  --ease-snappy: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+}
+
+/* Light theme (default fallback) */
+:root, [data-theme="light"] {
+  --background: 0 0% 100%;
+  --surface: 240 5% 96%;
+  --border: 240 6% 90%;
+  --text-primary: 240 10% 4%;
+  --text-secondary: 240 4% 46%;
+  --primary: 238 80% 67%;
+  --primary-foreground: 240 5% 96%;
+  --selection: 238 80% 90%;
+  --hover: 240 5% 92%;
+  --muted: 240 5% 96%;
+  --focus-ring: 238 82% 74%;
+  
+  --success: 160 84% 39%;
+  --warning: 38 92% 50%;
+  --danger: 348 83% 60%;
+  --info: 217 91% 60%;
+}
+
+/* Dark theme */
+[data-theme="dark"] {
+  --background: 240 10% 4%;
+  --surface: 240 6% 10%;
+  --border: 240 5% 16%;
+  --text-primary: 0 0% 98%;
+  --text-secondary: 240 5% 65%;
+  --primary: 238 80% 67%;
+  --primary-foreground: 240 5% 96%;
+  --selection: 244 55% 41%;
+  --hover: 240 5% 16%;
+  --muted: 240 5% 16%;
+  --focus-ring: 238 82% 74%;
+
+  --success: 160 84% 39%;
+  --warning: 38 92% 50%;
+  --danger: 348 83% 60%;
+  --info: 217 91% 60%;
+}
+
+/* System theme dark override */
+@media (prefers-color-scheme: dark) {
+  [data-theme="system"] {
+    --background: 240 10% 4%;
+    --surface: 240 6% 10%;
+    --border: 240 5% 16%;
+    --text-primary: 0 0% 98%;
+    --text-secondary: 240 5% 65%;
+    --primary: 238 80% 67%;
+    --primary-foreground: 240 5% 96%;
+    --selection: 244 55% 41%;
+    --hover: 240 5% 16%;
+    --muted: 240 5% 16%;
+    --focus-ring: 238 82% 74%;
+  }
+}
+
+/* Base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Scrollbar (WebKit) */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-text-secondary); }
+
+/* Focus styles */
+:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
