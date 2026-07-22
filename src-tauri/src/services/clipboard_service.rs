@@ -70,6 +70,7 @@ impl ClipboardService {
                 is_pinned: None,
                 language: None,
                 language_source: None,
+                ..Default::default()
             },
         )?;
 
@@ -94,6 +95,7 @@ impl ClipboardService {
                 is_pinned: Some(new_pin),
                 language: None,
                 language_source: None,
+                ..Default::default()
             },
         )?;
 
@@ -112,8 +114,9 @@ impl ClipboardService {
             &ClipUpdate {
                 is_favorite: None,
                 is_pinned: None,
-                language,
-                language_source: Some(language_source.clone()),
+                language: language.clone(),
+                language_source: Some("manual".to_string()),
+                ..Default::default()
             },
         )?;
 

@@ -7,6 +7,7 @@ pub mod migrations;
 pub mod search_repo;
 pub mod settings_repo;
 pub mod tag_repo;
+pub mod vault_repo;
 
 use crate::error::AppError;
 use rusqlite::Connection;

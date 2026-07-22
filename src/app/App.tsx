@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useUIStore } from '../stores/ui-store';
+import { useVaultStore } from '../stores/vault-store';
 import { cn } from '../shared/lib/utils';
 import { Toolbar } from '../shared/layout/Toolbar';
 import { Sidebar } from '../shared/layout/Sidebar';
@@ -9,6 +10,11 @@ import { SettingsPanel } from '../features/settings/components/SettingsPanel';
 
 export function App() {
   const { settingsOpen, toggleSettings } = useUIStore();
+  const { checkStatus } = useVaultStore();
+
+  useEffect(() => {
+    checkStatus();
+  }, [checkStatus]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

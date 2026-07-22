@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { Pin, Star, Type, Image as ImageIcon, Trash2, Copy, Link, Code, File } from 'lucide-react';
+import { Pin, Star, Type, Image as ImageIcon, Trash2, Copy, Link, Code, File, Lock } from 'lucide-react';
 import { cn, formatFileSize } from '../../../shared/lib/utils';
 import type { ClipDto } from '../../../shared/types';
 import { useToggleFavorite, useTogglePin, useDeleteClip } from '../api/mutations';
@@ -66,12 +66,11 @@ export const ClipboardItem = React.memo(function ClipboardItem({ clip, isSelecte
     >
       <div className="flex-1 min-w-0 flex flex-col gap-1 text-left relative">
         {/* Permanent Indicators */}
-        {(clip.is_pinned || clip.is_favorite) && (
-          <div className="absolute top-0 right-0 flex items-center gap-1.5 opacity-80">
-            {clip.is_pinned && <Pin size={14} className="fill-current text-primary" />}
-            {clip.is_favorite && <Star size={14} className="fill-current text-primary" />}
-          </div>
-        )}
+        <div className="absolute top-0 right-0 flex items-center gap-1.5 opacity-80">
+          {clip.is_encrypted && <Lock size={14} className="text-primary" />}
+          {clip.is_pinned && <Pin size={14} className="fill-current text-primary" />}
+          {clip.is_favorite && <Star size={14} className="fill-current text-primary" />}
+        </div>
 
         {/* Top line */}
         <div className="flex items-center gap-2 pr-12">
@@ -87,6 +86,8 @@ export const ClipboardItem = React.memo(function ClipboardItem({ clip, isSelecte
               ) : (
                  <span>{clip.files?.[0]?.file_name || clip.preview}</span>
               )
+            ) : clip.is_encrypted ? (
+              <span className="italic text-text-secondary flex items-center gap-1">Encrypted Payload</span>
             ) : (
               clip.preview
             )}

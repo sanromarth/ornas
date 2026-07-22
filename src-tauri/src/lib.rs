@@ -107,6 +107,13 @@ pub fn run() {
             commands::tags::assign_clip_to_tag,
             commands::tags::remove_clip_from_tag,
             commands::tags::get_tags_for_clip,
+            commands::vault::setup_vault,
+            commands::vault::unlock_vault,
+            commands::vault::lock_vault,
+            commands::vault::get_vault_status,
+            commands::vault::encrypt_clip,
+            commands::vault::decrypt_clip,
+            commands::vault::get_decrypted_clip,
         ])
         .run(tauri::generate_context!())
         .map_err(|e| {

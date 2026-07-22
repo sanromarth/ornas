@@ -9,3 +9,4 @@ pub mod settings;
 pub mod backup;
 pub mod collections;
 pub mod tags;
+pub mod vault;

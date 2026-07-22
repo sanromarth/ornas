@@ -3,7 +3,7 @@ import { useUIStore } from '../../../stores/ui-store';
 import { useQueryClient } from '@tanstack/react-query';
 import { useClipQuery, useClipCollectionsQuery, useClipTagsQuery } from '../api/queries';
 
-import { Star, Pin, Trash2, Copy, MousePointer, Plus } from 'lucide-react';
+import { Star, Pin, Trash2, Copy, MousePointer, Plus, Lock, Unlock } from 'lucide-react';
 import { EmptyState } from '../../../shared/components/EmptyState';
 import { Dialog } from '../../../shared/components/Dialog';
 import { ConfirmDialog } from '../../../shared/components/ConfirmDialog';
@@ -17,13 +17,33 @@ import { CollectionService } from '../../../services/collection-service';
 import { TagService } from '../../../services/tag-service';
 import { clipboardKeys } from '../../../shared/lib/queryKeys';
 import { CodeSnippetPreview } from './CodeSnippetPreview';
+import { useVaultStore } from '../../../stores/vault-store';
+import { VaultLockScreen } from '../../vault/components/VaultLockScreen';
+import { useDecryptedClipQuery } from '../api/queries';
+import { VaultService } from '../../../services/vault';
 
 export function ClipboardPreview() {
   const queryClient = useQueryClient();
   const { selectedClipId } = useUIStore();
   const { collections: allCollections } = useCollectionStore();
   const { tags: allTags } = useTagStore();
-  const { data: clip, isLoading, error } = useClipQuery(selectedClipId);
+  const { isUnlocked, isInitialized } = useVaultStore();
+  const { data: rawClip, isLoading, error } = useClipQuery(selectedClipId);
+  const { data: decryptedClip, isLoading: isDecrypting } = useDecryptedClipQuery(
+    selectedClipId, 
+    rawClip?.is_encrypted ?? false, 
+    isUnlocked
+  );
+  
+  // Merge decrypted content if available
+  const clip = rawClip ? {
+    ...rawClip,
+    content_text: decryptedClip?.content_text ?? rawClip.content_text,
+    content_html: decryptedClip?.content_html ?? rawClip.content_html,
+    content_rtf: decryptedClip?.content_rtf ?? rawClip.content_rtf,
+    preview: decryptedClip?.preview ?? rawClip.preview,
+  } : undefined;
+
   const { data: collections } = useClipCollectionsQuery(selectedClipId);
   const { data: tags } = useClipTagsQuery(selectedClipId);
   const { mutate: toggleFavorite, isPending: isFavoritePending } = useToggleFavorite();
@@ -32,7 +52,28 @@ export function ClipboardPreview() {
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [isAssigningCollection, setIsAssigningCollection] = useState(false);
   const [isAssigningTag, setIsAssigningTag] = useState(false);
+  const [isEncrypting, setIsEncrypting] = useState(false);
   const { addToast } = useToast();
+
+  const handleEncrypt = async () => {
+    if (!clip || !isInitialized) return;
+    setIsEncrypting(true);
+    try {
+      if (clip.is_encrypted) {
+        await VaultService.decryptClip(clip.id);
+        addToast({ title: 'Clip decrypted', variant: 'success' });
+      } else {
+        await VaultService.encryptClip(clip.id);
+        addToast({ title: 'Clip encrypted', variant: 'success' });
+      }
+      queryClient.invalidateQueries({ queryKey: clipboardKeys.detail(clip.id) });
+      queryClient.invalidateQueries({ queryKey: clipboardKeys.list({}) });
+    } catch (err: any) {
+      addToast({ title: 'Encryption failed', description: err.message, variant: 'error' });
+    } finally {
+      setIsEncrypting(false);
+    }
+  };
 
   const handleCopy = () => {
     if (!clip) return;
@@ -100,6 +141,25 @@ export function ClipboardPreview() {
     return (
       <div data-testid="clipboard-preview-error" className="flex-1 flex items-center justify-center text-danger p-8 text-center bg-surface">
         <p>Failed to load preview</p>
+      </div>
+    );
+  }
+
+  if (clip.is_encrypted && !isUnlocked) {
+    return (
+      <div className="flex-1 flex flex-col bg-surface overflow-hidden">
+        <VaultLockScreen />
+      </div>
+    );
+  }
+
+  if (clip.is_encrypted && isDecrypting) {
+    return (
+      <div className="flex-1 p-6 bg-surface">
+        <div className="space-y-4 animate-pulse">
+          <div className="h-6 w-1/3 bg-border rounded-md"></div>
+          <div className="h-32 bg-border rounded-md"></div>
+        </div>
       </div>
     );
   }
@@ -196,6 +256,18 @@ export function ClipboardPreview() {
           <Star size={16} className={clip.is_favorite ? "fill-current" : ""} />
           Favorite
         </Button>
+        {isInitialized && isUnlocked && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleEncrypt}
+            disabled={isEncrypting}
+            className={cn("gap-2", clip.is_encrypted && "text-primary hover:text-primary")}
+          >
+            {clip.is_encrypted ? <Unlock size={16} /> : <Lock size={16} />}
+            {clip.is_encrypted ? 'Decrypt' : 'Encrypt'}
+          </Button>
+        )}
         <Button
           variant="ghost"
           size="sm"

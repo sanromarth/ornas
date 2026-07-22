@@ -23,6 +23,8 @@ export interface ClipDto {
   is_code: boolean;
   detection_confidence: number;
   language_source: string;
+  is_encrypted?: boolean;
+  encryption_version?: number;
   /** Unix epoch seconds. */
   created_at: number;
   /** Unix epoch seconds. */
@@ -37,18 +39,32 @@ export interface ClipFileDto {
   clip_id: number;
   file_path: string;
   file_name: string;
-  extension: string | null;
-  mime_type: string | null;
+  extension: string;
+  mime_type: string;
   file_size: number;
   is_dir: boolean;
   is_readonly: boolean;
-  created_time: number | null;
-  modified_time: number | null;
-  hash: string | null;
-  thumbnail_path: string | null;
+  created_time: number;
+  modified_time: number;
+  hash: string;
+  thumbnail_path?: string;
   status: string;
   selection_group: number;
-  icon_type: string;
+  icon_type?: string;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface VaultStatus {
+  is_initialized: boolean;
+  is_unlocked: boolean;
+}
+
+export interface DecryptedPayloadResponse {
+  content_text?: string;
+  content_html?: string;
+  content_rtf?: string;
+  preview?: string;
 }
 
 /** Parameters for paginated list queries. */
