@@ -19,6 +19,10 @@ export interface ClipDto {
   line_count: number;
   is_favorite: boolean;
   is_pinned: boolean;
+  language: string | null;
+  is_code: boolean;
+  detection_confidence: number;
+  language_source: string;
   /** Unix epoch seconds. */
   created_at: number;
   /** Unix epoch seconds. */

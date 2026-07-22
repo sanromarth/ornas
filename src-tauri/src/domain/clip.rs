@@ -44,6 +44,10 @@ pub struct Clip {
     pub line_count: i64,
     pub is_favorite: bool,
     pub is_pinned: bool,
+    pub language: Option<String>,
+    pub is_code: bool,
+    pub detection_confidence: f64,
+    pub language_source: String,
     /// Unix epoch seconds.
     pub created_at: i64,
     /// Unix epoch seconds.
@@ -67,6 +71,10 @@ pub struct NewClip {
     pub preview: Option<String>,
     pub char_count: i64,
     pub line_count: i64,
+    pub language: Option<String>,
+    pub is_code: bool,
+    pub detection_confidence: f64,
+    pub language_source: String,
 }
 
 /// Fields that can be updated on an existing clip.
@@ -74,6 +82,8 @@ pub struct NewClip {
 pub struct ClipUpdate {
     pub is_favorite: Option<bool>,
     pub is_pinned: Option<bool>,
+    pub language: Option<String>,
+    pub language_source: Option<String>,
 }
 
 /// A file associated with a clip.

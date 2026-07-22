@@ -66,7 +66,7 @@ impl BackupManager {
 
         // 1. Fetch Clips
         let conn = self.db.conn()?;
-        let mut stmt = conn.prepare("SELECT id, content_text, content_html, content_rtf, image_path, content_type, category, source_app, content_hash, preview, char_count, line_count, is_favorite, is_pinned, created_at, updated_at FROM clips")?;
+        let mut stmt = conn.prepare("SELECT id, content_text, content_html, content_rtf, image_path, content_type, category, source_app, content_hash, preview, char_count, line_count, is_favorite, is_pinned, language, is_code, detection_confidence, language_source, created_at, updated_at FROM clips")?;
         
         let clips_iter = stmt.query_map([], |row| {
             let content_type_str: String = row.get(5)?;
@@ -91,8 +91,12 @@ impl BackupManager {
                 line_count: row.get(11)?,
                 is_favorite: row.get::<_, i64>(12)? > 0,
                 is_pinned: row.get::<_, i64>(13)? > 0,
-                created_at: row.get(14)?,
-                updated_at: row.get(15)?,
+                language: row.get(14).unwrap_or(None),
+                is_code: row.get::<_, i64>(15).unwrap_or(0) > 0,
+                detection_confidence: row.get(16).unwrap_or(0.0),
+                language_source: row.get(17).unwrap_or_else(|_| "auto".to_string()),
+                created_at: row.get(18)?,
+                updated_at: row.get(19)?,
                 files: None,
             })
         })?;
@@ -362,9 +366,9 @@ impl BackupManager {
         // Import clips
         {
             let mut stmt = tx.prepare("INSERT INTO clips (
-                id, content_text, content_html, content_rtf, image_path, content_type, category, source_app, content_hash, preview, char_count, line_count, is_favorite, is_pinned, created_at, updated_at
+                id, content_text, content_html, content_rtf, image_path, content_type, category, source_app, content_hash, preview, char_count, line_count, is_favorite, is_pinned, language, is_code, detection_confidence, language_source, created_at, updated_at
             ) VALUES (
-                ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16
+                ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20
             ) ON CONFLICT(id) DO UPDATE SET
                 content_text=excluded.content_text,
                 content_html=excluded.content_html,
@@ -379,13 +383,17 @@ impl BackupManager {
                 line_count=excluded.line_count,
                 is_favorite=excluded.is_favorite,
                 is_pinned=excluded.is_pinned,
+                language=excluded.language,
+                is_code=excluded.is_code,
+                detection_confidence=excluded.detection_confidence,
+                language_source=excluded.language_source,
                 updated_at=excluded.updated_at
             ")?;
             
             for clip in &clips {
                 let content_type = clip.content_type.as_str();
                 stmt.execute(rusqlite::params![
-                    clip.id, clip.content_text, clip.content_html, clip.content_rtf, clip.image_path, content_type, clip.category, clip.source_app, clip.content_hash, clip.preview, clip.char_count, clip.line_count, clip.is_favorite as i64, clip.is_pinned as i64, clip.created_at, clip.updated_at
+                    clip.id, clip.content_text, clip.content_html, clip.content_rtf, clip.image_path, content_type, clip.category, clip.source_app, clip.content_hash, clip.preview, clip.char_count, clip.line_count, clip.is_favorite as i64, clip.is_pinned as i64, clip.language, clip.is_code as i64, clip.detection_confidence, clip.language_source, clip.created_at, clip.updated_at
                 ])?;
             }
         }

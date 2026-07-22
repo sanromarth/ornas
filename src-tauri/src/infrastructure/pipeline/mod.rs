@@ -3,6 +3,7 @@
 //! See ARCHITECTURE_FINAL.md §7 for the pipeline specification.
 
 pub mod categorizer;
+pub mod code_detector;
 pub mod dedup;
 pub mod hasher;
 pub mod metadata;

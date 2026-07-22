@@ -137,12 +137,13 @@ impl AppState {
         app_handle: tauri::AppHandle,
     ) -> PipelineRunner {
         use crate::infrastructure::pipeline::{
-            categorizer::Categorizer, dedup::Dedup, hasher::Hasher, metadata::Metadata,
+            categorizer::Categorizer, code_detector::CodeDetector, dedup::Dedup, hasher::Hasher, metadata::Metadata,
             normalizer::Normalizer, notifier::Notifier, persister::Persister,
         };
 
         let stages: Vec<Box<dyn crate::domain::pipeline::PipelineStage>> = vec![
             Box::new(Normalizer),
+            Box::new(CodeDetector::new()),
             Box::new(Hasher),
             Box::new(Dedup::new(config.dedup_cache_size, Arc::clone(&clip_repo))),
             Box::new(Categorizer),

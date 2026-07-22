@@ -59,6 +59,10 @@ impl PipelineStage for Persister {
             preview: item.preview.clone(),
             char_count: item.char_count,
             line_count: item.line_count,
+            language: item.language.clone(),
+            is_code: item.is_code,
+            detection_confidence: item.detection_confidence,
+            language_source: item.language_source.clone(),
         };
 
         let created = self.clip_repo.create(&new_clip)?;

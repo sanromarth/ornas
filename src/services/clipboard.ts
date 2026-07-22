@@ -23,3 +23,7 @@ export async function toggleFavorite(id: number): Promise<ClipDto> {
 export async function togglePin(id: number): Promise<ClipDto> {
   return tauriInvoke<ClipDto>(COMMANDS.TOGGLE_PIN, { id });
 }
+
+export async function setClipLanguage(id: number, language: string | null, language_source: string): Promise<ClipDto> {
+  return tauriInvoke<ClipDto>(COMMANDS.SET_CLIP_LANGUAGE, { id, language, language_source });
+}

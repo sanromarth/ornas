@@ -123,6 +123,10 @@ mod tests {
             preview: Some("hello world".into()),
             char_count: 11,
             line_count: 1,
+            language: None,
+            is_code: false,
+            detection_confidence: 0.0,
+            language_source: "auto".to_string(),
         };
         clip_repo.create(&new_clip).unwrap();
 

@@ -68,6 +68,8 @@ impl ClipboardService {
             &ClipUpdate {
                 is_favorite: Some(new_fav),
                 is_pinned: None,
+                language: None,
+                language_source: None,
             },
         )?;
 
@@ -90,6 +92,8 @@ impl ClipboardService {
             &ClipUpdate {
                 is_favorite: None,
                 is_pinned: Some(new_pin),
+                language: None,
+                language_source: None,
             },
         )?;
 
@@ -98,6 +102,26 @@ impl ClipboardService {
             .map_err(|e| AppError::Internal(format!("Failed to emit event: {e}")))?;
 
         tracing::debug!(id = id, pinned = new_pin, "pin toggled");
+        Ok(updated)
+    }
+
+    /// Updates the language of a clip and emits a `clip-updated` event.
+    pub fn update_clip_language(&self, id: i64, language: Option<String>, language_source: String) -> Result<Clip, AppError> {
+        let updated = self.clip_repo.update(
+            id,
+            &ClipUpdate {
+                is_favorite: None,
+                is_pinned: None,
+                language,
+                language_source: Some(language_source.clone()),
+            },
+        )?;
+
+        self.app_handle
+            .emit("clip-updated", serde_json::json!({ "id": id }))
+            .map_err(|e| AppError::Internal(format!("Failed to emit event: {e}")))?;
+
+        tracing::debug!(id = id, language_source, "language updated");
         Ok(updated)
     }
 
