@@ -1,28 +1,167 @@
-# Dependencies
+# ╔══════════════════════════════════════════════════════════════╗
+# ║  ORNAS — .gitignore                                        ║
+# ║  Tauri v2 · React · Vite · Rust · TypeScript               ║
+# ╚══════════════════════════════════════════════════════════════╝
+
+
+# ── Dependencies ──────────────────────────────────────────────
 node_modules/
 
-# Build output
+
+# ── Build Outputs ─────────────────────────────────────────────
+
+# Vite / Frontend
 dist/
+dist-ssr/
+*.tsbuildinfo
+
+# Rust / Tauri
 target/
 src-tauri/target/
 
-# IDE
+# Tauri build bundles (generated during `tauri build`)
+src-tauri/gen/
+
+
+# ── Testing ───────────────────────────────────────────────────
+
+# Vitest
+coverage/
+
+# Playwright
+playwright-report/
+playwright/.cache/
+test-results/
+blob-report/
+
+
+# ── IDE & Editors ─────────────────────────────────────────────
+
+# JetBrains (IntelliJ, CLion, WebStorm, RustRover)
 .idea/
+*.iml
+
+# VS Code (keep .vscode/settings.json and extensions.json)
+# Uncomment the next line if your team does NOT share VS Code settings:
+# .vscode/
+.vscode/*.log
+.history/
+
+# Vim / Neovim
 *.swp
 *.swo
 *~
+*.un~
+Session.vim
+.netrwhist
 
-# OS
+# Emacs
+\#*\#
+.#*
+
+# Sublime Text
+*.sublime-workspace
+
+
+# ── Operating System ──────────────────────────────────────────
+
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
 Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
 
-# Environment
+# Linux
+.directory
+.Trash-*
+
+
+# ── Environment & Secrets ────────────────────────────────────
 .env
-.env.local
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.cert
 
-# Debug
+
+# ── Logs ──────────────────────────────────────────────────────
 *.log
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# Coverage
-coverage/
+
+# ── Runtime & Cache ───────────────────────────────────────────
+*.pid
+*.seed
+*.pid.lock
+.cache/
+.parcel-cache/
+.turbo/
+.vercel/
+.next/
+.nuxt/
+
+
+# ── Package Manager ──────────────────────────────────────────
+# Lock files (keep package-lock.json and Cargo.lock — they ARE committed)
+# yarn
+.yarn/cache
+.yarn/unplugged
+.yarn/install-state.gz
+.pnp.*
+
+
+# ── Rust Specific ─────────────────────────────────────────────
+**/*.rs.bk
+*.rlib
+
+
+# ── Crash & Core Dumps ───────────────────────────────────────
+core
+core.*
+vgcore.*
+*.dmp
+hs_err_pid*
+
+
+# ── Tauri Platform Artifacts ──────────────────────────────────
+# macOS code signing (never commit these)
+*.app
+*.dmg
+*.pkg
+
+# Windows installers
+*.msi
+*.exe
+*.nsis
+
+# Linux packages
+*.deb
+*.rpm
+*.AppImage
+*.snap
+*.flatpak
+
+
+# ── Miscellaneous ─────────────────────────────────────────────
+*.orig
+*.bak
+*.tmp
+*.temp
+*.patch

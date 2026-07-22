@@ -2,7 +2,7 @@ import { Settings } from 'lucide-react';
 import { IconButton } from '../components/IconButton';
 import { cn } from '../lib/utils';
 import { useUIStore } from '../../stores/ui-store';
-import OrnasLogo from '../../assets/logo.png';
+import OrnasLogo from '../../assets/logo.svg';
 
 interface ToolbarProps {
   className?: string;

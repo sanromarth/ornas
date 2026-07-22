@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Pin, Star, Type, Image as ImageIcon, Trash2, Copy, Link, Code } from 'lucide-react';
-import { cn } from '../../../shared/lib/utils';
+import { invoke } from '@tauri-apps/api/core';
+import { Pin, Star, Type, Image as ImageIcon, Trash2, Copy, Link, Code, File } from 'lucide-react';
+import { cn, formatFileSize } from '../../../shared/lib/utils';
 import type { ClipDto } from '../../../shared/types';
 import { useToggleFavorite, useTogglePin, useDeleteClip } from '../api/mutations';
 import { IconButton } from '../../../shared/components/IconButton';
@@ -20,8 +21,18 @@ export const ClipboardItem = React.memo(function ClipboardItem({ clip, isSelecte
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const { addToast } = useToast();
 
-  const handleCopy = (e: React.MouseEvent) => {
+  const handleCopy = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (clip.content_type === 'file') {
+      try {
+        await invoke('restore_files_to_clipboard', { clipId: clip.id });
+        addToast({ title: 'Files copied to clipboard', variant: 'success' });
+      } catch (err: any) {
+        addToast({ title: 'Failed to copy files', description: err.message || String(err), variant: 'error' });
+      }
+      return;
+    }
+    
     const content = clip.content_text ?? clip.preview;
     if (content) {
       navigator.clipboard.writeText(content);
@@ -39,6 +50,7 @@ export const ClipboardItem = React.memo(function ClipboardItem({ clip, isSelecte
       case 'image': return <ImageIcon size={14} />;
       case 'link': return <Link size={14} />;
       case 'code': return <Code size={14} />;
+      case 'file': return <File size={14} />;
       default: return <Type size={14} />;
     }
   };
@@ -69,6 +81,12 @@ export const ClipboardItem = React.memo(function ClipboardItem({ clip, isSelecte
           <div className="text-sm font-medium truncate text-text-primary">
             {clip.content_type === 'image' ? (
               <span className="italic text-text-secondary">Image content</span>
+            ) : clip.content_type === 'file' ? (
+              clip.files && clip.files.length > 1 ? (
+                 <span>{clip.files.length} items</span>
+              ) : (
+                 <span>{clip.files?.[0]?.file_name || clip.preview}</span>
+              )
             ) : (
               clip.preview
             )}
@@ -79,7 +97,22 @@ export const ClipboardItem = React.memo(function ClipboardItem({ clip, isSelecte
         <div className="flex items-center gap-2 text-xs text-text-secondary">
           <span>{date}</span>
           <span className="opacity-50">·</span>
-          <span className="capitalize">{clip.category}</span>
+          {clip.content_type === 'file' && clip.files && clip.files.length > 0 ? (
+            <>
+              <span>
+                {formatFileSize(
+                  clip.files.reduce((acc, f) => acc + f.file_size, 0)
+                )}
+              </span>
+              <span className="opacity-50">·</span>
+              <span className={cn(
+                clip.files[0].status === 'Available' ? 'text-green-500' : 
+                clip.files[0].status === 'Moved' ? 'text-yellow-500' : 'text-danger'
+              )}>{clip.files[0].status}</span>
+            </>
+          ) : (
+            <span className="capitalize">{clip.category}</span>
+          )}
         </div>
       </div>
 

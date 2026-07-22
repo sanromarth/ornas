@@ -49,7 +49,8 @@ pub fn run() {
 
             // Start clipboard monitor on background threads
             let pipeline = std::sync::Arc::clone(&app_state.pipeline);
-            infrastructure::clipboard::monitor::start_clipboard_monitor(pipeline);
+            let db = std::sync::Arc::clone(&app_state.db);
+            infrastructure::clipboard::monitor::start_clipboard_monitor(pipeline, db);
 
             // Schedule pruning task (10 seconds after startup, then every prune_interval)
             let prune_interval = app_state.config.prune_interval_secs;
@@ -85,9 +86,26 @@ pub fn run() {
             commands::clipboard::delete_clip,
             commands::clipboard::toggle_favorite,
             commands::clipboard::toggle_pin,
+            commands::clipboard::restore_files_to_clipboard,
             commands::search::search_clips,
             commands::settings::get_settings,
             commands::settings::update_setting,
+            commands::backup::export_backup,
+            commands::backup::import_backup,
+            commands::collections::create_collection,
+            commands::collections::list_collections,
+            commands::collections::update_collection,
+            commands::collections::delete_collection,
+            commands::collections::assign_clip_to_collection,
+            commands::collections::remove_clip_from_collection,
+            commands::collections::get_collections_for_clip,
+            commands::tags::create_tag,
+            commands::tags::list_tags,
+            commands::tags::update_tag,
+            commands::tags::delete_tag,
+            commands::tags::assign_clip_to_tag,
+            commands::tags::remove_clip_from_tag,
+            commands::tags::get_tags_for_clip,
         ])
         .run(tauri::generate_context!())
         .map_err(|e| {

@@ -25,6 +25,8 @@ pub fn list_clips(
         category,
         favorites_only: favorites_only.unwrap_or(false),
         pinned_only: pinned_only.unwrap_or(false),
+        collection_id: None,
+        tag_id: None,
     };
     state.clipboard_service.list(&params)
 }
@@ -52,3 +54,34 @@ pub fn toggle_favorite(state: State<'_, AppState>, id: i64) -> Result<Clip, AppE
 pub fn toggle_pin(state: State<'_, AppState>, id: i64) -> Result<Clip, AppError> {
     state.clipboard_service.toggle_pin(id)
 }
+
+/// Restore file paths to the system clipboard.
+#[tauri::command]
+pub fn restore_files_to_clipboard(state: State<'_, AppState>, clip_id: i64) -> Result<(), AppError> {
+    let clip = state.clipboard_service.get(clip_id)?;
+    if clip.content_type != crate::domain::clip::ContentType::File {
+        return Err(AppError::Clipboard("Clip is not a file list".into()));
+    }
+    
+    if let Some(files) = clip.files {
+        let mut paths = Vec::new();
+        for f in files {
+            if std::path::Path::new(&f.file_path).exists() {
+                paths.push(f.file_path);
+            }
+        }
+        
+        if paths.is_empty() {
+            return Err(AppError::Clipboard("No valid files found to restore".into()));
+        }
+        
+        use clipboard_rs::{Clipboard, ClipboardContext};
+        let ctx = ClipboardContext::new().map_err(|e| AppError::Clipboard(e.to_string()))?;
+        ctx.set_files(paths).map_err(|e| AppError::Clipboard(e.to_string()))?;
+        
+        Ok(())
+    } else {
+        Err(AppError::Clipboard("No files associated with this clip".into()))
+    }
+}
+

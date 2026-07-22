@@ -1,22 +1,36 @@
 import { useState } from 'react';
 import { useUIStore } from '../../../stores/ui-store';
-import { useClipQuery } from '../api/queries';
+import { useQueryClient } from '@tanstack/react-query';
+import { useClipQuery, useClipCollectionsQuery, useClipTagsQuery } from '../api/queries';
 
-import { Star, Pin, Trash2, Copy, MousePointer } from 'lucide-react';
+import { Star, Pin, Trash2, Copy, MousePointer, Plus } from 'lucide-react';
 import { EmptyState } from '../../../shared/components/EmptyState';
+import { Dialog } from '../../../shared/components/Dialog';
 import { ConfirmDialog } from '../../../shared/components/ConfirmDialog';
 import { Button } from '../../../shared/components/Button';
 import { useToggleFavorite, useTogglePin, useDeleteClip } from '../api/mutations';
 import { useToast } from '../../../shared/components/useToast';
 import { cn } from '../../../shared/lib/utils';
+import { useCollectionStore } from '../../../stores/collection-store';
+import { useTagStore } from '../../../stores/tag-store';
+import { CollectionService } from '../../../services/collection-service';
+import { TagService } from '../../../services/tag-service';
+import { clipboardKeys } from '../../../shared/lib/queryKeys';
 
 export function ClipboardPreview() {
+  const queryClient = useQueryClient();
   const { selectedClipId } = useUIStore();
+  const { collections: allCollections } = useCollectionStore();
+  const { tags: allTags } = useTagStore();
   const { data: clip, isLoading, error } = useClipQuery(selectedClipId);
+  const { data: collections } = useClipCollectionsQuery(selectedClipId);
+  const { data: tags } = useClipTagsQuery(selectedClipId);
   const { mutate: toggleFavorite, isPending: isFavoritePending } = useToggleFavorite();
   const { mutate: togglePin, isPending: isPinPending } = useTogglePin();
   const { mutate: deleteClip, isPending: isDeletePending } = useDeleteClip();
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const [isAssigningCollection, setIsAssigningCollection] = useState(false);
+  const [isAssigningTag, setIsAssigningTag] = useState(false);
   const { addToast } = useToast();
 
   const handleCopy = () => {
@@ -25,6 +39,36 @@ export function ClipboardPreview() {
     if (content) {
       navigator.clipboard.writeText(content);
       addToast({ title: 'Copied to clipboard', variant: 'success' });
+    }
+  };
+
+  const toggleCollection = async (collectionId: number) => {
+    if (!selectedClipId) return;
+    try {
+      const hasCollection = collections?.some(c => c.id === collectionId);
+      if (hasCollection) {
+        await CollectionService.removeClipFromCollection(selectedClipId, collectionId);
+      } else {
+        await CollectionService.assignClipToCollection(selectedClipId, collectionId);
+      }
+      queryClient.invalidateQueries({ queryKey: clipboardKeys.collections(selectedClipId) });
+    } catch (err: any) {
+      addToast({ title: 'Failed to update collection', description: err.toString(), variant: 'error' });
+    }
+  };
+
+  const toggleTag = async (tagId: number) => {
+    if (!selectedClipId) return;
+    try {
+      const hasTag = tags?.some(t => t.id === tagId);
+      if (hasTag) {
+        await TagService.removeClipFromTag(selectedClipId, tagId);
+      } else {
+        await TagService.assignClipToTag(selectedClipId, tagId);
+      }
+      queryClient.invalidateQueries({ queryKey: clipboardKeys.tags(selectedClipId) });
+    } catch (err: any) {
+      addToast({ title: 'Failed to update tag', description: err.toString(), variant: 'error' });
     }
   };
 
@@ -95,6 +139,20 @@ export function ClipboardPreview() {
             <span className="text-text-primary font-medium">{clip.is_pinned ? 'Yes' : 'No'}</span>
           </div>
         </div>
+
+        <div className="flex items-center gap-4 mt-2">
+           <div className="flex gap-2 items-center text-xs">
+              <span className="text-text-tertiary">Collections:</span>
+              {collections?.map(c => <span key={c.id} className="bg-primary/20 text-primary px-2 py-0.5 rounded-full">{c.name}</span>)}
+              <button onClick={() => setIsAssigningCollection(true)} className="text-text-tertiary hover:text-text-primary px-1.5 py-0.5 rounded transition-colors"><Plus size={14} /></button>
+           </div>
+           
+           <div className="flex gap-2 items-center text-xs">
+              <span className="text-text-tertiary">Tags:</span>
+              {tags?.map(t => <span key={t.id} className="bg-surface border border-border px-2 py-0.5 rounded-full">#{t.name}</span>)}
+              <button onClick={() => setIsAssigningTag(true)} className="text-text-tertiary hover:text-text-primary px-1.5 py-0.5 rounded transition-colors"><Plus size={14} /></button>
+           </div>
+        </div>
       </div>
       
       <div className="flex-1 p-6 overflow-auto">
@@ -160,6 +218,54 @@ export function ClipboardPreview() {
           deleteClip(clip.id);
         }}
       />
+
+      <Dialog 
+        isOpen={isAssigningCollection} 
+        onClose={() => setIsAssigningCollection(false)}
+        title="Assign Collections"
+      >
+        <div className="flex flex-col gap-2 max-h-60 overflow-y-auto">
+          {allCollections.length === 0 && <p className="text-sm text-text-secondary">No collections created yet.</p>}
+          {allCollections.map(col => {
+            const isAssigned = collections?.some(c => c.id === col.id);
+            return (
+              <label key={col.id} className="flex items-center gap-2 cursor-pointer hover:bg-white/5 p-2 rounded-md">
+                <input 
+                  type="checkbox" 
+                  checked={isAssigned || false}
+                  onChange={() => toggleCollection(col.id)}
+                  className="accent-primary"
+                />
+                <span className="text-sm text-text-primary">{col.name}</span>
+              </label>
+            );
+          })}
+        </div>
+      </Dialog>
+
+      <Dialog 
+        isOpen={isAssigningTag} 
+        onClose={() => setIsAssigningTag(false)}
+        title="Assign Tags"
+      >
+        <div className="flex flex-col gap-2 max-h-60 overflow-y-auto">
+          {allTags.length === 0 && <p className="text-sm text-text-secondary">No tags created yet.</p>}
+          {allTags.map(tag => {
+            const isAssigned = tags?.some(t => t.id === tag.id);
+            return (
+              <label key={tag.id} className="flex items-center gap-2 cursor-pointer hover:bg-white/5 p-2 rounded-md">
+                <input 
+                  type="checkbox" 
+                  checked={isAssigned || false}
+                  onChange={() => toggleTag(tag.id)}
+                  className="accent-primary"
+                />
+                <span className="text-sm text-text-primary">{tag.name}</span>
+              </label>
+            );
+          })}
+        </div>
+      </Dialog>
     </div>
   );
 }

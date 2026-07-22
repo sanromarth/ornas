@@ -5,6 +5,8 @@
 
 use crate::domain::pipeline::ClipItem;
 use crate::infrastructure::pipeline::runner::PipelineRunner;
+use crate::infrastructure::database::Database;
+use crate::services::file_clipboard::FileClipboardService;
 use clipboard_rs::ClipboardWatcher;
 use std::sync::{Arc, mpsc};
 use std::thread;
@@ -15,8 +17,25 @@ use std::thread;
 /// into the pipeline (useful for testing).
 ///
 /// The monitor runs until the application exits.
-pub fn start_clipboard_monitor(pipeline: Arc<PipelineRunner>) -> mpsc::Sender<ClipItem> {
+/// The monitor runs until the application exits.
+pub fn start_clipboard_monitor(pipeline: Arc<PipelineRunner>, db: Arc<Database>) -> mpsc::Sender<ClipItem> {
     let (sender, receiver) = mpsc::channel::<ClipItem>();
+    let (file_sender, file_receiver) = mpsc::channel::<Vec<String>>();
+
+    // File clipboard service thread
+    let db_clone = Arc::clone(&db);
+    thread::Builder::new()
+        .name("file-clipboard-consumer".into())
+        .spawn(move || {
+            let service = FileClipboardService::new(db_clone);
+            for paths in file_receiver {
+                if let Err(e) = service.process_files(paths) {
+                    tracing::error!("Failed to process files from clipboard: {}", e);
+                }
+            }
+        })
+        .ok();
+
 
     // Pipeline consumer thread
     let pipeline_clone = Arc::clone(&pipeline);
@@ -40,11 +59,12 @@ pub fn start_clipboard_monitor(pipeline: Arc<PipelineRunner>) -> mpsc::Sender<Cl
 
     // Native clipboard watcher thread
     let watcher_sender = sender.clone();
+    let watcher_file_sender = file_sender.clone();
     thread::Builder::new()
         .name("clipboard-watcher".into())
         .spawn(move || {
             tracing::info!("Clipboard watcher thread started");
-            match super::native::start_native_watcher(watcher_sender) {
+            match super::native::start_native_watcher(watcher_sender, watcher_file_sender) {
                 Ok(mut watcher) => {
                     watcher.start_watch();
                 }

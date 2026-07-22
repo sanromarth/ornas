@@ -12,6 +12,7 @@ pub enum ContentType {
     Text,
     Image,
     RichText,
+    File,
 }
 
 impl ContentType {
@@ -21,6 +22,7 @@ impl ContentType {
             Self::Text => "text",
             Self::Image => "image",
             Self::RichText => "rich_text",
+            Self::File => "file",
         }
     }
 }
@@ -46,6 +48,9 @@ pub struct Clip {
     pub created_at: i64,
     /// Unix epoch seconds.
     pub updated_at: i64,
+    /// List of files if content_type is File.
+    #[serde(default)]
+    pub files: Option<Vec<ClipFile>>,
 }
 
 /// Data required to create a new clip (before persistence assigns an ID).
@@ -70,3 +75,27 @@ pub struct ClipUpdate {
     pub is_favorite: Option<bool>,
     pub is_pinned: Option<bool>,
 }
+
+/// A file associated with a clip.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ClipFile {
+    pub id: i64,
+    pub clip_id: i64,
+    pub file_path: String,
+    pub file_name: String,
+    pub extension: Option<String>,
+    pub mime_type: Option<String>,
+    pub file_size: i64,
+    pub is_dir: bool,
+    pub is_readonly: bool,
+    pub created_time: Option<i64>,
+    pub modified_time: Option<i64>,
+    pub hash: Option<String>,
+    pub thumbnail_path: Option<String>,
+    pub status: String,
+    pub selection_group: i64,
+    pub icon_type: String,
+    pub created_at: i64,
+    pub updated_at: i64,
+}
+

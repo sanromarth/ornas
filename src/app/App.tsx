@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useUIStore } from '../stores/ui-store';
 import { cn } from '../shared/lib/utils';
 import { Toolbar } from '../shared/layout/Toolbar';
+import { Sidebar } from '../shared/layout/Sidebar';
 import { SearchBar } from '../features/search';
 import { ClipboardList, ClipboardPreview } from '../features/clipboard';
 import { SettingsPanel } from '../features/settings/components/SettingsPanel';
@@ -24,7 +25,10 @@ export function App() {
     <main className="flex h-screen w-screen overflow-hidden bg-background text-text-primary rounded-xl">
       <h1 className="sr-only">ORNAS Clipboard Manager</h1>
       
-      {/* Left Panel - History List */}
+      {/* Left Sidebar - Collections & Tags */}
+      <Sidebar />
+
+      {/* Center Panel - History List */}
       <div 
         className={cn(
           "flex flex-col h-full bg-background border-r border-border shrink-0 transition-[width,transform] duration-200 ease-[var(--ease-snappy)]",
@@ -39,7 +43,7 @@ export function App() {
       {/* Right Panel - Preview / Settings */}
       <div className={cn(
         "flex flex-col flex-1 h-full transition-[width,transform] duration-200 ease-[var(--ease-snappy)]",
-        settingsOpen ? "w-full bg-background" : "w-[65%] bg-surface"
+        settingsOpen ? "w-full bg-background" : "w-full bg-surface"
       )}>
         <ClipboardPreview />
         <SettingsPanel onClose={toggleSettings} />

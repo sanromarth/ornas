@@ -5,11 +5,18 @@ import { useUIStore } from '../../../stores/ui-store';
 import { ClipboardItem } from './ClipboardItem';
 import { EmptyState } from './EmptyState';
 import { useToast } from '../../../shared/components/useToast';
+import { invoke } from '@tauri-apps/api/core';
 
 export function ClipboardList() {
-  const { clips: historyClips, isLoading: isHistoryLoading, error: historyError } = useClipboard();
-  const { debouncedQuery, results: searchClips, isLoading: isSearchLoading, error: searchError } = useSearch();
-  const { selectedClipId, selectClip } = useUIStore();
+  const { selectedClipId, selectClip, selectedCollectionId, selectedTagId } = useUIStore();
+  
+  const listParams = {
+    collection_id: selectedCollectionId ?? undefined,
+    tag_id: selectedTagId ?? undefined,
+  };
+
+  const { clips: historyClips, isLoading: isHistoryLoading, error: historyError } = useClipboard(listParams);
+  const { debouncedQuery, results: searchClips, isLoading: isSearchLoading, error: searchError } = useSearch(listParams);
   const { addToast } = useToast();
 
   const isSearching = debouncedQuery.trim().length > 0;
@@ -67,10 +74,16 @@ export function ClipboardList() {
         e.preventDefault();
         if (currentIndex !== -1) {
           const clip = clips[currentIndex];
-          const content = clip.content_text ?? clip.preview;
-          if (content) {
-            navigator.clipboard.writeText(content);
-            addToast({ title: 'Copied to clipboard', variant: 'success' });
+          if (clip.content_type === 'file') {
+            invoke('restore_files_to_clipboard', { clipId: clip.id })
+              .then(() => addToast({ title: 'Files copied to clipboard', variant: 'success' }))
+              .catch((err: any) => addToast({ title: 'Failed to copy files', description: err.message || String(err), variant: 'error' }));
+          } else {
+            const content = clip.content_text ?? clip.preview;
+            if (content) {
+              navigator.clipboard.writeText(content);
+              addToast({ title: 'Copied to clipboard', variant: 'success' });
+            }
           }
         }
         break;

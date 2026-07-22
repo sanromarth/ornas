@@ -19,3 +19,10 @@ pub struct NewTag {
     pub name: String,
     pub color: Option<String>,
 }
+
+/// Fields that can be updated on an existing tag.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct TagUpdate {
+    pub name: Option<String>,
+    pub color: Option<String>,
+}

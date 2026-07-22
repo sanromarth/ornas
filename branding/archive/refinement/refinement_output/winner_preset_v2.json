@@ -1,0 +1,55 @@
+{
+  "name": "ornas_refined_v2",
+  "description": "Round 2 winner: radius 154 (score 9.170)",
+  "overrides": {
+    "body_radius_x": 154.0,
+    "body_radius_y": 154.0
+  },
+  "full_config": {
+    "canvas_size": 512,
+    "body_center_y_ratio": 0.605,
+    "body_radius_x": 154.0,
+    "body_radius_y": 154.0,
+    "body_thickness": 54.0,
+    "squircle_power": 4.0,
+    "bracket_height": 65.0,
+    "bracket_overlap": 15.0,
+    "bracket_leg_thickness": 26.0,
+    "bracket_corner_radius": 20.0,
+    "handle_width": 100.0,
+    "handle_height": 45.0,
+    "handle_corner_radius": 20.0,
+    "slot_width": 48.0,
+    "slot_height": 16.0,
+    "slot_corner_radius": 8.0,
+    "inner_bracket_inset": 26.0,
+    "inner_bracket_corner_radius": 15.0
+  },
+  "scores": {
+    "silhouette": 9.98,
+    "balance": 9.56,
+    "weight": 10.0,
+    "favicon": 9.86,
+    "recognizability": 9.74,
+    "uniqueness": 10.0,
+    "premium": 9.69,
+    "desktop": 1.0,
+    "overall": 9.17
+  },
+  "metrics": {
+    "fill_ratio": 0.2375,
+    "rb_ratio": 4.463,
+    "aspect": 0.8042,
+    "v_center": 0.5374,
+    "h_offset": 0.0,
+    "ws_ratio": 0.5973,
+    "wall_ratio": 0.3506,
+    "compactness": 9.359,
+    "ring_area": 50857.0,
+    "bracket_area": 11395.9,
+    "total_area": 62252.9,
+    "top_pad": 80.8,
+    "bottom_pad": 48.2,
+    "bbox_aspect": 0.804
+  }
+}

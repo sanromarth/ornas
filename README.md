@@ -1,4 +1,7 @@
-# ORNAS — Never Lose a Copy
+<div align="center">
+  <img src="public/logo.svg" width="128" height="128" alt="ORNAS Logo" />
+  <h1>ORNAS — Never Lose a Copy</h1>
+</div>
 
 > The open-source clipboard productivity workspace.
 
@@ -10,6 +13,10 @@
 
 ORNAS is a lightweight, offline-first desktop application that captures, organizes, and searches everything you copy. Built with Tauri v2 for native performance with a modern web UI.
 
+## Screenshots
+
+*(Screenshots coming soon)*
+
 ## Features (V1.0)
 
 - 📋 **Automatic clipboard capture** — text, images, rich text
@@ -18,13 +25,35 @@ ORNAS is a lightweight, offline-first desktop application that captures, organiz
 - 🏷️ **Smart categorization** — auto-detect URLs, code, emails, JSON, and more
 - ⌨️ **Keyboard-first UX** — every action reachable without a mouse
 - 🖼️ **Image support** — capture and preview clipboard images
+- 💾 **Backup & Restore** — export to ZIP, merge or replace databases
 - 🔒 **Offline-only** — zero network calls, zero telemetry, zero cloud
 - 🧹 **Auto-pruning** — configurable retention with smart cleanup
 - 🎨 **Dark & light themes** — follows system preference
 - ⚡ **Fast startup** — under 2 seconds cold, under 500ms warm
 - 📦 **Tiny footprint** — under 15MB binary, under 150MB memory
 
-## Quick Start
+## Downloads
+
+You can download the latest release for your platform from the [Releases page](https://github.com/sanromarth/ornas/releases).
+
+## Keyboard Shortcuts
+
+| Action | Shortcut |
+|--------|----------|
+| Toggle Window | `Ctrl/Cmd + Shift + V` |
+| Search | `Ctrl/Cmd + F` |
+| Navigate | `Up/Down` |
+| Copy Selected | `Enter` |
+
+## Installation
+
+### Prerequisites
+
+- [Rust](https://rustup.rs) (1.77+)
+- [Node.js](https://nodejs.org) (20+)
+- Linux: `libwebkit2gtk-4.1-dev`, `libgtk-3-dev`, `libayatana-appindicator3-dev`
+
+### Development Setup
 
 ```bash
 git clone https://github.com/sanromarth/ornas.git
@@ -33,13 +62,17 @@ npm install
 npm run tauri dev
 ```
 
-### Prerequisites
-
-- [Rust](https://rustup.rs) (1.77+)
-- [Node.js](https://nodejs.org) (20+)
-- Linux: `libwebkit2gtk-4.1-dev`, `libgtk-3-dev`, `libayatana-appindicator3-dev`
-
 See [DEVELOPMENT_SETUP.md](DEVELOPMENT_SETUP.md) for full setup instructions.
+
+### Build Instructions
+
+To build a release binary:
+
+```bash
+npm run tauri build
+```
+
+The compiled binaries will be located in `src-tauri/target/release/bundle/`.
 
 ## Architecture
 

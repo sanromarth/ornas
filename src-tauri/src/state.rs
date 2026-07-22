@@ -34,6 +34,10 @@ pub struct AppState {
     pub search_service: SearchService,
     /// Settings service (key-value config).
     pub settings_service: SettingsService,
+    /// Collection service.
+    pub collection_service: crate::services::collection_service::CollectionService,
+    /// Tag service.
+    pub tag_service: crate::services::tag_service::TagService,
     /// Clip repository (for direct pipeline access).
     pub clip_repo: Arc<dyn ClipRepository>,
     /// Image store.
@@ -41,6 +45,8 @@ pub struct AppState {
     pub image_store: Arc<ImageStore>,
     /// Pipeline runner.
     pub pipeline: Arc<PipelineRunner>,
+    /// Database connection.
+    pub db: Arc<Database>,
 }
 
 impl AppState {
@@ -74,6 +80,10 @@ impl AppState {
             Arc::new(SqliteSearchRepo::new(Arc::clone(&db)));
         let settings_repo: Arc<dyn SettingsRepository> =
             Arc::new(SqliteSettingsRepo::new(Arc::clone(&db)));
+        let collection_repo: Arc<dyn crate::domain::traits::CollectionRepository> =
+            Arc::new(crate::infrastructure::database::collection_repo::SqliteCollectionRepo::new(Arc::clone(&db)));
+        let tag_repo: Arc<dyn crate::domain::traits::TagRepository> =
+            Arc::new(crate::infrastructure::database::tag_repo::SqliteTagRepo::new(Arc::clone(&db)));
 
         // 7. Load config from settings
         let settings_service = SettingsService::new(Arc::clone(&settings_repo));
@@ -100,6 +110,8 @@ impl AppState {
         let clipboard_service =
             ClipboardService::new(Arc::clone(&clip_repo), config.clone(), app_handle);
         let search_service = SearchService::new(Arc::clone(&search_repo));
+        let collection_service = crate::services::collection_service::CollectionService::new(collection_repo);
+        let tag_service = crate::services::tag_service::TagService::new(tag_repo);
 
         tracing::info!("Application state initialized");
 
@@ -108,9 +120,12 @@ impl AppState {
             clipboard_service,
             search_service,
             settings_service,
+            collection_service,
+            tag_service,
             clip_repo,
             image_store,
             pipeline,
+            db,
         })
     }
 

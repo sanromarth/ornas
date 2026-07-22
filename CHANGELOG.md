@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Project foundation: Tauri v2 + React 19 + TypeScript 5 + Rust 2024 edition
 - Clean architecture: commands → services → domain → infrastructure
+- Backup & Restore system (JSON + binary assets in a ZIP archive)
 - SQLite schema with FTS5 full-text search (migration 001)
 - 7-stage clipboard processing pipeline (trait-based)
 - Central configuration system (`AppConfig` with typed defaults)
