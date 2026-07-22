@@ -9,6 +9,7 @@
 use crate::domain::clip::{Clip, ClipUpdate, NewClip};
 use crate::domain::collection::{Collection, CollectionUpdate, NewCollection};
 use crate::domain::tag::{NewTag, Tag, TagUpdate};
+use crate::domain::vault::VaultConfig;
 use crate::error::AppError;
 
 /// Parameters for paginated list queries.
@@ -55,7 +56,11 @@ pub trait ClipRepository: Send + Sync {
     fn set_favorite(&self, id: i64, favorite: bool) -> Result<(), AppError>;
     fn set_pinned(&self, id: i64, pinned: bool) -> Result<(), AppError>;
     fn touch(&self, id: i64) -> Result<(), AppError>;
+    /// Prunes clips older than the specified retention period (in seconds)
+    /// that are neither pinned nor favorited.
     fn prune_older_than(&self, max_age_secs: i64) -> Result<u64, AppError>;
+    /// Retrieves all encrypted clips.
+    fn get_encrypted_clips(&self) -> Result<Vec<Clip>, AppError>;
     #[allow(dead_code)]
     fn count(&self) -> Result<u64, AppError>;
 }
@@ -82,6 +87,15 @@ pub trait TagRepository: Send + Sync {
     fn assign_clip(&self, clip_id: i64, tag_id: i64) -> Result<(), AppError>;
     fn remove_clip(&self, clip_id: i64, tag_id: i64) -> Result<(), AppError>;
     fn get_tags_for_clip(&self, clip_id: i64) -> Result<Vec<Tag>, AppError>;
+}
+
+/// Defines the contract for vault configuration data access.
+pub trait VaultRepository: Send + Sync {
+    /// Loads the vault configuration, if it exists.
+    fn load_config(&self) -> Result<Option<VaultConfig>, AppError>;
+    
+    /// Saves the vault configuration.
+    fn save_config(&self, config: &VaultConfig) -> Result<(), AppError>;
 }
 
 /// Contract for full-text search operations.

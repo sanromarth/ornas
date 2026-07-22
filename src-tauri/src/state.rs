@@ -16,6 +16,7 @@ use crate::infrastructure::database::settings_repo::SqliteSettingsRepo;
 use crate::infrastructure::image_store::ImageStore;
 use crate::infrastructure::pipeline::runner::PipelineRunner;
 use crate::services::clipboard_service::ClipboardService;
+use crate::services::crypto_service::CryptoService;
 use crate::services::search_service::SearchService;
 use crate::services::settings_service::SettingsService;
 use std::path::PathBuf;
@@ -38,6 +39,8 @@ pub struct AppState {
     pub collection_service: crate::services::collection_service::CollectionService,
     /// Tag service.
     pub tag_service: crate::services::tag_service::TagService,
+    /// Crypto service.
+    pub crypto_service: Arc<CryptoService>,
     /// Clip repository (for direct pipeline access).
     pub clip_repo: Arc<dyn ClipRepository>,
     /// Image store.
@@ -84,6 +87,8 @@ impl AppState {
             Arc::new(crate::infrastructure::database::collection_repo::SqliteCollectionRepo::new(Arc::clone(&db)));
         let tag_repo: Arc<dyn crate::domain::traits::TagRepository> =
             Arc::new(crate::infrastructure::database::tag_repo::SqliteTagRepo::new(Arc::clone(&db)));
+        let vault_repo: Arc<dyn crate::domain::traits::VaultRepository> =
+            Arc::new(crate::infrastructure::database::vault_repo::SqliteVaultRepository::new(Arc::clone(&db)));
 
         // 7. Load config from settings
         let settings_service = SettingsService::new(Arc::clone(&settings_repo));
@@ -109,7 +114,8 @@ impl AppState {
         // 10. Build services
         let clipboard_service =
             ClipboardService::new(Arc::clone(&clip_repo), config.clone(), app_handle);
-        let search_service = SearchService::new(Arc::clone(&search_repo));
+        let crypto_service = Arc::new(CryptoService::new(vault_repo));
+        let search_service = SearchService::new(Arc::clone(&search_repo), Arc::clone(&crypto_service), Arc::clone(&clip_repo));
         let collection_service = crate::services::collection_service::CollectionService::new(collection_repo);
         let tag_service = crate::services::tag_service::TagService::new(tag_repo);
 
@@ -118,6 +124,7 @@ impl AppState {
         Ok(Self {
             config,
             clipboard_service,
+            crypto_service,
             search_service,
             settings_service,
             collection_service,

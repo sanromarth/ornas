@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { listClips, getClip } from '../../../services/clipboard';
 import { CollectionService } from '../../../services/collection-service';
 import { TagService } from '../../../services/tag-service';
+import { VaultService } from '../../../services/vault';
 import { clipboardKeys } from '../../../shared/lib/queryKeys';
 import type { ListParams } from '../../../shared/types';
 
@@ -37,5 +38,13 @@ export function useClipTagsQuery(id: number | null) {
     queryKey: clipboardKeys.tags(id!),
     queryFn: () => TagService.getTagsForClip(id!),
     enabled: id !== null,
+  });
+}
+
+export function useDecryptedClipQuery(id: number | null, isEncrypted: boolean, isUnlocked: boolean) {
+  return useQuery({
+    queryKey: ['decryptedClip', id],
+    queryFn: () => VaultService.getDecryptedClip(id!),
+    enabled: id !== null && isEncrypted && isUnlocked,
   });
 }

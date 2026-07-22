@@ -63,6 +63,10 @@ impl PipelineStage for Persister {
             is_code: item.is_code,
             detection_confidence: item.detection_confidence,
             language_source: item.language_source.clone(),
+            is_encrypted: false,
+            encryption_version: None,
+            encrypted_blob: None,
+            nonce: None,
         };
 
         let created = self.clip_repo.create(&new_clip)?;

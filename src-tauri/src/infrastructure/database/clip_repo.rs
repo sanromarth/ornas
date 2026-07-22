@@ -53,6 +53,10 @@ pub(crate) fn row_to_clip(row: &Row) -> Result<Clip, rusqlite::Error> {
         language_source: row.get("language_source").unwrap_or_else(|_| "auto".to_string()),
         is_favorite: row.get::<_, i64>("is_favorite")? != 0,
         is_pinned: row.get::<_, i64>("is_pinned")? != 0,
+        is_encrypted: row.get::<_, i64>("is_encrypted").unwrap_or(0) != 0,
+        encryption_version: row.get("encryption_version").unwrap_or(None),
+        encrypted_blob: row.get("encrypted_blob").unwrap_or(None),
+        nonce: row.get("nonce").unwrap_or(None),
         created_at: row.get("created_at")?,
         updated_at: row.get("updated_at")?,
         files: None,
@@ -109,9 +113,10 @@ impl ClipRepository for SqliteClipRepo {
             "INSERT INTO clips (
                 content_text, content_html, content_rtf, image_path,
                 content_type, category, source_app, content_hash,
-                preview, char_count, line_count, language, is_code, detection_confidence, language_source
+                preview, char_count, line_count, language, is_code, detection_confidence, language_source,
+                is_encrypted, encryption_version, encrypted_blob, nonce
             ) VALUES (
-                ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15
+                ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19
             ) RETURNING *",
         )?;
 
@@ -132,6 +137,10 @@ impl ClipRepository for SqliteClipRepo {
                 if clip.is_code { 1_i64 } else { 0_i64 },
                 clip.detection_confidence,
                 clip.language_source,
+                if clip.is_encrypted { 1_i64 } else { 0_i64 },
+                clip.encryption_version,
+                clip.encrypted_blob,
+                clip.nonce,
             ],
             row_to_clip,
         )?;
@@ -250,6 +259,46 @@ impl ClipRepository for SqliteClipRepo {
             sql_params.push(lang_src.clone().into());
         }
 
+        if let Some(ref val) = update.content_text {
+            query.push_str(&format!(", content_text = ?{}", sql_params.len() + 1));
+            sql_params.push(val.clone().into());
+        }
+
+        if let Some(ref val) = update.content_html {
+            query.push_str(&format!(", content_html = ?{}", sql_params.len() + 1));
+            sql_params.push(val.clone().into());
+        }
+
+        if let Some(ref val) = update.content_rtf {
+            query.push_str(&format!(", content_rtf = ?{}", sql_params.len() + 1));
+            sql_params.push(val.clone().into());
+        }
+
+        if let Some(ref val) = update.preview {
+            query.push_str(&format!(", preview = ?{}", sql_params.len() + 1));
+            sql_params.push(val.clone().into());
+        }
+
+        if let Some(enc) = update.is_encrypted {
+            query.push_str(&format!(", is_encrypted = ?{}", sql_params.len() + 1));
+            sql_params.push(if enc { 1_i64 } else { 0_i64 }.into());
+        }
+
+        if let Some(ref ver) = update.encryption_version {
+            query.push_str(&format!(", encryption_version = ?{}", sql_params.len() + 1));
+            sql_params.push(ver.clone().into());
+        }
+
+        if let Some(ref blob) = update.encrypted_blob {
+            query.push_str(&format!(", encrypted_blob = ?{}", sql_params.len() + 1));
+            sql_params.push(blob.clone().into());
+        }
+
+        if let Some(ref n) = update.nonce {
+            query.push_str(&format!(", nonce = ?{}", sql_params.len() + 1));
+            sql_params.push(n.clone().into());
+        }
+
         query.push_str(&format!(
             " WHERE id = ?{} RETURNING *",
             sql_params.len() + 1
@@ -321,6 +370,19 @@ impl ClipRepository for SqliteClipRepo {
         let count: i64 = stmt.query_row([], |row| row.get(0))?;
         Ok(count as u64)
     }
+
+    fn get_encrypted_clips(&self) -> Result<Vec<Clip>, AppError> {
+        let conn = self.db.conn()?;
+        let mut stmt = conn.prepare("SELECT * FROM clips WHERE is_encrypted = 1")?;
+        let clip_iter = stmt.query_map([], row_to_clip)?;
+
+        let mut clips = Vec::new();
+        for clip_result in clip_iter {
+            clips.push(clip_result?);
+        }
+        
+        Ok(clips)
+    }
 }
 
 #[cfg(test)]
@@ -356,6 +418,10 @@ mod tests {
             is_code: false,
             detection_confidence: 0.0,
             language_source: "auto".to_string(),
+            is_encrypted: false,
+            encryption_version: None,
+            encrypted_blob: None,
+            nonce: None,
         };
 
         // Create
@@ -373,6 +439,7 @@ mod tests {
             is_pinned: None,
             language: None,
             language_source: None,
+            ..Default::default()
         };
         let updated = repo.update(1, &update).unwrap();
         assert!(updated.is_favorite);

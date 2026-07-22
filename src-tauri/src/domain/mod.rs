@@ -11,3 +11,4 @@ pub mod config;
 pub mod pipeline;
 pub mod tag;
 pub mod traits;
+pub mod vault;
