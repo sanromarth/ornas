@@ -4,8 +4,9 @@
 //! captured items to the pipeline for processing.
 
 use crate::domain::pipeline::ClipItem;
-use crate::infrastructure::pipeline::runner::PipelineRunner;
 use crate::infrastructure::database::Database;
+use crate::infrastructure::image_store::ImageStore;
+use crate::infrastructure::pipeline::runner::PipelineRunner;
 use crate::services::file_clipboard::FileClipboardService;
 use clipboard_rs::ClipboardWatcher;
 use std::sync::{Arc, mpsc};
@@ -17,17 +18,21 @@ use std::thread;
 /// into the pipeline (useful for testing).
 ///
 /// The monitor runs until the application exits.
-/// The monitor runs until the application exits.
-pub fn start_clipboard_monitor(pipeline: Arc<PipelineRunner>, db: Arc<Database>) -> mpsc::Sender<ClipItem> {
+pub fn start_clipboard_monitor(
+    pipeline: Arc<PipelineRunner>,
+    db: Arc<Database>,
+    image_store: Arc<ImageStore>,
+) -> mpsc::Sender<ClipItem> {
     let (sender, receiver) = mpsc::channel::<ClipItem>();
     let (file_sender, file_receiver) = mpsc::channel::<Vec<String>>();
 
     // File clipboard service thread
     let db_clone = Arc::clone(&db);
+    let image_store_clone = Arc::clone(&image_store);
     thread::Builder::new()
         .name("file-clipboard-consumer".into())
         .spawn(move || {
-            let service = FileClipboardService::new(db_clone);
+            let service = FileClipboardService::new(db_clone, image_store_clone);
             for paths in file_receiver {
                 if let Err(e) = service.process_files(paths) {
                     tracing::error!("Failed to process files from clipboard: {}", e);
@@ -35,7 +40,6 @@ pub fn start_clipboard_monitor(pipeline: Arc<PipelineRunner>, db: Arc<Database>)
             }
         })
         .ok();
-
 
     // Pipeline consumer thread
     let pipeline_clone = Arc::clone(&pipeline);

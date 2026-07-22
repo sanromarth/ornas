@@ -12,7 +12,9 @@ pub fn create_collection(
     color: Option<String>,
     state: State<'_, AppState>,
 ) -> Result<Collection, AppError> {
-    state.collection_service.create_collection(name, icon, color)
+    state
+        .collection_service
+        .create_collection(name, icon, color)
 }
 
 #[tauri::command]
@@ -40,7 +42,9 @@ pub fn assign_clip_to_collection(
     collection_id: i64,
     state: State<'_, AppState>,
 ) -> Result<(), AppError> {
-    state.collection_service.assign_clip_to_collection(clip_id, collection_id)
+    state
+        .collection_service
+        .assign_clip_to_collection(clip_id, collection_id)
 }
 
 #[tauri::command]
@@ -49,7 +53,9 @@ pub fn remove_clip_from_collection(
     collection_id: i64,
     state: State<'_, AppState>,
 ) -> Result<(), AppError> {
-    state.collection_service.remove_clip_from_collection(clip_id, collection_id)
+    state
+        .collection_service
+        .remove_clip_from_collection(clip_id, collection_id)
 }
 
 #[tauri::command]

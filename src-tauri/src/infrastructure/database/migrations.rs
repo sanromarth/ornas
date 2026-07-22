@@ -13,7 +13,16 @@ pub fn get_migrations() -> Migrations<'static> {
         M::up(include_str!("../../../migrations/001_initial.sql")),
         M::up(include_str!("../../../migrations/002_files.sql")),
         M::up(include_str!("../../../migrations/003_allow_file_type.sql")),
-        M::up(include_str!("../../../migrations/004_collections_indexes.sql")),
+        M::up(include_str!(
+            "../../../migrations/004_collections_indexes.sql"
+        )),
+        M::up(include_str!("../../../migrations/005_code_snippets.sql")),
+        M::up(include_str!(
+            "../../../migrations/006_encrypted_storage.sql"
+        )),
+        M::up(include_str!(
+            "../../../migrations/007_performance_indexes.sql"
+        )),
     ])
 }
 

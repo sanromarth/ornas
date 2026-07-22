@@ -160,9 +160,9 @@ graph LR
     C --- S
     S --- I
 
-    FC -.IPC.-> C
-    FS -.IPC.-> C
-    FST -.IPC.-> C
+    FC -.->|IPC| C
+    FS -.->|IPC| C
+    FST -.->|IPC| C
 
     FC --> SH
     FS --> SH

@@ -248,9 +248,9 @@ Plugins run in a `wasmtime` WASM sandbox with strict resource limits:
 
 ```mermaid
 graph LR
-    M["manifest.json<br>declares permissions"] --> PS["Permission System<br>validates at load"]
-    PS --> U["User<br>approves/denies"]
-    U --> R["Runtime<br>enforces"]
+    M["manifest.json declares permissions"] --> PS["Permission System validates at load"]
+    PS --> U["User approves/denies"]
+    U --> R["Runtime enforces"]
 
     subgraph "Capability Levels"
         C1["clipboard:read"]

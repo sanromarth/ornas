@@ -20,14 +20,14 @@ question: *"If this test fails, is there a real bug that would affect users?"*
 ```mermaid
 graph TD
     subgraph "Test Pyramid"
-        A["🔺 E2E Tests<br/>(NOT in V1.0)"]
-        B["🔶 Integration Tests<br/>Repository implementations<br/>Pipeline end-to-end"]
-        C["🟢 Unit Tests<br/>Domain pure functions<br/>Category detection, hashing, normalization"]
+        A["🔺 E2E Tests (NOT in V1.0)"]
+        B["🔶 Integration Tests: Repository implementations, Pipeline end-to-end"]
+        C["🟢 Unit Tests: Domain pure functions, Category detection, hashing, normalization"]
     end
 
-    A -.->|"Deferred to V1.1"| D[Tauri E2E framework]
-    B -->|"In-process SQLite"| E[Real DB, real queries]
-    C -->|"No I/O, no mocks"| F[Pure computation]
+    A -.->|Deferred to V1.1| D[Tauri E2E framework]
+    B -->|In-process SQLite| E[Real DB, real queries]
+    C -->|No I/O, no mocks| F[Pure computation]
 
     style A fill:#444,stroke:#666,color:#999
     style B fill:#d97706,stroke:#b45309,color:#fff

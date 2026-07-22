@@ -44,7 +44,7 @@ describe('Clipboard Integration', () => {
     });
     vi.mocked(invoke).mockImplementation(async (cmd, args) => {
       if (cmd === 'list_clips') return mockClips;
-      if (cmd === 'get_clip') return mockClips.find(c => c.id === (args as any).id) || null;
+      if (cmd === 'get_clip') return mockClips.find(c => c.id === (args as { id: number }).id) || null;
       if (cmd === 'search_clips') return [];
       return null;
     });

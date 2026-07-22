@@ -25,7 +25,9 @@ impl VaultRepository for SqliteVaultRepository {
             "SELECT id, salt, verification_nonce, verification_payload, created_at, updated_at FROM vault_config WHERE id = 1"
         ).map_err(|e| AppError::Database(e.to_string()))?;
 
-        let mut rows = stmt.query([]).map_err(|e| AppError::Database(e.to_string()))?;
+        let mut rows = stmt
+            .query([])
+            .map_err(|e| AppError::Database(e.to_string()))?;
 
         if let Some(row) = rows.next().map_err(|e| AppError::Database(e.to_string()))? {
             Ok(Some(VaultConfig {
@@ -47,7 +49,7 @@ impl VaultRepository for SqliteVaultRepository {
             .duration_since(UNIX_EPOCH)
             .unwrap_or_default()
             .as_secs() as i64;
-            
+
         conn.execute(
             "INSERT INTO vault_config (id, salt, verification_nonce, verification_payload, created_at, updated_at) 
              VALUES (1, ?1, ?2, ?3, ?4, ?4)

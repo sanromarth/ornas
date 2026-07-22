@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { cn } from '../lib/utils';
 import { X } from 'lucide-react';
 import { IconButton } from './IconButton';
@@ -10,6 +11,7 @@ export interface DialogProps {
   children: React.ReactNode;
   closeOnBackdropClick?: boolean;
   className?: string;
+  hideClose?: boolean;
 }
 
 export function Dialog({
@@ -19,11 +21,13 @@ export function Dialog({
   children,
   closeOnBackdropClick = true,
   className,
+  hideClose = false,
 }: DialogProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const [isRendered, setIsRendered] = useState(isOpen);
   const [isVisible, setIsVisible] = useState(false);
+  const titleId = useId();
 
   useEffect(() => {
     if (isOpen) {
@@ -86,7 +90,7 @@ export function Dialog({
 
   if (!isRendered) return null;
 
-  return (
+  return createPortal(
     <div 
       className={cn(
         "fixed inset-0 z-dialog flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity",
@@ -98,7 +102,7 @@ export function Dialog({
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="dialog-title"
+        aria-labelledby={titleId}
         tabIndex={-1}
         className={cn(
           "relative flex w-full max-w-[420px] flex-col rounded-lg border border-border bg-surface shadow-2xl outline-none",
@@ -108,22 +112,29 @@ export function Dialog({
         )}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-border px-6 py-5">
-          <h2 id="dialog-title" className="font-['Outfit'] text-lg font-semibold text-text-primary tracking-wide">
-            {title}
-          </h2>
-          <IconButton 
-            aria-label="Close dialog" 
-            onClick={onClose}
-            className="text-text-secondary hover:text-text-primary"
-          >
-            <X size={18} />
-          </IconButton>
-        </div>
-        <div className="p-6">
-          {children}
-        </div>
+        {hideClose ? (
+          children
+        ) : (
+          <>
+            <div className="flex items-center justify-between border-b border-border px-6 py-5">
+              <h2 id={titleId} className="font-outfit text-lg font-semibold text-text-primary tracking-wide">
+                {title}
+              </h2>
+              <IconButton 
+                aria-label="Close dialog" 
+                onClick={onClose}
+                className="text-text-secondary hover:text-text-primary"
+              >
+                <X size={18} />
+              </IconButton>
+            </div>
+            <div className="p-6">
+              {children}
+            </div>
+          </>
+        )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

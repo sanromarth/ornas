@@ -17,8 +17,9 @@ use crate::error::AppError;
 pub struct ListParams {
     /// Maximum number of results to return.
     pub limit: u32,
-    /// Number of results to skip.
-    pub offset: u32,
+    pub cursor_pinned: Option<bool>,
+    pub cursor_created_at: Option<i64>,
+    pub cursor_id: Option<i64>,
     /// Optional category filter.
     pub category: Option<String>,
     /// If true, show only favorites.
@@ -35,7 +36,9 @@ impl Default for ListParams {
     fn default() -> Self {
         Self {
             limit: 50,
-            offset: 0,
+            cursor_pinned: None,
+            cursor_created_at: None,
+            cursor_id: None,
             category: None,
             favorites_only: false,
             pinned_only: false,
@@ -93,7 +96,7 @@ pub trait TagRepository: Send + Sync {
 pub trait VaultRepository: Send + Sync {
     /// Loads the vault configuration, if it exists.
     fn load_config(&self) -> Result<Option<VaultConfig>, AppError>;
-    
+
     /// Saves the vault configuration.
     fn save_config(&self, config: &VaultConfig) -> Result<(), AppError>;
 }

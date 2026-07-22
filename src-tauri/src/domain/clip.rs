@@ -48,13 +48,13 @@ pub struct Clip {
     pub is_code: bool,
     pub detection_confidence: f64,
     pub language_source: String,
-    
+
     // Encryption fields
     pub is_encrypted: bool,
     pub encryption_version: Option<i64>,
     pub encrypted_blob: Option<Vec<u8>>,
     pub nonce: Option<Vec<u8>>,
-    
+
     /// Unix epoch seconds.
     pub created_at: i64,
     /// Unix epoch seconds.
@@ -82,7 +82,7 @@ pub struct NewClip {
     pub is_code: bool,
     pub detection_confidence: f64,
     pub language_source: String,
-    
+
     // Encryption fields
     pub is_encrypted: bool,
     pub encryption_version: Option<i64>,
@@ -97,7 +97,7 @@ pub struct ClipUpdate {
     pub is_pinned: Option<bool>,
     pub language: Option<String>,
     pub language_source: Option<String>,
-    
+
     // Encryption fields for encrypt/decrypt workflows
     pub content_text: Option<Option<String>>,
     pub content_html: Option<Option<String>>,
@@ -131,4 +131,3 @@ pub struct ClipFile {
     pub created_at: i64,
     pub updated_at: i64,
 }
-

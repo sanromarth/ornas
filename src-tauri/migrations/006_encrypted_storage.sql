@@ -27,21 +27,21 @@ DROP TRIGGER IF EXISTS clips_au;
 
 -- Recreate triggers with a condition: only index if is_encrypted = 0
 CREATE TRIGGER clips_ai AFTER INSERT ON clips BEGIN
-  INSERT INTO clips_fts(rowid, content_text, preview, category, source_app)
-  SELECT new.id, new.content_text, new.preview, new.category, new.source_app
+  INSERT INTO clips_fts(rowid, content_text, preview)
+  SELECT new.id, new.content_text, new.preview
   WHERE new.is_encrypted = 0;
 END;
 
 CREATE TRIGGER clips_ad AFTER DELETE ON clips BEGIN
-  INSERT INTO clips_fts(clips_fts, rowid, content_text, preview, category, source_app)
-  VALUES('delete', old.id, old.content_text, old.preview, old.category, old.source_app);
+  INSERT INTO clips_fts(clips_fts, rowid, content_text, preview)
+  VALUES('delete', old.id, old.content_text, old.preview);
 END;
 
 CREATE TRIGGER clips_au AFTER UPDATE ON clips BEGIN
-  INSERT INTO clips_fts(clips_fts, rowid, content_text, preview, category, source_app)
-  VALUES('delete', old.id, old.content_text, old.preview, old.category, old.source_app);
+  INSERT INTO clips_fts(clips_fts, rowid, content_text, preview)
+  VALUES('delete', old.id, old.content_text, old.preview);
   
-  INSERT INTO clips_fts(rowid, content_text, preview, category, source_app)
-  SELECT new.id, new.content_text, new.preview, new.category, new.source_app
+  INSERT INTO clips_fts(rowid, content_text, preview)
+  SELECT new.id, new.content_text, new.preview
   WHERE new.is_encrypted = 0;
 END;

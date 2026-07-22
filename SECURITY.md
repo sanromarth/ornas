@@ -4,14 +4,14 @@
 
 | Version | Supported |
 |---------|-----------|
-| 0.1.x   | ✅        |
+| 0.9.x   | ✅        |
 
 ## Reporting a Vulnerability
 
 If you discover a security vulnerability, please report it responsibly:
 
 1. **Do NOT** open a public GitHub issue
-2. Email the maintainers with details of the vulnerability
+2. Email the maintainers at security@ornas.io with details of the vulnerability
 3. Include steps to reproduce if possible
 
 ### Response Timeline

@@ -202,11 +202,11 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A["User Action<br/>(delete / favorite / pin)"] --> B["invoke('action_cmd', {id, ...})"]
+    A["User Action (delete / favorite / pin)"] --> B["invoke('action_cmd', {id, ...})"]
     B --> C["Command validates input"]
     C --> D["Service executes business logic"]
     D --> E["Repository writes to SQLite"]
-    E --> F["Service emits Tauri event<br/>(clip-updated / clip-deleted)"]
+    E --> F["Service emits Tauri event (clip-updated / clip-deleted)"]
     F --> G["Frontend useTauriEvent hook"]
     G --> H["queryClient.invalidateQueries()"]
     H --> I["TanStack Query refetches"]
@@ -235,13 +235,13 @@ pub struct AppState {
 flowchart TD
     A["main.rs: tauri::Builder"] --> B["Open SQLite + apply PRAGMAs"]
     B --> C["Run migrations"]
-    C --> D["Build repositories<br/>(SqliteClipRepo, etc.)"]
-    D --> E["Build services<br/>(inject repos via constructor)"]
-    E --> F["Load AppConfig<br/>(defaults + settings table merge)"]
+    C --> D["Build repositories (SqliteClipRepo, etc.)"]
+    D --> E["Build services (inject repos via constructor)"]
+    E --> F["Load AppConfig (defaults + settings table merge)"]
     F --> G["Construct AppState"]
     G --> H[".manage(AppState)"]
-    H --> I["Register commands:<br/>list_clips, search, etc."]
-    I --> J["Start clipboard monitor<br/>(background task)"]
+    H --> I["Register commands: list_clips, search, etc."]
+    I --> J["Start clipboard monitor (background task)"]
     J --> K["App ready"]
 ```
 

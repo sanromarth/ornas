@@ -1,6 +1,6 @@
 /** TanStack Query queries for clipboard data fetching. */
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import { listClips, getClip } from '../../../services/clipboard';
 import { CollectionService } from '../../../services/collection-service';
 import { TagService } from '../../../services/tag-service';
@@ -10,9 +10,21 @@ import type { ListParams } from '../../../shared/types';
 
 /** Fetches paginated clipboard items. */
 export function useClipsQuery(params?: ListParams) {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: clipboardKeys.list(params ?? {}),
-    queryFn: () => listClips(params),
+    queryFn: async ({ pageParam }) => {
+      return listClips({ ...params, ...(pageParam as Partial<ListParams>) });
+    },
+    initialPageParam: {} as never,
+    getNextPageParam: (lastPage) => {
+      if (!lastPage || lastPage.length < 50) return undefined;
+      const lastClip = lastPage[lastPage.length - 1];
+      return {
+        cursor_pinned: lastClip.is_pinned,
+        cursor_created_at: lastClip.created_at,
+        cursor_id: lastClip.id,
+      } as Partial<ListParams>;
+    },
   });
 }
 

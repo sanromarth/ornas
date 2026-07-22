@@ -3,7 +3,7 @@
 ## Prerequisites
 
 ### All Platforms
-- [Rust](https://rustup.rs) 1.77+ (via rustup)
+- [Rust](https://rustup.rs) 1.85+ (via rustup)
 - [Node.js](https://nodejs.org) 20+ LTS
 - npm 10+
 

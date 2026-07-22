@@ -22,7 +22,7 @@ export function SplitPane({
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // TODO: Persist divider position
+  // Divider position persistence not implemented in v1
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();

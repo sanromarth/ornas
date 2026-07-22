@@ -28,8 +28,8 @@ export const useVaultStore = create<VaultState>((set) => ({
         isUnlocked: status.is_unlocked,
         isChecking: false 
       });
-    } catch (error: any) {
-      set({ error: error.message || 'Failed to check vault status', isChecking: false });
+    } catch (error: unknown) {
+      set({ error: (error instanceof Error ? error.message : String(error)) || 'Failed to check vault status', isChecking: false });
     }
   },
 
@@ -38,8 +38,8 @@ export const useVaultStore = create<VaultState>((set) => ({
     try {
       await VaultService.setupVault(password);
       set({ isInitialized: true, isUnlocked: true });
-    } catch (error: any) {
-      set({ error: error.message || 'Failed to setup vault' });
+    } catch (error: unknown) {
+      set({ error: (error instanceof Error ? error.message : String(error)) || 'Failed to setup vault' });
       throw error;
     }
   },
@@ -49,8 +49,8 @@ export const useVaultStore = create<VaultState>((set) => ({
     try {
       await VaultService.unlockVault(password);
       set({ isUnlocked: true });
-    } catch (error: any) {
-      set({ error: error.message || 'Failed to unlock vault' });
+    } catch (error: unknown) {
+      set({ error: (error instanceof Error ? error.message : String(error)) || 'Failed to unlock vault' });
       throw error;
     }
   },
@@ -60,8 +60,8 @@ export const useVaultStore = create<VaultState>((set) => ({
     try {
       await VaultService.lockVault();
       set({ isUnlocked: false });
-    } catch (error: any) {
-      set({ error: error.message || 'Failed to lock vault' });
+    } catch (error: unknown) {
+      set({ error: (error instanceof Error ? error.message : String(error)) || 'Failed to lock vault' });
       throw error;
     }
   }

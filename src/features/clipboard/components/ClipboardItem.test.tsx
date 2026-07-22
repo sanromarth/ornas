@@ -1,3 +1,4 @@
+import { ClipDto } from '../../../shared/types';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ClipboardItem } from './ClipboardItem';
@@ -17,7 +18,7 @@ const mockClip = {
   is_favorite: false,
   created_at: Math.floor(Date.now() / 1000),
   category: 'text',
-} as any;
+} as unknown as ClipDto;
 
 const renderWithToast = (ui: React.ReactElement) => {
   return render(ui);
@@ -32,15 +33,15 @@ describe('ClipboardItem', () => {
     vi.mocked(mutations.useToggleFavorite).mockReturnValue({
       mutate: toggleFavoriteMock,
       isPending: false,
-    } as any);
+    } as unknown as ReturnType<typeof mutations.useToggleFavorite>);
     vi.mocked(mutations.useTogglePin).mockReturnValue({
       mutate: togglePinMock,
       isPending: false,
-    } as any);
+    } as unknown as ReturnType<typeof mutations.useTogglePin>);
     vi.mocked(mutations.useDeleteClip).mockReturnValue({
       mutate: deleteClipMock,
       isPending: false,
-    } as any);
+    } as unknown as ReturnType<typeof mutations.useDeleteClip>);
     vi.clearAllMocks();
   });
 

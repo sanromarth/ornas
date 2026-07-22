@@ -24,6 +24,7 @@ export const COMMANDS = {
   TOGGLE_FAVORITE: 'toggle_favorite',
   TOGGLE_PIN: 'toggle_pin',
   SET_CLIP_LANGUAGE: 'set_clip_language',
+  WRITE_TEXT_TO_CLIPBOARD: 'write_text_to_clipboard',
   SEARCH_CLIPS: 'search_clips',
   GET_SETTINGS: 'get_settings',
   UPDATE_SETTING: 'update_setting',

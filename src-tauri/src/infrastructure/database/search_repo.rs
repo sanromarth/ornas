@@ -27,7 +27,7 @@ impl SearchRepository for SqliteSearchRepo {
         let mut sql = String::from(
             "SELECT c.* 
              FROM clips c 
-             JOIN clips_fts fts ON c.id = fts.rowid"
+             JOIN clips_fts fts ON c.id = fts.rowid",
         );
 
         if params.collection_id.is_some() {
@@ -38,7 +38,7 @@ impl SearchRepository for SqliteSearchRepo {
         }
 
         sql.push_str(" WHERE clips_fts MATCH ?");
-        
+
         let mut sql_params: Vec<rusqlite::types::Value> = vec![query.to_string().into()];
 
         if let Some(cat) = &params.category {
@@ -127,6 +127,10 @@ mod tests {
             is_code: false,
             detection_confidence: 0.0,
             language_source: "auto".to_string(),
+            is_encrypted: false,
+            encryption_version: None,
+            encrypted_blob: None,
+            nonce: None,
         };
         clip_repo.create(&new_clip).unwrap();
 

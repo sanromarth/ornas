@@ -83,12 +83,19 @@ impl AppState {
             Arc::new(SqliteSearchRepo::new(Arc::clone(&db)));
         let settings_repo: Arc<dyn SettingsRepository> =
             Arc::new(SqliteSettingsRepo::new(Arc::clone(&db)));
-        let collection_repo: Arc<dyn crate::domain::traits::CollectionRepository> =
-            Arc::new(crate::infrastructure::database::collection_repo::SqliteCollectionRepo::new(Arc::clone(&db)));
-        let tag_repo: Arc<dyn crate::domain::traits::TagRepository> =
-            Arc::new(crate::infrastructure::database::tag_repo::SqliteTagRepo::new(Arc::clone(&db)));
-        let vault_repo: Arc<dyn crate::domain::traits::VaultRepository> =
-            Arc::new(crate::infrastructure::database::vault_repo::SqliteVaultRepository::new(Arc::clone(&db)));
+        let collection_repo: Arc<dyn crate::domain::traits::CollectionRepository> = Arc::new(
+            crate::infrastructure::database::collection_repo::SqliteCollectionRepo::new(
+                Arc::clone(&db),
+            ),
+        );
+        let tag_repo: Arc<dyn crate::domain::traits::TagRepository> = Arc::new(
+            crate::infrastructure::database::tag_repo::SqliteTagRepo::new(Arc::clone(&db)),
+        );
+        let vault_repo: Arc<dyn crate::domain::traits::VaultRepository> = Arc::new(
+            crate::infrastructure::database::vault_repo::SqliteVaultRepository::new(Arc::clone(
+                &db,
+            )),
+        );
 
         // 7. Load config from settings
         let settings_service = SettingsService::new(Arc::clone(&settings_repo));
@@ -115,8 +122,13 @@ impl AppState {
         let clipboard_service =
             ClipboardService::new(Arc::clone(&clip_repo), config.clone(), app_handle);
         let crypto_service = Arc::new(CryptoService::new(vault_repo));
-        let search_service = SearchService::new(Arc::clone(&search_repo), Arc::clone(&crypto_service), Arc::clone(&clip_repo));
-        let collection_service = crate::services::collection_service::CollectionService::new(collection_repo);
+        let search_service = SearchService::new(
+            Arc::clone(&search_repo),
+            Arc::clone(&crypto_service),
+            Arc::clone(&clip_repo),
+        );
+        let collection_service =
+            crate::services::collection_service::CollectionService::new(collection_repo);
         let tag_service = crate::services::tag_service::TagService::new(tag_repo);
 
         tracing::info!("Application state initialized");
@@ -144,8 +156,8 @@ impl AppState {
         app_handle: tauri::AppHandle,
     ) -> PipelineRunner {
         use crate::infrastructure::pipeline::{
-            categorizer::Categorizer, code_detector::CodeDetector, dedup::Dedup, hasher::Hasher, metadata::Metadata,
-            normalizer::Normalizer, notifier::Notifier, persister::Persister,
+            categorizer::Categorizer, code_detector::CodeDetector, dedup::Dedup, hasher::Hasher,
+            metadata::Metadata, normalizer::Normalizer, notifier::Notifier, persister::Persister,
         };
 
         let stages: Vec<Box<dyn crate::domain::pipeline::PipelineStage>> = vec![

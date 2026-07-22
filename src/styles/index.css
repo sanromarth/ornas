@@ -44,12 +44,15 @@
 
 @theme {
   --color-background: hsl(var(--background));
+  --color-app: hsl(var(--app));
   --color-surface: hsl(var(--surface));
+  --color-elevated: hsl(var(--elevated));
   --color-border: hsl(var(--border));
   --color-primary: hsl(var(--primary));
   --color-primary-foreground: hsl(var(--primary-foreground));
   --color-text-primary: hsl(var(--text-primary));
   --color-text-secondary: hsl(var(--text-secondary));
+  --color-text-tertiary: hsl(var(--text-tertiary));
   --color-muted: hsl(var(--muted));
   --color-hover: hsl(var(--hover));
   --color-selection: hsl(var(--selection));
@@ -89,16 +92,19 @@
 /* Light theme (default fallback) */
 :root, [data-theme="light"] {
   --background: 0 0% 100%;
-  --surface: 240 5% 96%;
-  --border: 240 6% 90%;
-  --text-primary: 240 10% 4%;
-  --text-secondary: 240 4% 46%;
-  --primary: 238 80% 67%;
-  --primary-foreground: 240 5% 96%;
-  --selection: 238 80% 90%;
-  --hover: 240 5% 92%;
-  --muted: 240 5% 96%;
-  --focus-ring: 238 82% 74%;
+  --app: 0 0% 97.5%;
+  --surface: 0 0% 100%;
+  --elevated: 0 0% 100%;
+  --border: 0 0% 91%;
+  --text-primary: 0 0% 9%;
+  --text-secondary: 0 0% 45%;
+  --text-tertiary: 0 0% 65%;
+  --primary: 238 85% 65%;
+  --primary-foreground: 0 0% 100%;
+  --selection: 238 85% 96%;
+  --hover: 0 0% 93%;
+  --muted: 0 0% 96%;
+  --focus-ring: 238 85% 65%;
   
   --success: 160 84% 39%;
   --warning: 38 92% 50%;
@@ -108,17 +114,20 @@
 
 /* Dark theme */
 [data-theme="dark"] {
-  --background: 240 10% 4%;
-  --surface: 240 6% 10%;
-  --border: 240 5% 16%;
-  --text-primary: 0 0% 98%;
-  --text-secondary: 240 5% 65%;
-  --primary: 238 80% 67%;
-  --primary-foreground: 240 5% 96%;
-  --selection: 244 55% 41%;
-  --hover: 240 5% 16%;
-  --muted: 240 5% 16%;
-  --focus-ring: 238 82% 74%;
+  --background: 240 5% 8%;
+  --app: 240 5% 8%;
+  --surface: 240 5% 11%;
+  --elevated: 240 5% 15%;
+  --border: 240 5% 18%;
+  --text-primary: 0 0% 93%;
+  --text-secondary: 0 0% 60%;
+  --text-tertiary: 0 0% 45%;
+  --primary: 238 100% 75%;
+  --primary-foreground: 240 5% 8%;
+  --selection: 238 50% 20%;
+  --hover: 240 5% 15%;
+  --muted: 240 5% 15%;
+  --focus-ring: 238 100% 75%;
 
   --success: 160 84% 39%;
   --warning: 38 92% 50%;
@@ -129,17 +138,20 @@
 /* System theme dark override */
 @media (prefers-color-scheme: dark) {
   [data-theme="system"] {
-    --background: 240 10% 4%;
-    --surface: 240 6% 10%;
-    --border: 240 5% 16%;
-    --text-primary: 0 0% 98%;
-    --text-secondary: 240 5% 65%;
-    --primary: 238 80% 67%;
-    --primary-foreground: 240 5% 96%;
-    --selection: 244 55% 41%;
-    --hover: 240 5% 16%;
-    --muted: 240 5% 16%;
-    --focus-ring: 238 82% 74%;
+    --background: 240 5% 8%;
+    --app: 240 5% 8%;
+    --surface: 240 5% 11%;
+    --elevated: 240 5% 15%;
+    --border: 240 5% 18%;
+    --text-primary: 0 0% 93%;
+    --text-secondary: 0 0% 60%;
+    --text-tertiary: 0 0% 45%;
+    --primary: 238 100% 75%;
+    --primary-foreground: 240 5% 8%;
+    --selection: 238 50% 20%;
+    --hover: 240 5% 15%;
+    --muted: 240 5% 15%;
+    --focus-ring: 238 100% 75%;
   }
 }
 
@@ -182,4 +194,9 @@ body {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Global Lucide Icon overrides for thinner, more premium native feel */
+svg.lucide {
+  stroke-width: 1.5 !important;
 }

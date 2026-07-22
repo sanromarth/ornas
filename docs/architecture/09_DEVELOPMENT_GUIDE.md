@@ -21,7 +21,7 @@ development tasks.
 
 | Tool | Minimum | Recommended | Install |
 |------|---------|-------------|---------|
-| **Rust** | 1.77.0 (2024 edition) | Latest stable | [rustup.rs](https://rustup.rs) |
+| **Rust** | 1.85.0 (2024 edition) | Latest stable | [rustup.rs](https://rustup.rs) |
 | **Node.js** | 20 LTS | 22 LTS | [nodejs.org](https://nodejs.org) |
 | **npm** | 10+ | Latest | Comes with Node.js |
 | **Tauri CLI** | 2.0 | Latest 2.x | `cargo install tauri-cli` |
@@ -85,7 +85,7 @@ npm install
 ### 3. Verify Rust Toolchain
 
 ```bash
-rustc --version          # Should be ≥ 1.77.0
+rustc --version          # Should be ≥ 1.85.0
 cargo --version
 cargo tauri --version    # Should be ≥ 2.0
 ```
