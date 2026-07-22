@@ -1,7 +1,7 @@
 /** TanStack Query mutations for clipboard write operations. */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { deleteClip, toggleFavorite, togglePin } from '../../../services/clipboard';
+import { deleteClip, toggleFavorite, togglePin, setClipLanguage } from '../../../services/clipboard';
 import { clipboardKeys } from '../../../shared/lib/queryKeys';
 import type { ClipDto } from '../../../shared/types';
 
@@ -128,6 +128,43 @@ export function useTogglePin() {
     },
     onError: (_err, _id, _context) => {
       // Rollback on error handled by invalidation or exact state restore if implemented
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: clipboardKeys.all });
+    },
+  });
+}
+
+/** Sets clip language manually with optimistic UI updates. */
+export function useSetClipLanguage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, language, language_source }: { id: number; language: string | null; language_source: string }) => 
+      setClipLanguage(id, language, language_source),
+    onMutate: async ({ id, language, language_source }) => {
+      await queryClient.cancelQueries({ queryKey: clipboardKeys.all });
+
+      const previousState = queryClient.getQueryData(clipboardKeys.all);
+
+      const updateList = (oldList: ClipDto[] | undefined) => {
+        if (!oldList) return oldList;
+        return oldList.map((clip) => 
+          clip.id === id ? { ...clip, language, language_source } : clip
+        );
+      };
+
+      queryClient.setQueriesData({ queryKey: clipboardKeys.lists() }, updateList);
+      queryClient.setQueriesData({ queryKey: clipboardKeys.searches() }, updateList);
+
+      queryClient.setQueriesData({ queryKey: clipboardKeys.detail(id) }, (oldClip: ClipDto | undefined) => {
+        if (!oldClip) return oldClip;
+        return { ...oldClip, language, language_source };
+      });
+
+      return { previousState };
+    },
+    onError: (_err, _variables, _context) => {
+      // rollback handled by invalidation or exact state restore if implemented
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: clipboardKeys.all });

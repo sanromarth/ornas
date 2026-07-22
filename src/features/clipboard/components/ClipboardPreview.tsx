@@ -16,6 +16,7 @@ import { useTagStore } from '../../../stores/tag-store';
 import { CollectionService } from '../../../services/collection-service';
 import { TagService } from '../../../services/tag-service';
 import { clipboardKeys } from '../../../shared/lib/queryKeys';
+import { CodeSnippetPreview } from './CodeSnippetPreview';
 
 export function ClipboardPreview() {
   const queryClient = useQueryClient();
@@ -155,13 +156,13 @@ export function ClipboardPreview() {
         </div>
       </div>
       
-      <div className="flex-1 p-6 overflow-auto">
+      <div className="flex-1 overflow-hidden flex flex-col relative z-0">
         {clip.content_type === 'image' && clip.image_path ? (
-          <img src={`asset://localhost/${clip.image_path}`} alt="Clipboard content" className="max-w-full h-auto rounded-md shadow-sm border border-border" />
+          <div className="p-6 overflow-auto h-full">
+            <img src={`asset://localhost/${clip.image_path}`} alt="Clipboard content" className="max-w-full h-auto rounded-md shadow-sm border border-border" />
+          </div>
         ) : (
-          <pre className="whitespace-pre-wrap break-all text-sm font-mono text-text-primary max-w-[80ch] leading-relaxed">
-            {clip.content_text ?? clip.preview}
-          </pre>
+          <CodeSnippetPreview clip={clip} />
         )}
       </div>
 

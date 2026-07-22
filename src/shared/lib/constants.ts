@@ -23,6 +23,7 @@ export const COMMANDS = {
   DELETE_CLIP: 'delete_clip',
   TOGGLE_FAVORITE: 'toggle_favorite',
   TOGGLE_PIN: 'toggle_pin',
+  SET_CLIP_LANGUAGE: 'set_clip_language',
   SEARCH_CLIPS: 'search_clips',
   GET_SETTINGS: 'get_settings',
   UPDATE_SETTING: 'update_setting',

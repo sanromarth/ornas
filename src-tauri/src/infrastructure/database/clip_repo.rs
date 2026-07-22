@@ -47,6 +47,10 @@ pub(crate) fn row_to_clip(row: &Row) -> Result<Clip, rusqlite::Error> {
         preview: row.get("preview")?,
         char_count: row.get("char_count")?,
         line_count: row.get("line_count")?,
+        language: row.get("language").unwrap_or(None),
+        is_code: row.get::<_, i64>("is_code").unwrap_or(0) != 0,
+        detection_confidence: row.get("detection_confidence").unwrap_or(0.0),
+        language_source: row.get("language_source").unwrap_or_else(|_| "auto".to_string()),
         is_favorite: row.get::<_, i64>("is_favorite")? != 0,
         is_pinned: row.get::<_, i64>("is_pinned")? != 0,
         created_at: row.get("created_at")?,
@@ -105,9 +109,9 @@ impl ClipRepository for SqliteClipRepo {
             "INSERT INTO clips (
                 content_text, content_html, content_rtf, image_path,
                 content_type, category, source_app, content_hash,
-                preview, char_count, line_count
+                preview, char_count, line_count, language, is_code, detection_confidence, language_source
             ) VALUES (
-                ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11
+                ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15
             ) RETURNING *",
         )?;
 
@@ -124,6 +128,10 @@ impl ClipRepository for SqliteClipRepo {
                 clip.preview,
                 clip.char_count,
                 clip.line_count,
+                clip.language,
+                if clip.is_code { 1_i64 } else { 0_i64 },
+                clip.detection_confidence,
+                clip.language_source,
             ],
             row_to_clip,
         )?;
@@ -232,6 +240,16 @@ impl ClipRepository for SqliteClipRepo {
             sql_params.push(if pin { 1_i64 } else { 0_i64 }.into());
         }
 
+        if let Some(lang) = &update.language {
+            query.push_str(&format!(", language = ?{}", sql_params.len() + 1));
+            sql_params.push(lang.clone().into());
+        }
+
+        if let Some(lang_src) = &update.language_source {
+            query.push_str(&format!(", language_source = ?{}", sql_params.len() + 1));
+            sql_params.push(lang_src.clone().into());
+        }
+
         query.push_str(&format!(
             " WHERE id = ?{} RETURNING *",
             sql_params.len() + 1
@@ -334,6 +352,10 @@ mod tests {
             preview: Some("test...".into()),
             char_count: 12,
             line_count: 1,
+            language: None,
+            is_code: false,
+            detection_confidence: 0.0,
+            language_source: "auto".to_string(),
         };
 
         // Create
@@ -349,6 +371,8 @@ mod tests {
         let update = ClipUpdate {
             is_favorite: Some(true),
             is_pinned: None,
+            language: None,
+            language_source: None,
         };
         let updated = repo.update(1, &update).unwrap();
         assert!(updated.is_favorite);

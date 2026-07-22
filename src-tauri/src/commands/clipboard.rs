@@ -55,6 +55,12 @@ pub fn toggle_pin(state: State<'_, AppState>, id: i64) -> Result<Clip, AppError>
     state.clipboard_service.toggle_pin(id)
 }
 
+/// Set the language of a clip manually.
+#[tauri::command]
+pub fn set_clip_language(state: State<'_, AppState>, id: i64, language: Option<String>, language_source: String) -> Result<Clip, AppError> {
+    state.clipboard_service.update_clip_language(id, language, language_source)
+}
+
 /// Restore file paths to the system clipboard.
 #[tauri::command]
 pub fn restore_files_to_clipboard(state: State<'_, AppState>, clip_id: i64) -> Result<(), AppError> {
