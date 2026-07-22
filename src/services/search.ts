@@ -2,8 +2,8 @@
 
 import { tauriInvoke } from './invoke';
 import { COMMANDS } from '../shared/lib/constants';
-import type { ClipDto } from '../shared/types';
+import type { ClipDto, ListParams } from '../shared/types';
 
-export async function searchClips(query: string, limit?: number): Promise<ClipDto[]> {
-  return tauriInvoke<ClipDto[]>(COMMANDS.SEARCH_CLIPS, { query, limit });
+export async function searchClips(query: string, params?: ListParams): Promise<ClipDto[]> {
+  return tauriInvoke<ClipDto[]>(COMMANDS.SEARCH_CLIPS, { query, ...params });
 }

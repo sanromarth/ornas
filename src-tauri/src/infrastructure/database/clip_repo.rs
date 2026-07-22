@@ -51,8 +51,51 @@ pub(crate) fn row_to_clip(row: &Row) -> Result<Clip, rusqlite::Error> {
         is_pinned: row.get::<_, i64>("is_pinned")? != 0,
         created_at: row.get("created_at")?,
         updated_at: row.get("updated_at")?,
+        files: None,
     })
 }
+
+fn fetch_clip_files(conn: &rusqlite::Connection, clip_ids: &[i64]) -> Result<std::collections::HashMap<i64, Vec<crate::domain::clip::ClipFile>>, AppError> {
+    if clip_ids.is_empty() {
+        return Ok(std::collections::HashMap::new());
+    }
+    
+    let placeholders = clip_ids.iter().map(|_| "?").collect::<Vec<_>>().join(",");
+    let query = format!("SELECT id, clip_id, file_path, file_name, extension, mime_type, file_size, is_dir, is_readonly, created_time, modified_time, hash, thumbnail_path, status, selection_group, icon_type, created_at, updated_at FROM clip_files WHERE clip_id IN ({})", placeholders);
+    
+    let mut stmt = conn.prepare(&query)?;
+    let mut rows = stmt.query(rusqlite::params_from_iter(clip_ids))?;
+    
+    let mut map: std::collections::HashMap<i64, Vec<crate::domain::clip::ClipFile>> = std::collections::HashMap::new();
+    
+    while let Some(row) = rows.next()? {
+        let clip_id: i64 = row.get(1)?;
+        let file = crate::domain::clip::ClipFile {
+            id: row.get(0)?,
+            clip_id,
+            file_path: row.get(2)?,
+            file_name: row.get(3)?,
+            extension: row.get(4)?,
+            mime_type: row.get(5)?,
+            file_size: row.get(6)?,
+            is_dir: row.get::<_, i64>(7)? != 0,
+            is_readonly: row.get::<_, i64>(8)? != 0,
+            created_time: row.get(9)?,
+            modified_time: row.get(10)?,
+            hash: row.get(11)?,
+            thumbnail_path: row.get(12)?,
+            status: row.get(13)?,
+            selection_group: row.get(14)?,
+            icon_type: row.get(15)?,
+            created_at: row.get(16)?,
+            updated_at: row.get(17)?,
+        };
+        map.entry(clip_id).or_default().push(file);
+    }
+    
+    Ok(map)
+}
+
 
 impl ClipRepository for SqliteClipRepo {
     fn create(&self, clip: &NewClip) -> Result<Clip, AppError> {
@@ -92,43 +135,82 @@ impl ClipRepository for SqliteClipRepo {
         let conn = self.db.conn()?;
         let mut stmt = conn.prepare("SELECT * FROM clips WHERE id = ?1")?;
         let clip = stmt.query_row(params![id], row_to_clip).optional()?;
-        Ok(clip)
+        if let Some(mut c) = clip {
+            if c.content_type == ContentType::File {
+                let map = fetch_clip_files(&conn, &[c.id])?;
+                c.files = map.get(&c.id).cloned();
+            }
+            Ok(Some(c))
+        } else {
+            Ok(None)
+        }
     }
 
     fn list(&self, params: &ListParams) -> Result<Vec<Clip>, AppError> {
         let conn = self.db.conn()?;
 
-        let mut query = String::from("SELECT * FROM clips WHERE 1=1");
+        let mut query = String::from("SELECT c.* FROM clips c");
         let mut sql_params: Vec<rusqlite::types::Value> = Vec::new();
 
+        if params.collection_id.is_some() {
+            query.push_str(" JOIN clip_collections cc ON c.id = cc.clip_id");
+        }
+        if params.tag_id.is_some() {
+            query.push_str(" JOIN clip_tags ct ON c.id = ct.clip_id");
+        }
+
+        query.push_str(" WHERE 1=1");
+
         if let Some(category) = &params.category {
-            query.push_str(&format!(" AND category = ?{}", sql_params.len() + 1));
+            query.push_str(" AND c.category = ?");
             sql_params.push(category.clone().into());
         }
 
         if params.favorites_only {
-            query.push_str(" AND is_favorite = 1");
+            query.push_str(" AND c.is_favorite = 1");
         }
 
         if params.pinned_only {
-            query.push_str(" AND is_pinned = 1");
+            query.push_str(" AND c.is_pinned = 1");
         }
 
-        query.push_str(&format!(
-            " ORDER BY is_pinned DESC, created_at DESC LIMIT ?{}",
-            sql_params.len() + 1
-        ));
+        if let Some(col_id) = params.collection_id {
+            query.push_str(" AND cc.collection_id = ?");
+            sql_params.push(col_id.into());
+        }
+        
+        if let Some(tag_id) = params.tag_id {
+            query.push_str(" AND ct.tag_id = ?");
+            sql_params.push(tag_id.into());
+        }
+
+        query.push_str(" ORDER BY c.is_pinned DESC, c.created_at DESC LIMIT ?");
         sql_params.push(params.limit.into());
 
-        query.push_str(&format!(" OFFSET ?{}", sql_params.len() + 1));
+        query.push_str(" OFFSET ?");
         sql_params.push(params.offset.into());
 
         let mut stmt = conn.prepare(&query)?;
         let clip_iter = stmt.query_map(rusqlite::params_from_iter(sql_params), row_to_clip)?;
 
         let mut clips = Vec::new();
+        let mut file_clip_ids = Vec::new();
         for clip_result in clip_iter {
-            clips.push(clip_result?);
+            let clip = clip_result?;
+            if clip.content_type == ContentType::File {
+                file_clip_ids.push(clip.id);
+            }
+            clips.push(clip);
+        }
+
+        if !file_clip_ids.is_empty() {
+            if let Ok(files_map) = fetch_clip_files(&conn, &file_clip_ids) {
+                for clip in &mut clips {
+                    if clip.content_type == ContentType::File {
+                        clip.files = files_map.get(&clip.id).cloned();
+                    }
+                }
+            }
         }
 
         Ok(clips)

@@ -4,6 +4,7 @@ import { Button } from '../../../shared/components/Button';
 import { Input } from '../../../shared/components/Input';
 import { useSettings } from '../hooks/useSettings';
 import { useUIStore } from '../../../stores/ui-store';
+import { BackupSection } from './BackupSection';
 
 interface Props {
   onClose: () => void;
@@ -140,6 +141,9 @@ export function SettingsPanel({ onClose }: Props) {
             </div>
           </div>
         </div>
+
+        {/* Backup & Restore Section */}
+        <BackupSection />
 
         {/* Privacy Section */}
         <div className="flex flex-col gap-6 shrink-0">

@@ -67,3 +67,9 @@ impl From<regex::Error> for AppError {
         Self::Internal(err.to_string())
     }
 }
+
+impl From<zip::result::ZipError> for AppError {
+    fn from(err: zip::result::ZipError) -> Self {
+        Self::Internal(err.to_string())
+    }
+}

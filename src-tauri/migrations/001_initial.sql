@@ -11,7 +11,7 @@ CREATE TABLE clips (
     content_rtf   TEXT,
     image_path    TEXT,
     content_type  TEXT NOT NULL
-                  CHECK(content_type IN ('text', 'image', 'rich_text')),
+                  CHECK(content_type IN ('text', 'image', 'rich_text', 'file')),
     category      TEXT NOT NULL DEFAULT 'plain_text',
     source_app    TEXT,
     content_hash  TEXT NOT NULL,

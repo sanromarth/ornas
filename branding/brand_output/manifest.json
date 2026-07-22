@@ -1,0 +1,160 @@
+[
+  {
+    "category": "svg",
+    "path": "brand_output/svg/icon-accent.svg",
+    "name": "icon-accent.svg",
+    "scheme": "accent"
+  },
+  {
+    "category": "svg",
+    "path": "brand_output/svg/icon-dark.svg",
+    "name": "icon-dark.svg",
+    "scheme": "dark"
+  },
+  {
+    "category": "svg",
+    "path": "brand_output/svg/icon-light.svg",
+    "name": "icon-light.svg",
+    "scheme": "light"
+  },
+  {
+    "category": "svg",
+    "path": "brand_output/svg/icon-monochrome.svg",
+    "name": "icon-monochrome.svg",
+    "scheme": "monochrome"
+  },
+  {
+    "category": "svg",
+    "path": "brand_output/svg/icon-mono-black.svg",
+    "name": "icon-mono-black.svg",
+    "scheme": "mono-black"
+  },
+  {
+    "category": "svg",
+    "path": "brand_output/svg/icon-mono-white.svg",
+    "name": "icon-mono-white.svg",
+    "scheme": "mono-white"
+  },
+  {
+    "category": "png",
+    "path": "brand_output/png/icon-16.png",
+    "name": "icon-16.png",
+    "scheme": "accent"
+  },
+  {
+    "category": "png",
+    "path": "brand_output/png/icon-20.png",
+    "name": "icon-20.png",
+    "scheme": "accent"
+  },
+  {
+    "category": "png",
+    "path": "brand_output/png/icon-24.png",
+    "name": "icon-24.png",
+    "scheme": "accent"
+  },
+  {
+    "category": "png",
+    "path": "brand_output/png/icon-32.png",
+    "name": "icon-32.png",
+    "scheme": "accent"
+  },
+  {
+    "category": "png",
+    "path": "brand_output/png/icon-48.png",
+    "name": "icon-48.png",
+    "scheme": "accent"
+  },
+  {
+    "category": "png",
+    "path": "brand_output/png/icon-64.png",
+    "name": "icon-64.png",
+    "scheme": "accent"
+  },
+  {
+    "category": "png",
+    "path": "brand_output/png/icon-128.png",
+    "name": "icon-128.png",
+    "scheme": "accent"
+  },
+  {
+    "category": "png",
+    "path": "brand_output/png/icon-256.png",
+    "name": "icon-256.png",
+    "scheme": "accent"
+  },
+  {
+    "category": "png",
+    "path": "brand_output/png/icon-512.png",
+    "name": "icon-512.png",
+    "scheme": "accent"
+  },
+  {
+    "category": "png",
+    "path": "brand_output/png/icon-1024.png",
+    "name": "icon-1024.png",
+    "scheme": "accent"
+  },
+  {
+    "category": "ico",
+    "path": "brand_output/ico/icon.ico",
+    "name": "icon.ico",
+    "scheme": "accent"
+  },
+  {
+    "category": "tauri",
+    "path": "brand_output/tauri/32x32.png",
+    "name": "32x32.png"
+  },
+  {
+    "category": "tauri",
+    "path": "brand_output/tauri/128x128.png",
+    "name": "128x128.png"
+  },
+  {
+    "category": "tauri",
+    "path": "brand_output/tauri/128x128@2x.png",
+    "name": "128x128@2x.png"
+  },
+  {
+    "category": "tauri",
+    "path": "brand_output/tauri/icon.png",
+    "name": "icon.png"
+  },
+  {
+    "category": "ico",
+    "path": "brand_output/tauri/icon.ico",
+    "name": "icon.ico",
+    "scheme": "accent"
+  },
+  {
+    "category": "favicon",
+    "path": "brand_output/favicon/favicon.svg",
+    "name": "favicon.svg"
+  },
+  {
+    "category": "favicon",
+    "path": "brand_output/favicon/favicon.ico",
+    "name": "favicon.ico"
+  },
+  {
+    "category": "favicon",
+    "path": "brand_output/favicon/apple-touch-icon.png",
+    "name": "apple-touch-icon.png"
+  },
+  {
+    "category": "preview",
+    "path": "brand_output/preview/preview-sizes.png",
+    "name": "preview-sizes.png"
+  },
+  {
+    "category": "preview",
+    "path": "brand_output/preview/preview-variants.png",
+    "name": "preview-variants.png"
+  },
+  {
+    "category": "preview",
+    "path": "brand_output/preview/preview-context.png",
+    "name": "preview-context.png"
+  }
+]

@@ -1,10 +1,12 @@
 //! Database infrastructure — SQLite connection, migrations, and repository implementations.
 
 pub mod clip_repo;
+pub mod collection_repo;
 pub mod connection;
 pub mod migrations;
 pub mod search_repo;
 pub mod settings_repo;
+pub mod tag_repo;
 
 use crate::error::AppError;
 use rusqlite::Connection;

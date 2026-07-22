@@ -24,3 +24,12 @@ pub struct NewCollection {
     pub icon: Option<String>,
     pub color: Option<String>,
 }
+
+/// Fields that can be updated on an existing collection.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct CollectionUpdate {
+    pub name: Option<String>,
+    pub icon: Option<String>,
+    pub color: Option<String>,
+    pub sort_order: Option<i64>,
+}

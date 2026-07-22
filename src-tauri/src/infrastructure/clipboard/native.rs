@@ -16,12 +16,13 @@ use std::sync::mpsc::Sender;
 /// through the provided channel for pipeline processing.
 pub struct NativeClipboardHandler {
     sender: Sender<ClipItem>,
+    file_sender: Sender<Vec<String>>,
 }
 
 impl NativeClipboardHandler {
     /// Creates a new handler that sends clipboard items to the given channel.
-    pub fn new(sender: Sender<ClipItem>) -> Self {
-        Self { sender }
+    pub fn new(sender: Sender<ClipItem>, file_sender: Sender<Vec<String>>) -> Self {
+        Self { sender, file_sender }
     }
 }
 
@@ -34,6 +35,17 @@ impl ClipboardHandler for NativeClipboardHandler {
                 return;
             }
         };
+
+        // Try reading files first
+        if let Ok(files) = ctx.get_files() {
+            if !files.is_empty() {
+                if let Err(e) = self.file_sender.send(files) {
+                    tracing::error!("Failed to send clipboard files to pipeline: {e}");
+                }
+                tracing::debug!("Clipboard files captured");
+                return;
+            }
+        }
 
         // Try reading text first
         if let Ok(text) = ctx.get_text() {
@@ -72,8 +84,9 @@ impl ClipboardHandler for NativeClipboardHandler {
 /// call `start_watch()` on in a background thread.
 pub fn start_native_watcher(
     sender: Sender<ClipItem>,
+    file_sender: Sender<Vec<String>>,
 ) -> Result<ClipboardWatcherContext<NativeClipboardHandler>, crate::error::AppError> {
-    let handler = NativeClipboardHandler::new(sender);
+    let handler = NativeClipboardHandler::new(sender, file_sender);
     let mut watcher = ClipboardWatcherContext::new().map_err(|e| {
         crate::error::AppError::Clipboard(format!("Failed to create clipboard watcher: {e}"))
     })?;

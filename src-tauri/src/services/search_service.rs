@@ -20,11 +20,11 @@ impl SearchService {
     }
 
     /// Performs a full-text search with the given query.
-    pub fn search(&self, query: &str, limit: u32) -> Result<Vec<Clip>, AppError> {
+    pub fn search(&self, query: &str, limit: u32, params: &crate::domain::traits::ListParams) -> Result<Vec<Clip>, AppError> {
         if query.trim().is_empty() {
             return Ok(Vec::new());
         }
-        self.search_repo.search(query, limit)
+        self.search_repo.search(query, limit, params)
     }
 
     /// Optimizes the FTS5 index (called during idle or shutdown).

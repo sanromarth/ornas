@@ -7,6 +7,8 @@
 //! **No I/O or database types appear here.** Only domain entities and errors.
 
 use crate::domain::clip::{Clip, ClipUpdate, NewClip};
+use crate::domain::collection::{Collection, CollectionUpdate, NewCollection};
+use crate::domain::tag::{NewTag, Tag, TagUpdate};
 use crate::error::AppError;
 
 /// Parameters for paginated list queries.
@@ -22,6 +24,10 @@ pub struct ListParams {
     pub favorites_only: bool,
     /// If true, show only pinned items.
     pub pinned_only: bool,
+    /// Optional collection filter.
+    pub collection_id: Option<i64>,
+    /// Optional tag filter.
+    pub tag_id: Option<i64>,
 }
 
 impl Default for ListParams {
@@ -32,6 +38,8 @@ impl Default for ListParams {
             category: None,
             favorites_only: false,
             pinned_only: false,
+            collection_id: None,
+            tag_id: None,
         }
     }
 }
@@ -52,9 +60,33 @@ pub trait ClipRepository: Send + Sync {
     fn count(&self) -> Result<u64, AppError>;
 }
 
+/// Contract for collections persistence.
+pub trait CollectionRepository: Send + Sync {
+    fn create(&self, collection: &NewCollection) -> Result<Collection, AppError>;
+    fn get_by_id(&self, id: i64) -> Result<Option<Collection>, AppError>;
+    fn list(&self) -> Result<Vec<Collection>, AppError>;
+    fn update(&self, id: i64, update: &CollectionUpdate) -> Result<Collection, AppError>;
+    fn delete(&self, id: i64) -> Result<(), AppError>;
+    fn assign_clip(&self, clip_id: i64, collection_id: i64) -> Result<(), AppError>;
+    fn remove_clip(&self, clip_id: i64, collection_id: i64) -> Result<(), AppError>;
+    fn get_collections_for_clip(&self, clip_id: i64) -> Result<Vec<Collection>, AppError>;
+}
+
+/// Contract for tags persistence.
+pub trait TagRepository: Send + Sync {
+    fn create(&self, tag: &NewTag) -> Result<Tag, AppError>;
+    fn get_by_id(&self, id: i64) -> Result<Option<Tag>, AppError>;
+    fn list(&self) -> Result<Vec<Tag>, AppError>;
+    fn update(&self, id: i64, update: &TagUpdate) -> Result<Tag, AppError>;
+    fn delete(&self, id: i64) -> Result<(), AppError>;
+    fn assign_clip(&self, clip_id: i64, tag_id: i64) -> Result<(), AppError>;
+    fn remove_clip(&self, clip_id: i64, tag_id: i64) -> Result<(), AppError>;
+    fn get_tags_for_clip(&self, clip_id: i64) -> Result<Vec<Tag>, AppError>;
+}
+
 /// Contract for full-text search operations.
 pub trait SearchRepository: Send + Sync {
-    fn search(&self, query: &str, limit: u32) -> Result<Vec<Clip>, AppError>;
+    fn search(&self, query: &str, limit: u32, params: &ListParams) -> Result<Vec<Clip>, AppError>;
     #[allow(dead_code)]
     fn optimize_index(&self) -> Result<(), AppError>;
     #[allow(dead_code)]

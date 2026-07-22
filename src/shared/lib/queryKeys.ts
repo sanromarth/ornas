@@ -8,6 +8,8 @@ export const clipboardKeys = {
   detail: (id: number) => [...clipboardKeys.details(), id] as const,
   searches: () => [...clipboardKeys.all, 'search'] as const,
   search: (query: string, limit?: number) => [...clipboardKeys.searches(), { query, limit }] as const,
+  collections: (id: number) => [...clipboardKeys.all, 'collections', id] as const,
+  tags: (id: number) => [...clipboardKeys.all, 'tags', id] as const,
 };
 
 export const settingsKeys = {

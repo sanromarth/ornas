@@ -1,0 +1,1288 @@
+[
+  {
+    "rank": 1,
+    "id": "F13",
+    "label": "radius 154",
+    "overrides": {
+      "body_radius_x": 154.0,
+      "body_radius_y": 154.0
+    },
+    "scores": {
+      "silhouette": 9.98,
+      "balance": 9.56,
+      "weight": 10.0,
+      "favicon": 9.86,
+      "recognizability": 9.74,
+      "uniqueness": 10.0,
+      "premium": 9.69,
+      "desktop": 1.0,
+      "overall": 9.17
+    },
+    "metrics": {
+      "fill_ratio": 0.2375,
+      "rb_ratio": 4.463,
+      "aspect": 0.8042,
+      "v_center": 0.5374,
+      "h_offset": 0.0,
+      "ws_ratio": 0.5973,
+      "wall_ratio": 0.3506,
+      "compactness": 9.359,
+      "ring_area": 50857.0,
+      "bracket_area": 11395.9,
+      "total_area": 62252.9,
+      "top_pad": 80.8,
+      "bottom_pad": 48.2,
+      "bbox_aspect": 0.804
+    },
+    "fav16": 1.9032,
+    "fav32": 1.1322
+  },
+  {
+    "rank": 2,
+    "id": "F09",
+    "label": "handle H 48",
+    "overrides": {
+      "handle_height": 48.0
+    },
+    "scores": {
+      "silhouette": 10.0,
+      "balance": 9.42,
+      "weight": 9.96,
+      "favicon": 9.96,
+      "recognizability": 9.84,
+      "uniqueness": 10.0,
+      "premium": 9.43,
+      "desktop": 1.0,
+      "overall": 9.149
+    },
+    "metrics": {
+      "fill_ratio": 0.2403,
+      "rb_ratio": 4.363,
+      "aspect": 0.799,
+      "v_center": 0.5354,
+      "h_offset": 0.0,
+      "ws_ratio": 0.6154,
+      "wall_ratio": 0.3484,
+      "compactness": 9.413,
+      "ring_area": 51257.5,
+      "bracket_area": 11747.9,
+      "total_area": 63005.4,
+      "top_pad": 76.8,
+      "bottom_pad": 47.2,
+      "bbox_aspect": 0.799
+    },
+    "fav16": 1.8235,
+    "fav32": 1.1057
+  },
+  {
+    "rank": 3,
+    "id": "BASE",
+    "label": "baseline (unchanged)",
+    "overrides": {},
+    "scores": {
+      "silhouette": 10.0,
+      "balance": 9.55,
+      "weight": 10.0,
+      "favicon": 9.64,
+      "recognizability": 9.72,
+      "uniqueness": 10.0,
+      "premium": 9.75,
+      "desktop": 1.0,
+      "overall": 9.137
+    },
+    "metrics": {
+      "fill_ratio": 0.2392,
+      "rb_ratio": 4.477,
+      "aspect": 0.8052,
+      "v_center": 0.5372,
+      "h_offset": 0.0,
+      "ws_ratio": 0.5923,
+      "wall_ratio": 0.3484,
+      "compactness": 9.416,
+      "ring_area": 51257.5,
+      "bracket_area": 11447.9,
+      "total_area": 62705.4,
+      "top_pad": 79.8,
+      "bottom_pad": 47.2,
+      "bbox_aspect": 0.805
+    },
+    "fav16": 1.7647,
+    "fav32": 1.1138
+  },
+  {
+    "rank": 4,
+    "id": "F05",
+    "label": "bracket H 68",
+    "overrides": {
+      "bracket_height": 68.0
+    },
+    "scores": {
+      "silhouette": 10.0,
+      "balance": 9.44,
+      "weight": 9.99,
+      "favicon": 9.85,
+      "recognizability": 9.84,
+      "uniqueness": 10.0,
+      "premium": 9.43,
+      "desktop": 1.0,
+      "overall": 9.136
+    },
+    "metrics": {
+      "fill_ratio": 0.2398,
+      "rb_ratio": 4.417,
+      "aspect": 0.799,
+      "v_center": 0.5356,
+      "h_offset": 0.0,
+      "ws_ratio": 0.6154,
+      "wall_ratio": 0.3484,
+      "compactness": 9.476,
+      "ring_area": 51257.5,
+      "bracket_area": 11603.9,
+      "total_area": 62861.4,
+      "top_pad": 76.8,
+      "bottom_pad": 47.2,
+      "bbox_aspect": 0.799
+    },
+    "fav16": 1.7941,
+    "fav32": 1.0938
+  },
+  {
+    "rank": 5,
+    "id": "F10",
+    "label": "handle H 50",
+    "overrides": {
+      "handle_height": 50.0
+    },
+    "scores": {
+      "silhouette": 10.0,
+      "balance": 9.32,
+      "weight": 9.91,
+      "favicon": 9.96,
+      "recognizability": 9.9,
+      "uniqueness": 10.0,
+      "premium": 9.11,
+      "desktop": 1.0,
+      "overall": 9.101
+    },
+    "metrics": {
+      "fill_ratio": 0.2411,
+      "rb_ratio": 4.29,
+      "aspect": 0.7949,
+      "v_center": 0.5342,
+      "h_offset": 0.0,
+      "ws_ratio": 0.6319,
+      "wall_ratio": 0.3484,
+      "compactness": 9.41,
+      "ring_area": 51257.5,
+      "bracket_area": 11947.9,
+      "total_area": 63205.4,
+      "top_pad": 74.8,
+      "bottom_pad": 47.2,
+      "bbox_aspect": 0.795
+    },
+    "fav16": 1.8235,
+    "fav32": 1.1301
+  },
+  {
+    "rank": 6,
+    "id": "F06",
+    "label": "bracket H 70",
+    "overrides": {
+      "bracket_height": 70.0
+    },
+    "scores": {
+      "silhouette": 10.0,
+      "balance": 9.35,
+      "weight": 9.97,
+      "favicon": 9.85,
+      "recognizability": 9.9,
+      "uniqueness": 10.0,
+      "premium": 9.11,
+      "desktop": 1.0,
+      "overall": 9.093
+    },
+    "metrics": {
+      "fill_ratio": 0.2402,
+      "rb_ratio": 4.378,
+      "aspect": 0.7949,
+      "v_center": 0.5345,
+      "h_offset": 0.0,
+      "ws_ratio": 0.6319,
+      "wall_ratio": 0.3484,
+      "compactness": 9.516,
+      "ring_area": 51257.5,
+      "bracket_area": 11707.9,
+      "total_area": 62965.4,
+      "top_pad": 74.8,
+      "bottom_pad": 47.2,
+      "bbox_aspect": 0.795
+    },
+    "fav16": 1.7941,
+    "fav32": 1.0625
+  },
+  {
+    "rank": 7,
+    "id": "F04",
+    "label": "overlap 11",
+    "overrides": {
+      "bracket_overlap": 11.0
+    },
+    "scores": {
+      "silhouette": 10.0,
+      "balance": 9.45,
+      "weight": 10.0,
+      "favicon": 9.64,
+      "recognizability": 9.87,
+      "uniqueness": 10.0,
+      "premium": 9.28,
+      "desktop": 1.0,
+      "overall": 9.089
+    },
+    "metrics": {
+      "fill_ratio": 0.2392,
+      "rb_ratio": 4.477,
+      "aspect": 0.7969,
+      "v_center": 0.5358,
+      "h_offset": 0.0,
+      "ws_ratio": 0.6235,
+      "wall_ratio": 0.3484,
+      "compactness": 9.416,
+      "ring_area": 51257.5,
+      "bracket_area": 11447.9,
+      "total_area": 62705.4,
+      "top_pad": 75.8,
+      "bottom_pad": 47.2,
+      "bbox_aspect": 0.797
+    },
+    "fav16": 1.7647,
+    "fav32": 1.0787
+  },
+  {
+    "rank": 8,
+    "id": "F08",
+    "label": "handle H 46",
+    "overrides": {
+      "handle_height": 46.0
+    },
+    "scores": {
+      "silhouette": 10.0,
+      "balance": 9.51,
+      "weight": 9.99,
+      "favicon": 9.37,
+      "recognizability": 9.76,
+      "uniqueness": 10.0,
+      "premium": 9.66,
+      "desktop": 1.0,
+      "overall": 9.078
+    },
+    "metrics": {
+      "fill_ratio": 0.2396,
+      "rb_ratio": 4.439,
+      "aspect": 0.8031,
+      "v_center": 0.5366,
+      "h_offset": 0.0,
+      "ws_ratio": 0.5998,
+      "wall_ratio": 0.3484,
+      "compactness": 9.415,
+      "ring_area": 51257.5,
+      "bracket_area": 11547.9,
+      "total_area": 62805.4,
+      "top_pad": 78.8,
+      "bottom_pad": 47.2,
+      "bbox_aspect": 0.803
+    },
+    "fav16": 1.7353,
+    "fav32": 1.1057
+  },
+  {
+    "rank": 9,
+    "id": "F03",
+    "label": "overlap 10",
+    "overrides": {
+      "bracket_overlap": 10.0
+    },
+    "scores": {
+      "silhouette": 10.0,
+      "balance": 9.42,
+      "weight": 10.0,
+      "favicon": 9.64,
+      "recognizability": 9.9,
+      "uniqueness": 10.0,
+      "premium": 9.11,
+      "desktop": 1.0,
+      "overall": 9.07
+    },
+    "metrics": {
+      "fill_ratio": 0.2392,
+      "rb_ratio": 4.477,
+      "aspect": 0.7949,
+      "v_center": 0.5354,
+      "h_offset": 0.0,
+      "ws_ratio": 0.6319,
+      "wall_ratio": 0.3484,
+      "compactness": 9.416,
+      "ring_area": 51257.5,
+      "bracket_area": 11447.9,
+      "total_area": 62705.4,
+      "top_pad": 74.8,
+      "bottom_pad": 47.2,
+      "bbox_aspect": 0.795
+    },
+    "fav16": 1.7647,
+    "fav32": 1.063
+  },
+  {
+    "rank": 10,
+    "id": "F02",
+    "label": "overlap 9",
+    "overrides": {
+      "bracket_overlap": 9.0
+    },
+    "scores": {
+      "silhouette": 10.0,
+      "balance": 9.4,
+      "weight": 10.0,
+      "favicon": 9.64,
+      "recognizability": 9.93,
+      "uniqueness": 10.0,
+      "premium": 8.93,
+      "desktop": 1.0,
+      "overall": 9.05
+    },
+    "metrics": {
+      "fill_ratio": 0.2392,
+      "rb_ratio": 4.477,
+      "aspect": 0.7928,
+      "v_center": 0.5351,
+      "h_offset": 0.0,
+      "ws_ratio": 0.6405,
+      "wall_ratio": 0.3484,
+      "compactness": 9.416,
+      "ring_area": 51257.5,
+      "bracket_area": 11447.9,
+      "total_area": 62705.4,
+      "top_pad": 73.8,
+      "bottom_pad": 47.2,
+      "bbox_aspect": 0.793
+    },
+    "fav16": 1.7647,
+    "fav32": 1.0709
+  },
+  {
+    "rank": 11,
+    "id": "F07",
+    "label": "bracket H 72",
+    "overrides": {
+      "bracket_height": 72.0
+    },
+    "scores": {
+      "silhouette": 10.0,
+      "balance": 9.26,
+      "weight": 9.95,
+      "favicon": 9.85,
+      "recognizability": 9.95,
+      "uniqueness": 10.0,
+      "premium": 8.73,
+      "desktop": 1.0,
+      "overall": 9.042
+    },
+    "metrics": {
+      "fill_ratio": 0.2406,
+      "rb_ratio": 4.339,
+      "aspect": 0.7908,
+      "v_center": 0.5334,
+      "h_offset": 0.0,
+      "ws_ratio": 0.6493,
+      "wall_ratio": 0.3484,
+      "compactness": 9.555,
+      "ring_area": 51257.5,
+      "bracket_area": 11811.9,
+      "total_area": 63069.4,
+      "top_pad": 72.8,
+      "bottom_pad": 47.2,
+      "bbox_aspect": 0.791
+    },
+    "fav16": 1.7941,
+    "fav32": 1.0859
+  },
+  {
+    "rank": 12,
+    "id": "F01",
+    "label": "overlap 8",
+    "overrides": {
+      "bracket_overlap": 8.0
+    },
+    "scores": {
+      "silhouette": 10.0,
+      "balance": 9.37,
+      "weight": 10.0,
+      "favicon": 9.64,
+      "recognizability": 9.95,
+      "uniqueness": 10.0,
+      "premium": 8.73,
+      "desktop": 1.0,
+      "overall": 9.026
+    },
+    "metrics": {
+      "fill_ratio": 0.2392,
+      "rb_ratio": 4.477,
+      "aspect": 0.7908,
+      "v_center": 0.5347,
+      "h_offset": 0.0,
+      "ws_ratio": 0.6493,
+      "wall_ratio": 0.3484,
+      "compactness": 9.416,
+      "ring_area": 51257.5,
+      "bracket_area": 11447.9,
+      "total_area": 62705.4,
+      "top_pad": 72.8,
+      "bottom_pad": 47.2,
+      "bbox_aspect": 0.791
+    },
+    "fav16": 1.7647,
+    "fav32": 1.0952
+  },
+  {
+    "rank": 13,
+    "id": "C04",
+    "label": "bracket70 + handle48",
+    "overrides": {
+      "bracket_height": 70.0,
+      "handle_height": 48.0
+    },
+    "scores": {
+      "silhouette": 10.0,
+      "balance": 9.2,
+      "weight": 9.89,
+      "favicon": 9.85,
+      "recognizability": 9.97,
+      "uniqueness": 10.0,
+      "premium": 8.51,
+      "desktop": 1.0,
+      "overall": 9.004
+    },
+    "metrics": {
+      "fill_ratio": 0.2413,
+      "rb_ratio": 4.269,
+      "aspect": 0.7888,
+      "v_center": 0.5327,
+      "h_offset": 0.0,
+      "ws_ratio": 0.6583,
+      "wall_ratio": 0.3484,
+      "compactness": 9.512,
+      "ring_area": 51257.5,
+      "bracket_area": 12007.9,
+      "total_area": 63265.4,
+      "top_pad": 71.8,
+      "bottom_pad": 47.2,
+      "bbox_aspect": 0.789
+    },
+    "fav16": 1.7941,
+    "fav32": 1.0781
+  },
+  {
+    "rank": 14,
+    "id": "C02",
+    "label": "overlap10 + handle48",
+    "overrides": {
+      "bracket_overlap": 10.0,
+      "handle_height": 48.0
+    },
+    "scores": {
+      "silhouette": 10.0,
+      "balance": 9.27,
+      "weight": 9.96,
+      "favicon": 9.64,
+      "recognizability": 9.97,
+      "uniqueness": 10.0,
+      "premium": 8.51,
+      "desktop": 1.0,
+      "overall": 8.985
+    },
+    "metrics": {
+      "fill_ratio": 0.2403,
+      "rb_ratio": 4.363,
+      "aspect": 0.7888,
+      "v_center": 0.5336,
+      "h_offset": 0.0,
+      "ws_ratio": 0.6583,
+      "wall_ratio": 0.3484,
+      "compactness": 9.413,
+      "ring_area": 51257.5,
+      "bracket_area": 11747.9,
+      "total_area": 63005.4,
+      "top_pad": 71.8,
+      "bottom_pad": 47.2,
+      "bbox_aspect": 0.789
+    },
+    "fav16": 1.7647,
+    "fav32": 1.0787
+  },
+  {
+    "rank": 15,
+    "id": "C01",
+    "label": "overlap10 + bracket70",
+    "overrides": {
+      "bracket_overlap": 10.0,
+      "bracket_height": 70.0
+    },
+    "scores": {
+      "silhouette": 10.0,
+      "balance": 9.2,
+      "weight": 9.97,
+      "favicon": 9.64,
+      "recognizability": 9.99,
+      "uniqueness": 10.0,
+      "premium": 8.01,
+      "desktop": 1.0,
+      "overall": 8.923
+    },
+    "metrics": {
+      "fill_ratio": 0.2402,
+      "rb_ratio": 4.378,
+      "aspect": 0.7848,
+      "v_center": 0.5327,
+      "h_offset": 0.0,
+      "ws_ratio": 0.6772,
+      "wall_ratio": 0.3484,
+      "compactness": 9.516,
+      "ring_area": 51257.5,
+      "bracket_area": 11707.9,
+      "total_area": 62965.4,
+      "top_pad": 69.8,
+      "bottom_pad": 47.2,
+      "bbox_aspect": 0.785
+    },
+    "fav16": 1.7647,
+    "fav32": 1.1406
+  },
+  {
+    "rank": 16,
+    "id": "F12",
+    "label": "radius 152",
+    "overrides": {
+      "body_radius_x": 152.0,
+      "body_radius_y": 152.0
+    },
+    "scores": {
+      "silhouette": 9.9,
+      "balance": 9.58,
+      "weight": 9.99,
+      "favicon": 8.47,
+      "recognizability": 9.78,
+      "uniqueness": 9.96,
+      "premium": 9.56,
+      "desktop": 1.0,
+      "overall": 8.902
+    },
+    "metrics": {
+      "fill_ratio": 0.234,
+      "rb_ratio": 4.433,
+      "aspect": 0.8021,
+      "v_center": 0.5377,
+      "h_offset": 0.0,
+      "ws_ratio": 0.6071,
+      "wall_ratio": 0.3553,
+      "compactness": 9.246,
+      "ring_area": 50056.1,
+      "bracket_area": 11291.9,
+      "total_area": 61348.0,
+      "top_pad": 82.8,
+      "bottom_pad": 50.2,
+      "bbox_aspect": 0.802
+    },
+    "fav16": 2.0333,
+    "fav32": 1.2368
+  },
+  {
+    "rank": 17,
+    "id": "C05",
+    "label": "bracket70 + radius152",
+    "overrides": {
+      "bracket_height": 70.0,
+      "body_radius_x": 152.0,
+      "body_radius_y": 152.0
+    },
+    "scores": {
+      "silhouette": 9.93,
+      "balance": 9.39,
+      "weight": 9.94,
+      "favicon": 8.94,
+      "recognizability": 9.94,
+      "uniqueness": 9.96,
+      "premium": 8.8,
+      "desktop": 1.0,
+      "overall": 8.891
+    },
+    "metrics": {
+      "fill_ratio": 0.235,
+      "rb_ratio": 4.333,
+      "aspect": 0.7917,
+      "v_center": 0.535,
+      "h_offset": 0.0,
+      "ws_ratio": 0.6461,
+      "wall_ratio": 0.3553,
+      "compactness": 9.345,
+      "ring_area": 50056.1,
+      "bracket_area": 11551.9,
+      "total_area": 61608.0,
+      "top_pad": 77.8,
+      "bottom_pad": 50.2,
+      "bbox_aspect": 0.792
+    },
+    "fav16": 2.0,
+    "fav32": 1.1429
+  },
+  {
+    "rank": 18,
+    "id": "F11",
+    "label": "radius 150",
+    "overrides": {
+      "body_radius_x": 150.0,
+      "body_radius_y": 150.0
+    },
+    "scores": {
+      "silhouette": 9.75,
+      "balance": 9.61,
+      "weight": 9.98,
+      "favicon": 8.47,
+      "recognizability": 9.82,
+      "uniqueness": 9.88,
+      "premium": 9.41,
+      "desktop": 1.0,
+      "overall": 8.863
+    },
+    "metrics": {
+      "fill_ratio": 0.2306,
+      "rb_ratio": 4.403,
+      "aspect": 0.8,
+      "v_center": 0.5381,
+      "h_offset": 0.0,
+      "ws_ratio": 0.6163,
+      "wall_ratio": 0.36,
+      "compactness": 9.133,
+      "ring_area": 49255.2,
+      "bracket_area": 11187.9,
+      "total_area": 60443.2,
+      "top_pad": 84.8,
+      "bottom_pad": 52.2,
+      "bbox_aspect": 0.8
+    },
+    "fav16": 2.0333,
+    "fav32": 1.2273
+  },
+  {
+    "rank": 19,
+    "id": "C03",
+    "label": "overlap10 + radius152",
+    "overrides": {
+      "bracket_overlap": 10.0,
+      "body_radius_x": 152.0,
+      "body_radius_y": 152.0
+    },
+    "scores": {
+      "silhouette": 9.9,
+      "balance": 9.46,
+      "weight": 9.99,
+      "favicon": 8.48,
+      "recognizability": 9.94,
+      "uniqueness": 9.96,
+      "premium": 8.8,
+      "desktop": 1.0,
+      "overall": 8.822
+    },
+    "metrics": {
+      "fill_ratio": 0.234,
+      "rb_ratio": 4.433,
+      "aspect": 0.7917,
+      "v_center": 0.5359,
+      "h_offset": 0.0,
+      "ws_ratio": 0.6461,
+      "wall_ratio": 0.3553,
+      "compactness": 9.246,
+      "ring_area": 50056.1,
+      "bracket_area": 11291.9,
+      "total_area": 61348.0,
+      "top_pad": 77.8,
+      "bottom_pad": 50.2,
+      "bbox_aspect": 0.792
+    },
+    "fav16": 2.0323,
+    "fav32": 1.1525
+  },
+  {
+    "rank": 20,
+    "id": "C06",
+    "label": "handle48 + radius152",
+    "overrides": {
+      "handle_height": 48.0,
+      "body_radius_x": 152.0,
+      "body_radius_y": 152.0
+    },
+    "scores": {
+      "silhouette": 9.94,
+      "balance": 9.46,
+      "weight": 9.93,
+      "favicon": 7.93,
+      "recognizability": 9.89,
+      "uniqueness": 9.96,
+      "premium": 9.16,
+      "desktop": 1.0,
+      "overall": 8.758
+    },
+    "metrics": {
+      "fill_ratio": 0.2352,
+      "rb_ratio": 4.318,
+      "aspect": 0.7958,
+      "v_center": 0.5359,
+      "h_offset": 0.0,
+      "ws_ratio": 0.6299,
+      "wall_ratio": 0.3553,
+      "compactness": 9.242,
+      "ring_area": 50056.1,
+      "bracket_area": 11591.9,
+      "total_area": 61648.0,
+      "top_pad": 79.8,
+      "bottom_pad": 50.2,
+      "bbox_aspect": 0.796
+    },
+    "fav16": 2.0667,
+    "fav32": 1.2193
+  },
+  {
+    "rank": 21,
+    "id": "M03",
+    "label": "ALL + power 4.5",
+    "overrides": {
+      "bracket_overlap": 10.0,
+      "bracket_height": 70.0,
+      "handle_height": 48.0,
+      "body_radius_x": 152.0,
+      "body_radius_y": 152.0,
+      "squircle_power": 4.5
+    },
+    "scores": {
+      "silhouette": 10.0,
+      "balance": 9.15,
+      "weight": 9.91,
+      "favicon": 9.32,
+      "recognizability": 9.99,
+      "uniqueness": 9.96,
+      "premium": 6.76,
+      "desktop": 1.0,
+      "overall": 8.708
+    },
+    "metrics": {
+      "fill_ratio": 0.2389,
+      "rb_ratio": 4.284,
+      "aspect": 0.7755,
+      "v_center": 0.5322,
+      "h_offset": 0.0,
+      "ws_ratio": 0.7202,
+      "wall_ratio": 0.3553,
+      "compactness": 9.402,
+      "ring_area": 50768.7,
+      "bracket_area": 11851.9,
+      "total_area": 62620.6,
+      "top_pad": 69.8,
+      "bottom_pad": 50.2,
+      "bbox_aspect": 0.776
+    },
+    "fav16": 1.9688,
+    "fav32": 1.1017
+  },
+  {
+    "rank": 22,
+    "id": "C07",
+    "label": "ovlp10+brk70+hndl48",
+    "overrides": {
+      "bracket_overlap": 10.0,
+      "bracket_height": 70.0,
+      "handle_height": 48.0
+    },
+    "scores": {
+      "silhouette": 10.0,
+      "balance": 9.03,
+      "weight": 9.89,
+      "favicon": 8.75,
+      "recognizability": 10.0,
+      "uniqueness": 10.0,
+      "premium": 7.13,
+      "desktop": 1.0,
+      "overall": 8.636
+    },
+    "metrics": {
+      "fill_ratio": 0.2413,
+      "rb_ratio": 4.269,
+      "aspect": 0.7789,
+      "v_center": 0.5309,
+      "h_offset": 0.0,
+      "ws_ratio": 0.7076,
+      "wall_ratio": 0.3484,
+      "compactness": 9.512,
+      "ring_area": 51257.5,
+      "bracket_area": 12007.9,
+      "total_area": 63265.4,
+      "top_pad": 66.8,
+      "bottom_pad": 47.2,
+      "bbox_aspect": 0.779
+    },
+    "fav16": 1.6857,
+    "fav32": 1.124
+  },
+  {
+    "rank": 23,
+    "id": "C10",
+    "label": "brk70+hndl48+rad152",
+    "overrides": {
+      "bracket_height": 70.0,
+      "handle_height": 48.0,
+      "body_radius_x": 152.0,
+      "body_radius_y": 152.0
+    },
+    "scores": {
+      "silhouette": 9.96,
+      "balance": 9.24,
+      "weight": 9.85,
+      "favicon": 7.97,
+      "recognizability": 9.99,
+      "uniqueness": 9.96,
+      "premium": 8.15,
+      "desktop": 1.0,
+      "overall": 8.627
+    },
+    "metrics": {
+      "fill_ratio": 0.2362,
+      "rb_ratio": 4.223,
+      "aspect": 0.7855,
+      "v_center": 0.5332,
+      "h_offset": 0.0,
+      "ws_ratio": 0.672,
+      "wall_ratio": 0.3553,
+      "compactness": 9.342,
+      "ring_area": 50056.1,
+      "bracket_area": 11851.9,
+      "total_area": 61908.0,
+      "top_pad": 74.8,
+      "bottom_pad": 50.2,
+      "bbox_aspect": 0.786
+    },
+    "fav16": 2.0645,
+    "fav32": 1.1765
+  },
+  {
+    "rank": 24,
+    "id": "M01",
+    "label": "ALL + thickness 52",
+    "overrides": {
+      "bracket_overlap": 10.0,
+      "bracket_height": 70.0,
+      "handle_height": 48.0,
+      "body_radius_x": 152.0,
+      "body_radius_y": 152.0,
+      "body_thickness": 52.0
+    },
+    "scores": {
+      "silhouette": 9.75,
+      "balance": 8.9,
+      "weight": 9.69,
+      "favicon": 9.33,
+      "recognizability": 9.99,
+      "uniqueness": 9.92,
+      "premium": 6.76,
+      "desktop": 1.0,
+      "overall": 8.607
+    },
+    "metrics": {
+      "fill_ratio": 0.2306,
+      "rb_ratio": 4.1,
+      "aspect": 0.7755,
+      "v_center": 0.5296,
+      "h_offset": 0.0,
+      "ws_ratio": 0.7202,
+      "wall_ratio": 0.3421,
+      "compactness": 9.668,
+      "ring_area": 48587.8,
+      "bracket_area": 11851.9,
+      "total_area": 60439.7,
+      "top_pad": 69.8,
+      "bottom_pad": 50.2,
+      "bbox_aspect": 0.776
+    },
+    "fav16": 1.9677,
+    "fav32": 1.1826
+  },
+  {
+    "rank": 25,
+    "id": "C08",
+    "label": "ovlp10+brk70+rad152",
+    "overrides": {
+      "bracket_overlap": 10.0,
+      "bracket_height": 70.0,
+      "body_radius_x": 152.0,
+      "body_radius_y": 152.0
+    },
+    "scores": {
+      "silhouette": 9.93,
+      "balance": 9.24,
+      "weight": 9.94,
+      "favicon": 7.97,
+      "recognizability": 10.0,
+      "uniqueness": 9.96,
+      "premium": 7.64,
+      "desktop": 1.0,
+      "overall": 8.578
+    },
+    "metrics": {
+      "fill_ratio": 0.235,
+      "rb_ratio": 4.333,
+      "aspect": 0.7815,
+      "v_center": 0.5332,
+      "h_offset": 0.0,
+      "ws_ratio": 0.6905,
+      "wall_ratio": 0.3553,
+      "compactness": 9.345,
+      "ring_area": 50056.1,
+      "bracket_area": 11551.9,
+      "total_area": 61608.0,
+      "top_pad": 72.8,
+      "bottom_pad": 50.2,
+      "bbox_aspect": 0.781
+    },
+    "fav16": 2.0645,
+    "fav32": 1.1271
+  },
+  {
+    "rank": 26,
+    "id": "C09",
+    "label": "ovlp10+hndl48+rad152",
+    "overrides": {
+      "bracket_overlap": 10.0,
+      "handle_height": 48.0,
+      "body_radius_x": 152.0,
+      "body_radius_y": 152.0
+    },
+    "scores": {
+      "silhouette": 9.94,
+      "balance": 9.32,
+      "weight": 9.93,
+      "favicon": 7.42,
+      "recognizability": 9.99,
+      "uniqueness": 9.96,
+      "premium": 8.15,
+      "desktop": 1.0,
+      "overall": 8.549
+    },
+    "metrics": {
+      "fill_ratio": 0.2352,
+      "rb_ratio": 4.318,
+      "aspect": 0.7855,
+      "v_center": 0.5341,
+      "h_offset": 0.0,
+      "ws_ratio": 0.672,
+      "wall_ratio": 0.3553,
+      "compactness": 9.242,
+      "ring_area": 50056.1,
+      "bracket_area": 11591.9,
+      "total_area": 61648.0,
+      "top_pad": 74.8,
+      "bottom_pad": 50.2,
+      "bbox_aspect": 0.786
+    },
+    "fav16": 2.0968,
+    "fav32": 1.1864
+  },
+  {
+    "rank": 27,
+    "id": "M06",
+    "label": "ALL + handle_w 94",
+    "overrides": {
+      "bracket_overlap": 10.0,
+      "bracket_height": 70.0,
+      "handle_height": 48.0,
+      "body_radius_x": 152.0,
+      "body_radius_y": 152.0,
+      "handle_width": 94.0
+    },
+    "scores": {
+      "silhouette": 9.94,
+      "balance": 9.16,
+      "weight": 9.91,
+      "favicon": 7.97,
+      "recognizability": 9.99,
+      "uniqueness": 9.96,
+      "premium": 6.76,
+      "desktop": 1.0,
+      "overall": 8.464
+    },
+    "metrics": {
+      "fill_ratio": 0.2355,
+      "rb_ratio": 4.284,
+      "aspect": 0.7755,
+      "v_center": 0.5323,
+      "h_offset": 0.0,
+      "ws_ratio": 0.7202,
+      "wall_ratio": 0.3553,
+      "compactness": 9.367,
+      "ring_area": 50056.1,
+      "bracket_area": 11683.9,
+      "total_area": 61740.0,
+      "top_pad": 69.8,
+      "bottom_pad": 50.2,
+      "bbox_aspect": 0.776
+    },
+    "fav16": 2.0645,
+    "fav32": 1.1345
+  },
+  {
+    "rank": 28,
+    "id": "M05",
+    "label": "ALL + bracket_r 17",
+    "overrides": {
+      "bracket_overlap": 10.0,
+      "bracket_height": 70.0,
+      "handle_height": 48.0,
+      "body_radius_x": 152.0,
+      "body_radius_y": 152.0,
+      "bracket_corner_radius": 17.0
+    },
+    "scores": {
+      "silhouette": 9.99,
+      "balance": 8.85,
+      "weight": 9.66,
+      "favicon": 8.94,
+      "recognizability": 9.95,
+      "uniqueness": 9.96,
+      "premium": 5.78,
+      "desktop": 1.0,
+      "overall": 8.452
+    },
+    "metrics": {
+      "fill_ratio": 0.2377,
+      "rb_ratio": 4.086,
+      "aspect": 0.7696,
+      "v_center": 0.5291,
+      "h_offset": 0.0,
+      "ws_ratio": 0.7525,
+      "wall_ratio": 0.3553,
+      "compactness": 9.359,
+      "ring_area": 50056.1,
+      "bracket_area": 12249.5,
+      "total_area": 62305.6,
+      "top_pad": 66.8,
+      "bottom_pad": 50.2,
+      "bbox_aspect": 0.77
+    },
+    "fav16": 2.0,
+    "fav32": 1.125
+  },
+  {
+    "rank": 29,
+    "id": "M02",
+    "label": "ALL + thickness 56",
+    "overrides": {
+      "bracket_overlap": 10.0,
+      "bracket_height": 70.0,
+      "handle_height": 48.0,
+      "body_radius_x": 152.0,
+      "body_radius_y": 152.0,
+      "body_thickness": 56.0
+    },
+    "scores": {
+      "silhouette": 9.99,
+      "balance": 9.22,
+      "weight": 9.95,
+      "favicon": 7.97,
+      "recognizability": 9.99,
+      "uniqueness": 9.59,
+      "premium": 6.76,
+      "desktop": 1.0,
+      "overall": 8.448
+    },
+    "metrics": {
+      "fill_ratio": 0.2416,
+      "rb_ratio": 4.345,
+      "aspect": 0.7755,
+      "v_center": 0.533,
+      "h_offset": 0.0,
+      "ws_ratio": 0.7202,
+      "wall_ratio": 0.3684,
+      "compactness": 9.035,
+      "ring_area": 51494.8,
+      "bracket_area": 11851.9,
+      "total_area": 63346.7,
+      "top_pad": 69.8,
+      "bottom_pad": 50.2,
+      "bbox_aspect": 0.776
+    },
+    "fav16": 2.0645,
+    "fav32": 1.1167
+  },
+  {
+    "rank": 30,
+    "id": "C11",
+    "label": "ALL: ovlp10+brk70+hndl48+rad152",
+    "overrides": {
+      "bracket_overlap": 10.0,
+      "bracket_height": 70.0,
+      "handle_height": 48.0,
+      "body_radius_x": 152.0,
+      "body_radius_y": 152.0
+    },
+    "scores": {
+      "silhouette": 9.96,
+      "balance": 9.07,
+      "weight": 9.85,
+      "favicon": 7.97,
+      "recognizability": 9.99,
+      "uniqueness": 9.96,
+      "premium": 6.76,
+      "desktop": 1.0,
+      "overall": 8.447
+    },
+    "metrics": {
+      "fill_ratio": 0.2362,
+      "rb_ratio": 4.223,
+      "aspect": 0.7755,
+      "v_center": 0.5313,
+      "h_offset": 0.0,
+      "ws_ratio": 0.7202,
+      "wall_ratio": 0.3553,
+      "compactness": 9.342,
+      "ring_area": 50056.1,
+      "bracket_area": 11851.9,
+      "total_area": 61908.0,
+      "top_pad": 69.8,
+      "bottom_pad": 50.2,
+      "bbox_aspect": 0.776
+    },
+    "fav16": 2.0645,
+    "fav32": 1.1345
+  },
+  {
+    "rank": 31,
+    "id": "M08",
+    "label": "ALL + leg 24",
+    "overrides": {
+      "bracket_overlap": 10.0,
+      "bracket_height": 70.0,
+      "handle_height": 48.0,
+      "body_radius_x": 152.0,
+      "body_radius_y": 152.0,
+      "bracket_leg_thickness": 24.0
+    },
+    "scores": {
+      "silhouette": 9.96,
+      "balance": 9.07,
+      "weight": 9.85,
+      "favicon": 7.97,
+      "recognizability": 9.99,
+      "uniqueness": 9.96,
+      "premium": 6.76,
+      "desktop": 1.0,
+      "overall": 8.447
+    },
+    "metrics": {
+      "fill_ratio": 0.2362,
+      "rb_ratio": 4.223,
+      "aspect": 0.7755,
+      "v_center": 0.5313,
+      "h_offset": 0.0,
+      "ws_ratio": 0.7202,
+      "wall_ratio": 0.3553,
+      "compactness": 9.342,
+      "ring_area": 50056.1,
+      "bracket_area": 11851.9,
+      "total_area": 61908.0,
+      "top_pad": 69.8,
+      "bottom_pad": 50.2,
+      "bbox_aspect": 0.776
+    },
+    "fav16": 2.0645,
+    "fav32": 1.1345
+  },
+  {
+    "rank": 32,
+    "id": "M07",
+    "label": "ALL + slot_w 44",
+    "overrides": {
+      "bracket_overlap": 10.0,
+      "bracket_height": 70.0,
+      "handle_height": 48.0,
+      "body_radius_x": 152.0,
+      "body_radius_y": 152.0,
+      "slot_width": 44.0
+    },
+    "scores": {
+      "silhouette": 9.96,
+      "balance": 9.04,
+      "weight": 9.82,
+      "favicon": 7.97,
+      "recognizability": 9.99,
+      "uniqueness": 9.96,
+      "premium": 6.76,
+      "desktop": 1.0,
+      "overall": 8.44
+    },
+    "metrics": {
+      "fill_ratio": 0.2364,
+      "rb_ratio": 4.201,
+      "aspect": 0.7755,
+      "v_center": 0.531,
+      "h_offset": 0.0,
+      "ws_ratio": 0.7202,
+      "wall_ratio": 0.3553,
+      "compactness": 9.277,
+      "ring_area": 50056.1,
+      "bracket_area": 11915.9,
+      "total_area": 61972.0,
+      "top_pad": 69.8,
+      "bottom_pad": 50.2,
+      "bbox_aspect": 0.776
+    },
+    "fav16": 2.0645,
+    "fav32": 1.1176
+  },
+  {
+    "rank": 33,
+    "id": "M04",
+    "label": "ALL + power 3.8",
+    "overrides": {
+      "bracket_overlap": 10.0,
+      "bracket_height": 70.0,
+      "handle_height": 48.0,
+      "body_radius_x": 152.0,
+      "body_radius_y": 152.0,
+      "squircle_power": 3.8
+    },
+    "scores": {
+      "silhouette": 9.92,
+      "balance": 9.03,
+      "weight": 9.81,
+      "favicon": 7.97,
+      "recognizability": 9.99,
+      "uniqueness": 9.96,
+      "premium": 6.76,
+      "desktop": 1.0,
+      "overall": 8.431
+    },
+    "metrics": {
+      "fill_ratio": 0.2348,
+      "rb_ratio": 4.194,
+      "aspect": 0.7755,
+      "v_center": 0.5309,
+      "h_offset": 0.0,
+      "ws_ratio": 0.7202,
+      "wall_ratio": 0.3553,
+      "compactness": 9.317,
+      "ring_area": 49703.8,
+      "bracket_area": 11851.9,
+      "total_area": 61555.7,
+      "top_pad": 69.8,
+      "bottom_pad": 50.2,
+      "bbox_aspect": 0.776
+    },
+    "fav16": 2.0645,
+    "fav32": 1.1441
+  }
+]

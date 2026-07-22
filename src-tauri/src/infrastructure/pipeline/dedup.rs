@@ -158,6 +158,7 @@ mod tests {
                 is_pinned: false,
                 created_at: 0,
                 updated_at: 0,
+                files: None,
             };
             clips.push(c.clone());
             Ok(c)
