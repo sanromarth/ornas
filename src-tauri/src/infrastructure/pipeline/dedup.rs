@@ -159,6 +159,14 @@ mod tests {
                 created_at: 0,
                 updated_at: 0,
                 files: None,
+                language: None,
+                is_code: false,
+                detection_confidence: 0.0,
+                language_source: "auto".to_string(),
+                is_encrypted: false,
+                encryption_version: None,
+                encrypted_blob: None,
+                nonce: None,
             };
             clips.push(c.clone());
             Ok(c)
@@ -196,6 +204,9 @@ mod tests {
         }
         fn count(&self) -> Result<u64, AppError> {
             Ok(0)
+        }
+        fn get_encrypted_clips(&self) -> Result<Vec<Clip>, AppError> {
+            Ok(vec![])
         }
     }
 
@@ -247,6 +258,14 @@ mod tests {
             preview: None,
             char_count: 0,
             line_count: 0,
+            language: None,
+            is_code: false,
+            detection_confidence: 0.0,
+            language_source: "auto".to_string(),
+            is_encrypted: false,
+            encryption_version: None,
+            encrypted_blob: None,
+            nonce: None,
         };
         repo.create(&new_clip).ok();
 

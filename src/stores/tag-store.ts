@@ -23,9 +23,9 @@ export const useTagStore = create<TagState>((set) => ({
     try {
       const tags = await TagService.listTags();
       set({ tags, isLoading: false });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to load tags:', err);
-      set({ error: err.toString(), isLoading: false });
+      set({ error: (err instanceof Error ? err.message : String(err)), isLoading: false });
     }
   },
 
@@ -34,8 +34,8 @@ export const useTagStore = create<TagState>((set) => ({
       const tag = await TagService.createTag(name, color);
       set((state) => ({ tags: [...state.tags, tag].sort((a, b) => a.name.localeCompare(b.name)) }));
       return tag;
-    } catch (err: any) {
-      useToast.getState().addToast({ title: 'Failed to create tag', description: err.toString(), variant: 'error' });
+    } catch (err: unknown) {
+      useToast.getState().addToast({ title: 'Failed to create tag', description: (err instanceof Error ? err.message : String(err)), variant: 'error' });
       return null;
     }
   },
@@ -46,8 +46,8 @@ export const useTagStore = create<TagState>((set) => ({
       set((state) => ({
         tags: state.tags.map((t) => (t.id === id ? updated : t)).sort((a, b) => a.name.localeCompare(b.name)),
       }));
-    } catch (err: any) {
-      useToast.getState().addToast({ title: 'Failed to update tag', description: err.toString(), variant: 'error' });
+    } catch (err: unknown) {
+      useToast.getState().addToast({ title: 'Failed to update tag', description: (err instanceof Error ? err.message : String(err)), variant: 'error' });
     }
   },
 
@@ -57,8 +57,8 @@ export const useTagStore = create<TagState>((set) => ({
       set((state) => ({
         tags: state.tags.filter((t) => t.id !== id),
       }));
-    } catch (err: any) {
-      useToast.getState().addToast({ title: 'Failed to delete tag', description: err.toString(), variant: 'error' });
+    } catch (err: unknown) {
+      useToast.getState().addToast({ title: 'Failed to delete tag', description: (err instanceof Error ? err.message : String(err)), variant: 'error' });
     }
   },
 }));

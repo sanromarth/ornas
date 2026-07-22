@@ -4,8 +4,8 @@
 //! captured items to the pipeline for processing.
 
 use crate::domain::pipeline::ClipItem;
-use crate::infrastructure::pipeline::runner::PipelineRunner;
 use crate::infrastructure::database::Database;
+use crate::infrastructure::pipeline::runner::PipelineRunner;
 use crate::services::file_clipboard::FileClipboardService;
 use clipboard_rs::ClipboardWatcher;
 use std::sync::{Arc, mpsc};
@@ -18,7 +18,10 @@ use std::thread;
 ///
 /// The monitor runs until the application exits.
 /// The monitor runs until the application exits.
-pub fn start_clipboard_monitor(pipeline: Arc<PipelineRunner>, db: Arc<Database>) -> mpsc::Sender<ClipItem> {
+pub fn start_clipboard_monitor(
+    pipeline: Arc<PipelineRunner>,
+    db: Arc<Database>,
+) -> mpsc::Sender<ClipItem> {
     let (sender, receiver) = mpsc::channel::<ClipItem>();
     let (file_sender, file_receiver) = mpsc::channel::<Vec<String>>();
 
@@ -35,7 +38,6 @@ pub fn start_clipboard_monitor(pipeline: Arc<PipelineRunner>, db: Arc<Database>)
             }
         })
         .ok();
-
 
     // Pipeline consumer thread
     let pipeline_clone = Arc::clone(&pipeline);

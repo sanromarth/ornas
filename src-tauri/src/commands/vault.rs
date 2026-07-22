@@ -4,15 +4,21 @@ use crate::domain::clip::ClipUpdate;
 use crate::domain::vault::{EncryptedClipPayload, VaultStatus};
 use crate::error::AppError;
 use crate::state::AppState;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 #[tauri::command]
-pub async fn setup_vault(password: String, state: tauri::State<'_, AppState>) -> Result<(), AppError> {
+pub async fn setup_vault(
+    password: String,
+    state: tauri::State<'_, AppState>,
+) -> Result<(), AppError> {
     state.crypto_service.setup_vault(&password)
 }
 
 #[tauri::command]
-pub async fn unlock_vault(password: String, state: tauri::State<'_, AppState>) -> Result<(), AppError> {
+pub async fn unlock_vault(
+    password: String,
+    state: tauri::State<'_, AppState>,
+) -> Result<(), AppError> {
     state.crypto_service.unlock_vault(&password)
 }
 
@@ -28,7 +34,9 @@ pub async fn get_vault_status(state: tauri::State<'_, AppState>) -> Result<Vault
 
 #[tauri::command]
 pub async fn encrypt_clip(clip_id: i64, state: tauri::State<'_, AppState>) -> Result<(), AppError> {
-    let clip = state.clip_repo.get_by_id(clip_id)?
+    let clip = state
+        .clip_repo
+        .get_by_id(clip_id)?
         .ok_or_else(|| AppError::Internal("Clip not found".into()))?;
 
     if clip.is_encrypted {
@@ -64,15 +72,23 @@ pub async fn encrypt_clip(clip_id: i64, state: tauri::State<'_, AppState>) -> Re
 
 #[tauri::command]
 pub async fn decrypt_clip(clip_id: i64, state: tauri::State<'_, AppState>) -> Result<(), AppError> {
-    let clip = state.clip_repo.get_by_id(clip_id)?
+    let clip = state
+        .clip_repo
+        .get_by_id(clip_id)?
         .ok_or_else(|| AppError::Internal("Clip not found".into()))?;
 
     if !clip.is_encrypted {
         return Ok(());
     }
 
-    let blob = clip.encrypted_blob.as_ref().ok_or_else(|| AppError::Internal("Missing blob".into()))?;
-    let nonce = clip.nonce.as_ref().ok_or_else(|| AppError::Internal("Missing nonce".into()))?;
+    let blob = clip
+        .encrypted_blob
+        .as_ref()
+        .ok_or_else(|| AppError::Internal("Missing blob".into()))?;
+    let nonce = clip
+        .nonce
+        .as_ref()
+        .ok_or_else(|| AppError::Internal("Missing nonce".into()))?;
 
     let payload = state.crypto_service.decrypt(blob, nonce)?;
 
@@ -102,8 +118,13 @@ pub struct DecryptedPayloadResponse {
 }
 
 #[tauri::command]
-pub async fn get_decrypted_clip(clip_id: i64, state: tauri::State<'_, AppState>) -> Result<DecryptedPayloadResponse, AppError> {
-    let clip = state.clip_repo.get_by_id(clip_id)?
+pub async fn get_decrypted_clip(
+    clip_id: i64,
+    state: tauri::State<'_, AppState>,
+) -> Result<DecryptedPayloadResponse, AppError> {
+    let clip = state
+        .clip_repo
+        .get_by_id(clip_id)?
         .ok_or_else(|| AppError::Internal("Clip not found".into()))?;
 
     if !clip.is_encrypted {
@@ -115,11 +136,17 @@ pub async fn get_decrypted_clip(clip_id: i64, state: tauri::State<'_, AppState>)
         });
     }
 
-    let blob = clip.encrypted_blob.as_ref().ok_or_else(|| AppError::Internal("Missing blob".into()))?;
-    let nonce = clip.nonce.as_ref().ok_or_else(|| AppError::Internal("Missing nonce".into()))?;
+    let blob = clip
+        .encrypted_blob
+        .as_ref()
+        .ok_or_else(|| AppError::Internal("Missing blob".into()))?;
+    let nonce = clip
+        .nonce
+        .as_ref()
+        .ok_or_else(|| AppError::Internal("Missing nonce".into()))?;
 
     let payload = state.crypto_service.decrypt(blob, nonce)?;
-    
+
     Ok(DecryptedPayloadResponse {
         content_text: payload.content_text,
         content_html: payload.content_html,

@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { Pin, Star, Type, Image as ImageIcon, Trash2, Copy, Link, Code, File, Lock } from 'lucide-react';
 import { cn, formatFileSize } from '../../../shared/lib/utils';
 import type { ClipDto } from '../../../shared/types';
+import { writeTextToClipboard } from '../../../services/clipboard';
 import { useToggleFavorite, useTogglePin, useDeleteClip } from '../api/mutations';
 import { IconButton } from '../../../shared/components/IconButton';
 import { ConfirmDialog } from '../../../shared/components/ConfirmDialog';
@@ -12,9 +13,10 @@ interface Props {
   clip: ClipDto;
   isSelected: boolean;
   onSelect: (id: number) => void;
+  tabIndex?: number;
 }
 
-export const ClipboardItem = React.memo(function ClipboardItem({ clip, isSelected, onSelect }: Props) {
+export const ClipboardItem = React.memo(function ClipboardItem({ clip, isSelected, onSelect, tabIndex }: Props) {
   const { mutate: toggleFavorite, isPending: isFavoritePending } = useToggleFavorite();
   const { mutate: togglePin, isPending: isPinPending } = useTogglePin();
   const { mutate: deleteClip, isPending: isDeletePending } = useDeleteClip();
@@ -27,16 +29,20 @@ export const ClipboardItem = React.memo(function ClipboardItem({ clip, isSelecte
       try {
         await invoke('restore_files_to_clipboard', { clipId: clip.id });
         addToast({ title: 'Files copied to clipboard', variant: 'success' });
-      } catch (err: any) {
-        addToast({ title: 'Failed to copy files', description: err.message || String(err), variant: 'error' });
+      } catch (err: unknown) {
+        addToast({ title: 'Failed to copy files', description: (err instanceof Error ? err.message : String(err)) || String(err), variant: 'error' });
       }
       return;
     }
     
     const content = clip.content_text ?? clip.preview;
     if (content) {
-      navigator.clipboard.writeText(content);
-      addToast({ title: 'Copied to clipboard', variant: 'success' });
+      try {
+        await writeTextToClipboard(content);
+        addToast({ title: 'Copied to clipboard', variant: 'success' });
+      } catch (err: unknown) {
+        addToast({ title: 'Failed to copy', description: (err instanceof Error ? err.message : String(err)) || String(err), variant: 'error' });
+      }
     }
   };
 
@@ -59,25 +65,19 @@ export const ClipboardItem = React.memo(function ClipboardItem({ clip, isSelecte
     <div
       data-testid={`clip-${clip.id}`}
       className={cn(
-        "group relative flex items-center justify-between px-4 py-3 cursor-pointer border-b border-border transition-colors duration-150 ease-out hover:bg-hover focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-focus-ring",
-        isSelected ? "bg-selection border-l-2 border-l-primary" : "bg-background border-l-2 border-l-transparent"
+        "group relative flex items-center justify-between px-3 py-2 mx-2 my-0.5 rounded-md cursor-pointer transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background",
+        isSelected ? "bg-primary text-primary-foreground shadow-sm" : "bg-transparent hover:bg-hover text-text-primary"
       )}
       onClick={() => onSelect(clip.id)}
+      tabIndex={tabIndex}
     >
       <div className="flex-1 min-w-0 flex flex-col gap-1 text-left relative">
-        {/* Permanent Indicators */}
-        <div className="absolute top-0 right-0 flex items-center gap-1.5 opacity-80">
-          {clip.is_encrypted && <Lock size={14} className="text-primary" />}
-          {clip.is_pinned && <Pin size={14} className="fill-current text-primary" />}
-          {clip.is_favorite && <Star size={14} className="fill-current text-primary" />}
-        </div>
-
         {/* Top line */}
-        <div className="flex items-center gap-2 pr-12">
-          <div className="text-text-secondary shrink-0 flex items-center justify-center">
+        <div className="flex items-center gap-2 pr-20">
+          <div className={cn("shrink-0 flex items-center justify-center", isSelected ? "text-primary-foreground opacity-90" : "text-text-secondary")}>
             {getContentTypeIcon()}
           </div>
-          <div className="text-sm font-medium truncate text-text-primary">
+          <div className="text-[13px] font-medium truncate">
             {clip.content_type === 'image' ? (
               <span className="italic text-text-secondary">Image content</span>
             ) : clip.content_type === 'file' ? (
@@ -95,7 +95,7 @@ export const ClipboardItem = React.memo(function ClipboardItem({ clip, isSelecte
         </div>
         
         {/* Second line */}
-        <div className="flex items-center gap-2 text-xs text-text-secondary">
+        <div className={cn("flex items-center gap-2 text-[11px]", isSelected ? "text-primary-foreground/80" : "text-text-secondary")}>
           <span>{date}</span>
           <span className="opacity-50">·</span>
           {clip.content_type === 'file' && clip.files && clip.files.length > 0 ? (
@@ -107,18 +107,33 @@ export const ClipboardItem = React.memo(function ClipboardItem({ clip, isSelecte
               </span>
               <span className="opacity-50">·</span>
               <span className={cn(
-                clip.files[0].status === 'Available' ? 'text-green-500' : 
-                clip.files[0].status === 'Moved' ? 'text-yellow-500' : 'text-danger'
+                clip.files[0].status === 'Available' ? 'text-success' : 
+                clip.files[0].status === 'Moved' ? 'text-warning' : 'text-danger'
               )}>{clip.files[0].status}</span>
             </>
           ) : (
             <span className="capitalize">{clip.category}</span>
           )}
+          
+          {/* Indicators */}
+          {(clip.is_encrypted || clip.is_pinned || clip.is_favorite) && (
+            <>
+              <span className="opacity-50">·</span>
+              <div className="flex items-center gap-1">
+                {clip.is_encrypted && <Lock size={12} className={isSelected ? "text-primary-foreground" : "text-primary"} />}
+                {clip.is_pinned && <Pin size={12} className={cn("fill-current", isSelected ? "text-primary-foreground" : "text-primary")} />}
+                {clip.is_favorite && <Star size={12} className={cn("fill-current", isSelected ? "text-primary-foreground" : "text-primary")} />}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
-      {/* Hover Actions */}
-      <div className="shrink-0 flex items-center gap-0 opacity-0 transition-opacity duration-150 ease-out group-hover:opacity-100 focus-within:opacity-100 ml-2">
+      {/* Hover Actions - Glassmorphic Toolbar */}
+      <div className={cn(
+        "absolute right-2 top-1/2 -translate-y-1/2 flex items-center p-0.5 rounded-md border border-border backdrop-blur-md opacity-0 transition-opacity duration-150 ease-out group-hover:opacity-100 focus-within:opacity-100 shadow-sm",
+        isSelected ? "bg-primary/20 border-primary/30 text-primary-foreground" : "bg-surface/80"
+      )}>
         <IconButton
           onClick={handleCopy}
           aria-label="Copy to clipboard"
@@ -154,7 +169,7 @@ export const ClipboardItem = React.memo(function ClipboardItem({ clip, isSelecte
           }}
           disabled={isDeletePending}
           aria-label="Delete item"
-          className="hover:text-danger hover:bg-danger/10"
+          className="hover:text-danger hover:bg-danger/20"
         >
           <Trash2 size={16} />
         </IconButton>

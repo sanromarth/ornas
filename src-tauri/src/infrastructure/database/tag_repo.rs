@@ -4,7 +4,7 @@ use crate::domain::tag::{NewTag, Tag, TagUpdate};
 use crate::domain::traits::TagRepository;
 use crate::error::AppError;
 use crate::infrastructure::database::Database;
-use rusqlite::{params, OptionalExtension, Row};
+use rusqlite::{OptionalExtension, Row, params};
 use std::sync::Arc;
 
 /// SQLite-backed tag repository.
@@ -29,16 +29,13 @@ fn row_to_tag(row: &Row) -> rusqlite::Result<Tag> {
 impl TagRepository for SqliteTagRepo {
     fn create(&self, tag: &NewTag) -> Result<Tag, AppError> {
         let conn = self.db.conn()?;
-        
+
         let mut stmt = conn.prepare(
             "INSERT INTO tags (name, color) 
              VALUES (?1, ?2) RETURNING *",
         )?;
 
-        let created = stmt.query_row(
-            params![tag.name, tag.color],
-            row_to_tag,
-        )?;
+        let created = stmt.query_row(params![tag.name, tag.color], row_to_tag)?;
 
         Ok(created)
     }
@@ -63,7 +60,7 @@ impl TagRepository for SqliteTagRepo {
 
     fn update(&self, id: i64, update: &TagUpdate) -> Result<Tag, AppError> {
         let conn = self.db.conn()?;
-        
+
         let mut sql = String::from("UPDATE tags SET ");
         let mut sql_params: Vec<rusqlite::types::Value> = Vec::new();
         let mut updates = Vec::new();
@@ -78,17 +75,22 @@ impl TagRepository for SqliteTagRepo {
         }
 
         if updates.is_empty() {
-            let tag = self.get_by_id(id)?.ok_or_else(|| AppError::NotFound(format!("Tag {id} not found")))?;
+            let tag = self
+                .get_by_id(id)?
+                .ok_or_else(|| AppError::NotFound(format!("Tag {id} not found")))?;
             return Ok(tag);
         }
 
         sql.push_str(&updates.join(", "));
-        sql.push_str(&format!(" WHERE id = ?{} RETURNING *", sql_params.len() + 1));
+        sql.push_str(&format!(
+            " WHERE id = ?{} RETURNING *",
+            sql_params.len() + 1
+        ));
         sql_params.push(id.into());
 
         let mut stmt = conn.prepare(&sql)?;
         let tag = stmt.query_row(rusqlite::params_from_iter(sql_params), row_to_tag)?;
-        
+
         Ok(tag)
     }
 
@@ -122,7 +124,7 @@ impl TagRepository for SqliteTagRepo {
             "SELECT t.* FROM tags t 
              JOIN clip_tags ct ON t.id = ct.tag_id 
              WHERE ct.clip_id = ?1 
-             ORDER BY t.name ASC"
+             ORDER BY t.name ASC",
         )?;
         let iter = stmt.query_map(params![clip_id], row_to_tag)?;
         let mut tags = Vec::new();

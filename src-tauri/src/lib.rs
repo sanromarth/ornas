@@ -88,6 +88,7 @@ pub fn run() {
             commands::clipboard::toggle_pin,
             commands::clipboard::set_clip_language,
             commands::clipboard::restore_files_to_clipboard,
+            commands::clipboard::write_text_to_clipboard,
             commands::search::search_clips,
             commands::settings::get_settings,
             commands::settings::update_setting,

@@ -10,7 +10,7 @@ describe('Toolbar', () => {
     vi.mocked(uiStoreModule.useUIStore).mockReturnValue({
       settingsOpen: false,
       toggleSettings: vi.fn(),
-    } as any);
+    } as unknown as ReturnType<typeof uiStoreModule.useUIStore>);
 
     render(<Toolbar />);
     
@@ -26,7 +26,7 @@ describe('Toolbar', () => {
     vi.mocked(uiStoreModule.useUIStore).mockReturnValue({
       settingsOpen: false,
       toggleSettings: toggleSettingsMock,
-    } as any);
+    } as unknown as ReturnType<typeof uiStoreModule.useUIStore>);
 
     render(<Toolbar />);
     

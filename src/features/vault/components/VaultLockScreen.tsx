@@ -20,8 +20,8 @@ export function VaultLockScreen() {
       await unlockVault(password);
       addToast({ title: 'Vault unlocked', variant: 'success' });
       setPassword('');
-    } catch (err: any) {
-      addToast({ title: 'Failed to unlock', description: err.message, variant: 'error' });
+    } catch (err: unknown) {
+      addToast({ title: 'Failed to unlock', description: (err instanceof Error ? err.message : String(err)), variant: 'error' });
     } finally {
       setLoading(false);
     }
@@ -37,7 +37,7 @@ export function VaultLockScreen() {
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center bg-surface p-8 text-center">
-      <div className="w-16 h-16 bg-surface-hover rounded-full flex items-center justify-center mb-6">
+      <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-6">
         <Lock className="w-8 h-8 text-primary" />
       </div>
       <h2 className="text-xl font-medium text-text-primary mb-2">Vault is Locked</h2>

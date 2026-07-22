@@ -20,11 +20,7 @@ pub fn list_tags(state: State<'_, AppState>) -> Result<Vec<Tag>, AppError> {
 }
 
 #[tauri::command]
-pub fn update_tag(
-    id: i64,
-    update: TagUpdate,
-    state: State<'_, AppState>,
-) -> Result<Tag, AppError> {
+pub fn update_tag(id: i64, update: TagUpdate, state: State<'_, AppState>) -> Result<Tag, AppError> {
     state.tag_service.update_tag(id, update)
 }
 
@@ -52,9 +48,6 @@ pub fn remove_clip_from_tag(
 }
 
 #[tauri::command]
-pub fn get_tags_for_clip(
-    clip_id: i64,
-    state: State<'_, AppState>,
-) -> Result<Vec<Tag>, AppError> {
+pub fn get_tags_for_clip(clip_id: i64, state: State<'_, AppState>) -> Result<Vec<Tag>, AppError> {
     state.tag_service.get_tags_for_clip(clip_id)
 }

@@ -4,7 +4,7 @@ use crate::domain::collection::{Collection, CollectionUpdate, NewCollection};
 use crate::domain::traits::CollectionRepository;
 use crate::error::AppError;
 use crate::infrastructure::database::Database;
-use rusqlite::{params, OptionalExtension, Row};
+use rusqlite::{OptionalExtension, Row, params};
 use std::sync::Arc;
 
 /// SQLite-backed collection repository.
@@ -32,7 +32,7 @@ fn row_to_collection(row: &Row) -> rusqlite::Result<Collection> {
 impl CollectionRepository for SqliteCollectionRepo {
     fn create(&self, collection: &NewCollection) -> Result<Collection, AppError> {
         let conn = self.db.conn()?;
-        
+
         // Find max sort_order
         let sort_order: i64 = conn.query_row(
             "SELECT COALESCE(MAX(sort_order), -1) + 1 FROM collections",
@@ -46,7 +46,12 @@ impl CollectionRepository for SqliteCollectionRepo {
         )?;
 
         let created = stmt.query_row(
-            params![collection.name, collection.icon, collection.color, sort_order],
+            params![
+                collection.name,
+                collection.icon,
+                collection.color,
+                sort_order
+            ],
             row_to_collection,
         )?;
 
@@ -62,7 +67,8 @@ impl CollectionRepository for SqliteCollectionRepo {
 
     fn list(&self) -> Result<Vec<Collection>, AppError> {
         let conn = self.db.conn()?;
-        let mut stmt = conn.prepare("SELECT * FROM collections ORDER BY sort_order ASC, created_at DESC")?;
+        let mut stmt =
+            conn.prepare("SELECT * FROM collections ORDER BY sort_order ASC, created_at DESC")?;
         let iter = stmt.query_map([], row_to_collection)?;
         let mut cols = Vec::new();
         for res in iter {
@@ -73,7 +79,7 @@ impl CollectionRepository for SqliteCollectionRepo {
 
     fn update(&self, id: i64, update: &CollectionUpdate) -> Result<Collection, AppError> {
         let conn = self.db.conn()?;
-        
+
         let mut sql = String::from("UPDATE collections SET ");
         let mut sql_params: Vec<rusqlite::types::Value> = Vec::new();
         let mut updates = Vec::new();
@@ -96,17 +102,22 @@ impl CollectionRepository for SqliteCollectionRepo {
         }
 
         if updates.is_empty() {
-            let col = self.get_by_id(id)?.ok_or_else(|| AppError::NotFound(format!("Collection {id} not found")))?;
+            let col = self
+                .get_by_id(id)?
+                .ok_or_else(|| AppError::NotFound(format!("Collection {id} not found")))?;
             return Ok(col);
         }
 
         sql.push_str(&updates.join(", "));
-        sql.push_str(&format!(" WHERE id = ?{} RETURNING *", sql_params.len() + 1));
+        sql.push_str(&format!(
+            " WHERE id = ?{} RETURNING *",
+            sql_params.len() + 1
+        ));
         sql_params.push(id.into());
 
         let mut stmt = conn.prepare(&sql)?;
         let col = stmt.query_row(rusqlite::params_from_iter(sql_params), row_to_collection)?;
-        
+
         Ok(col)
     }
 
@@ -140,7 +151,7 @@ impl CollectionRepository for SqliteCollectionRepo {
             "SELECT c.* FROM collections c 
              JOIN clip_collections cc ON c.id = cc.collection_id 
              WHERE cc.clip_id = ?1 
-             ORDER BY c.sort_order ASC, c.created_at DESC"
+             ORDER BY c.sort_order ASC, c.created_at DESC",
         )?;
         let iter = stmt.query_map(params![clip_id], row_to_collection)?;
         let mut cols = Vec::new();

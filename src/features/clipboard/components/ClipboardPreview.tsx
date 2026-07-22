@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useUIStore } from '../../../stores/ui-store';
 import { useQueryClient } from '@tanstack/react-query';
+import { convertFileSrc } from '@tauri-apps/api/core';
+import { appDataDir, join } from '@tauri-apps/api/path';
 import { useClipQuery, useClipCollectionsQuery, useClipTagsQuery } from '../api/queries';
 
-import { Star, Pin, Trash2, Copy, MousePointer, Plus, Lock, Unlock } from 'lucide-react';
+import { Star, Pin, Trash2, Copy, Check, MousePointer, Plus, Lock, Unlock } from 'lucide-react';
 import { EmptyState } from '../../../shared/components/EmptyState';
 import { Dialog } from '../../../shared/components/Dialog';
 import { ConfirmDialog } from '../../../shared/components/ConfirmDialog';
@@ -16,7 +18,31 @@ import { useTagStore } from '../../../stores/tag-store';
 import { CollectionService } from '../../../services/collection-service';
 import { TagService } from '../../../services/tag-service';
 import { clipboardKeys } from '../../../shared/lib/queryKeys';
-import { CodeSnippetPreview } from './CodeSnippetPreview';
+const CodeSnippetPreview = lazy(() => import('./CodeSnippetPreview').then(module => ({ default: module.CodeSnippetPreview })));
+
+function ImagePreview({ imagePath }: { imagePath: string }) {
+  const [src, setSrc] = useState<string>('');
+  useEffect(() => {
+    async function load() {
+      try {
+        const base = await appDataDir();
+        const fullPath = await join(base, 'images', imagePath);
+        setSrc(convertFileSrc(fullPath));
+      } catch (err) {
+        console.error('Failed to resolve image path', err);
+      }
+    }
+    load();
+  }, [imagePath]);
+
+  if (!src) return <div className="p-6 text-text-tertiary">Loading image...</div>;
+  return (
+    <div className="p-6 overflow-auto h-full">
+      <img src={src} alt="Clipboard content" className="max-w-full h-auto rounded-md shadow-sm border border-border" />
+    </div>
+  );
+}
+
 import { useVaultStore } from '../../../stores/vault-store';
 import { VaultLockScreen } from '../../vault/components/VaultLockScreen';
 import { useDecryptedClipQuery } from '../api/queries';
@@ -68,12 +94,14 @@ export function ClipboardPreview() {
       }
       queryClient.invalidateQueries({ queryKey: clipboardKeys.detail(clip.id) });
       queryClient.invalidateQueries({ queryKey: clipboardKeys.list({}) });
-    } catch (err: any) {
-      addToast({ title: 'Encryption failed', description: err.message, variant: 'error' });
+    } catch (err: unknown) {
+      addToast({ title: 'Encryption failed', description: (err instanceof Error ? err.message : String(err)), variant: 'error' });
     } finally {
       setIsEncrypting(false);
     }
   };
+
+  const [isCopied, setIsCopied] = useState(false);
 
   const handleCopy = () => {
     if (!clip) return;
@@ -81,6 +109,8 @@ export function ClipboardPreview() {
     if (content) {
       navigator.clipboard.writeText(content);
       addToast({ title: 'Copied to clipboard', variant: 'success' });
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 1500);
     }
   };
 
@@ -94,8 +124,8 @@ export function ClipboardPreview() {
         await CollectionService.assignClipToCollection(selectedClipId, collectionId);
       }
       queryClient.invalidateQueries({ queryKey: clipboardKeys.collections(selectedClipId) });
-    } catch (err: any) {
-      addToast({ title: 'Failed to update collection', description: err.toString(), variant: 'error' });
+    } catch (err: unknown) {
+      addToast({ title: 'Failed to update collection', description: (err instanceof Error ? err.message : String(err)), variant: 'error' });
     }
   };
 
@@ -109,8 +139,8 @@ export function ClipboardPreview() {
         await TagService.assignClipToTag(selectedClipId, tagId);
       }
       queryClient.invalidateQueries({ queryKey: clipboardKeys.tags(selectedClipId) });
-    } catch (err: any) {
-      addToast({ title: 'Failed to update tag', description: err.toString(), variant: 'error' });
+    } catch (err: unknown) {
+      addToast({ title: 'Failed to update tag', description: (err instanceof Error ? err.message : String(err)), variant: 'error' });
     }
   };
 
@@ -173,112 +203,79 @@ export function ClipboardPreview() {
       role="region"
       aria-label="Clipboard content preview"
     >
-      <div className="flex flex-col gap-4 p-6 border-b border-border shrink-0">
-        <h3 className="text-base font-medium text-text-primary font-['Outfit'] tracking-wide">
-          {(clip.content_type as string) === 'image' ? 'Image Clip' : (clip.content_type as string) === 'link' ? 'Link Clip' : (clip.content_type as string) === 'code' ? 'Code Clip' : 'Text Clip'}
-        </h3>
-        
-        <div className="flex items-center gap-10 text-sm">
-          <div className="flex flex-col gap-1">
-            <span className="text-[11px] font-medium tracking-wide uppercase text-text-primary/70">Copied</span>
-            <span className="text-text-primary font-medium">{new Date(clip.created_at * 1000).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+      <div className="flex flex-col gap-5 p-8 border-b border-border shrink-0 bg-surface">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col gap-1.5">
+            <h3 className="text-xl font-semibold text-text-primary tracking-tight font-outfit">
+              {(clip.content_type as string) === 'image' ? 'Image Clip' : (clip.content_type as string) === 'link' ? 'Link Clip' : (clip.content_type as string) === 'code' ? 'Code Clip' : 'Text Clip'}
+            </h3>
+            <div className="text-[13px] text-text-secondary">
+              {new Date(clip.created_at * 1000).toLocaleString(undefined, { month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+            </div>
           </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-[11px] font-medium tracking-wide uppercase text-text-primary/70">Characters</span>
-            <span className="text-text-primary font-medium">{clip.char_count.toLocaleString()}</span>
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-[11px] font-medium tracking-wide uppercase text-text-primary/70">Lines</span>
-            <span className="text-text-primary font-medium">{clip.line_count.toLocaleString()}</span>
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-[11px] font-medium tracking-wide uppercase text-text-primary/70">Category</span>
-            <span className="text-text-primary font-medium capitalize">{clip.content_type}</span>
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-[11px] font-medium tracking-wide uppercase text-text-primary/70">Pinned</span>
-            <span className="text-text-primary font-medium">{clip.is_pinned ? 'Yes' : 'No'}</span>
+          
+          <div className="flex items-center gap-1 shrink-0 flex-wrap justify-end">
+            <Button variant="secondary" size="sm" onClick={handleCopy} className={cn("gap-2 px-3 h-8 shadow-sm transition-colors", isCopied && "bg-success/10 text-success border-success/30 hover:bg-success/20")}>
+              {isCopied ? <Check size={14} /> : <Copy size={14} />} {isCopied ? 'Copied!' : 'Copy'}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => togglePin(clip.id)} disabled={isPinPending} className={cn("px-2.5 h-8", clip.is_pinned && "text-primary hover:text-primary")}>
+              <Pin size={16} className={clip.is_pinned ? "fill-current" : ""} />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => toggleFavorite(clip.id)} disabled={isFavoritePending} className={cn("px-2.5 h-8", clip.is_favorite && "text-primary hover:text-primary")}>
+              <Star size={16} className={clip.is_favorite ? "fill-current" : ""} />
+            </Button>
+            {isInitialized && isUnlocked && (
+              <Button variant="ghost" size="sm" onClick={handleEncrypt} disabled={isEncrypting} className={cn("px-2.5 h-8", clip.is_encrypted && "text-primary hover:text-primary")} aria-label={clip.is_encrypted ? 'Decrypt' : 'Encrypt'}>
+                {clip.is_encrypted ? <Unlock size={16} /> : <Lock size={16} />}
+              </Button>
+            )}
+            <Button variant="ghost" size="sm" onClick={() => setIsConfirmingDelete(true)} disabled={isDeletePending} className="px-2.5 h-8 hover:text-danger hover:bg-danger/10">
+              <Trash2 size={16} />
+            </Button>
           </div>
         </div>
 
-        <div className="flex items-center gap-4 mt-2">
-           <div className="flex gap-2 items-center text-xs">
-              <span className="text-text-tertiary">Collections:</span>
-              {collections?.map(c => <span key={c.id} className="bg-primary/20 text-primary px-2 py-0.5 rounded-full">{c.name}</span>)}
-              <button onClick={() => setIsAssigningCollection(true)} className="text-text-tertiary hover:text-text-primary px-1.5 py-0.5 rounded transition-colors"><Plus size={14} /></button>
-           </div>
-           
-           <div className="flex gap-2 items-center text-xs">
-              <span className="text-text-tertiary">Tags:</span>
-              {tags?.map(t => <span key={t.id} className="bg-surface border border-border px-2 py-0.5 rounded-full">#{t.name}</span>)}
-              <button onClick={() => setIsAssigningTag(true)} className="text-text-tertiary hover:text-text-primary px-1.5 py-0.5 rounded transition-colors"><Plus size={14} /></button>
-           </div>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px]">
+          <div className="flex items-center gap-2">
+             <span className="font-semibold text-text-tertiary uppercase tracking-wider">Details</span>
+             <div className="flex gap-1.5">
+                <span className="px-2.5 py-0.5 rounded-full bg-hover text-text-secondary border border-border">{clip.char_count.toLocaleString()} chars</span>
+                <span className="px-2.5 py-0.5 rounded-full bg-hover text-text-secondary border border-border">{clip.line_count.toLocaleString()} lines</span>
+                <span className="px-2.5 py-0.5 rounded-full bg-hover text-text-secondary border border-border capitalize">{clip.content_type}</span>
+             </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+             <span className="font-semibold text-text-tertiary uppercase tracking-wider">Collections</span>
+             <div className="flex gap-1.5 items-center">
+                {collections?.length ? null : <span className="text-text-tertiary italic">None</span>}
+                {collections?.map(c => <span key={c.id} className="bg-primary/10 text-primary px-2.5 py-0.5 rounded-full font-medium">{c.name}</span>)}
+                <button onClick={() => setIsAssigningCollection(true)} className="flex items-center justify-center h-5 w-5 rounded-full bg-hover text-text-secondary hover:text-text-primary transition-colors border border-border outline-none focus-visible:ring-2 focus-visible:ring-focus-ring" aria-label="Add Collection"><Plus size={12} /></button>
+             </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+             <span className="font-semibold text-text-tertiary uppercase tracking-wider">Tags</span>
+             <div className="flex gap-1.5 items-center">
+                {tags?.length ? null : <span className="text-text-tertiary italic">None</span>}
+                {tags?.map(t => <span key={t.id} className="bg-hover text-text-primary px-2.5 py-0.5 rounded-full border border-border">#{t.name}</span>)}
+                <button onClick={() => setIsAssigningTag(true)} className="flex items-center justify-center h-5 w-5 rounded-full bg-hover text-text-secondary hover:text-text-primary transition-colors border border-border outline-none focus-visible:ring-2 focus-visible:ring-focus-ring" aria-label="Add Tag"><Plus size={12} /></button>
+             </div>
+          </div>
         </div>
       </div>
       
       <div className="flex-1 overflow-hidden flex flex-col relative z-0">
         {clip.content_type === 'image' && clip.image_path ? (
-          <div className="p-6 overflow-auto h-full">
-            <img src={`asset://localhost/${clip.image_path}`} alt="Clipboard content" className="max-w-full h-auto rounded-md shadow-sm border border-border" />
-          </div>
+          <ImagePreview imagePath={clip.image_path} />
         ) : (
-          <CodeSnippetPreview clip={clip} />
+          <Suspense fallback={<div className="p-6 text-text-tertiary">Loading snippet...</div>}>
+            <CodeSnippetPreview clip={clip} />
+          </Suspense>
         )}
       </div>
 
-      <div className="border-t border-border p-4 flex items-center justify-end gap-2 shrink-0 bg-surface">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleCopy}
-          className="gap-2"
-        >
-          <Copy size={16} />
-          Copy
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => togglePin(clip.id)}
-          disabled={isPinPending}
-          className={cn("gap-2", clip.is_pinned && "text-primary hover:text-primary")}
-        >
-          <Pin size={16} className={clip.is_pinned ? "fill-current" : ""} />
-          Pin
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => toggleFavorite(clip.id)}
-          disabled={isFavoritePending}
-          className={cn("gap-2", clip.is_favorite && "text-primary hover:text-primary")}
-        >
-          <Star size={16} className={clip.is_favorite ? "fill-current" : ""} />
-          Favorite
-        </Button>
-        {isInitialized && isUnlocked && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleEncrypt}
-            disabled={isEncrypting}
-            className={cn("gap-2", clip.is_encrypted && "text-primary hover:text-primary")}
-          >
-            {clip.is_encrypted ? <Unlock size={16} /> : <Lock size={16} />}
-            {clip.is_encrypted ? 'Decrypt' : 'Encrypt'}
-          </Button>
-        )}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsConfirmingDelete(true)}
-          disabled={isDeletePending}
-          className="gap-2 hover:text-danger/90 hover:bg-hover"
-        >
-          <Trash2 size={16} />
-          Delete
-        </Button>
-      </div>
+
 
       <ConfirmDialog
         open={isConfirmingDelete}
@@ -302,7 +299,7 @@ export function ClipboardPreview() {
           {allCollections.map(col => {
             const isAssigned = collections?.some(c => c.id === col.id);
             return (
-              <label key={col.id} className="flex items-center gap-2 cursor-pointer hover:bg-white/5 p-2 rounded-md">
+              <label key={col.id} className="flex items-center gap-2 cursor-pointer hover:bg-hover p-2 rounded-md transition-colors">
                 <input 
                   type="checkbox" 
                   checked={isAssigned || false}
@@ -326,7 +323,7 @@ export function ClipboardPreview() {
           {allTags.map(tag => {
             const isAssigned = tags?.some(t => t.id === tag.id);
             return (
-              <label key={tag.id} className="flex items-center gap-2 cursor-pointer hover:bg-white/5 p-2 rounded-md">
+              <label key={tag.id} className="flex items-center gap-2 cursor-pointer hover:bg-hover p-2 rounded-md transition-colors">
                 <input 
                   type="checkbox" 
                   checked={isAssigned || false}

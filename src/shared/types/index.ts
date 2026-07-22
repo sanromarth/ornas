@@ -70,7 +70,9 @@ export interface DecryptedPayloadResponse {
 /** Parameters for paginated list queries. */
 export interface ListParams {
   limit?: number;
-  offset?: number;
+  cursor_pinned?: boolean;
+  cursor_created_at?: number;
+  cursor_id?: number;
   category?: string;
   favorites_only?: boolean;
   pinned_only?: boolean;

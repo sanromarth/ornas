@@ -108,7 +108,12 @@ impl ClipboardService {
     }
 
     /// Updates the language of a clip and emits a `clip-updated` event.
-    pub fn update_clip_language(&self, id: i64, language: Option<String>, language_source: String) -> Result<Clip, AppError> {
+    pub fn update_clip_language(
+        &self,
+        id: i64,
+        language: Option<String>,
+        language_source: String,
+    ) -> Result<Clip, AppError> {
         let updated = self.clip_repo.update(
             id,
             &ClipUpdate {

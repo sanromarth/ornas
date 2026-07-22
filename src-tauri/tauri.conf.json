@@ -41,6 +41,22 @@
       "icons/icon.icns",
       "icons/icon.png",
       "icons/icon.ico"
-    ]
+    ],
+    "publisher": "sanromarth",
+    "shortDescription": "Never Lose a Copy",
+    "longDescription": "ORNAS is a lightweight, offline-first desktop application that captures, organizes, and searches everything you copy.",
+    "category": "Utility",
+    "copyright": "Copyright © 2026 sanromarth",
+    "macOS": {
+      "frameworks": [],
+      "minimumSystemVersion": "10.15",
+      "entitlements": null,
+      "exceptionDomain": ""
+    },
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": ""
+    }
   }
 }

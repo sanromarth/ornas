@@ -32,8 +32,8 @@ export function VaultSection() {
       addToast({ title: 'Vault configured successfully', variant: 'success' });
       setPassword('');
       setConfirmPassword('');
-    } catch (e: any) {
-      addToast({ title: 'Failed to configure vault', description: e.message, variant: 'error' });
+    } catch (e: unknown) {
+      addToast({ title: 'Failed to configure vault', description: (e instanceof Error ? e.message : String(e)), variant: 'error' });
     } finally {
       setLoading(false);
     }
@@ -43,8 +43,8 @@ export function VaultSection() {
     try {
       await lockVault();
       addToast({ title: 'Vault locked', variant: 'success' });
-    } catch (e: any) {
-      addToast({ title: 'Failed to lock vault', description: e.message, variant: 'error' });
+    } catch (e: unknown) {
+      addToast({ title: 'Failed to lock vault', description: (e instanceof Error ? e.message : String(e)), variant: 'error' });
     }
   };
 

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Button } from '../../../shared/components/Button';
+import { ConfirmDialog } from '../../../shared/components/ConfirmDialog';
 import { BackupService, BackupProgress, ImportMode } from '../services/BackupService';
 
 export function BackupSection() {
@@ -8,6 +9,7 @@ export function BackupSection() {
   const [isImporting, setIsImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [showReplaceConfirm, setShowReplaceConfirm] = useState(false);
 
   const handleExport = async () => {
     setError(null);
@@ -16,8 +18,8 @@ export function BackupSection() {
     try {
       await BackupService.exportBackup((p) => setProgress(p));
       setSuccess("Backup exported successfully.");
-    } catch (err: any) {
-      setError(err.message || String(err));
+    } catch (err: unknown) {
+      setError((err instanceof Error ? err.message : String(err)) || String(err));
     } finally {
       setIsExporting(false);
       setProgress(null);
@@ -25,21 +27,14 @@ export function BackupSection() {
   };
 
   const handleImport = async (mode: ImportMode) => {
-    if (mode === 'replace_all') {
-      const confirmed = await confirm(
-        "WARNING: This will permanently delete all current clips and replace them with the backup. This cannot be undone. Proceed?"
-      );
-      if (!confirmed) return;
-    }
-
     setError(null);
     setSuccess(null);
     setIsImporting(true);
     try {
       await BackupService.importBackup(mode, (p) => setProgress(p));
       setSuccess("Backup imported successfully. Please restart ORNAS to refresh state.");
-    } catch (err: any) {
-      setError(err.message || String(err));
+    } catch (err: unknown) {
+      setError((err instanceof Error ? err.message : String(err)) || String(err));
     } finally {
       setIsImporting(false);
       setProgress(null);
@@ -88,7 +83,7 @@ export function BackupSection() {
               <p className="text-sm text-text-secondary leading-relaxed">Completely overwrite your current history with the backup.</p>
             </div>
             <Button 
-              onClick={() => handleImport('replace_all')}
+              onClick={() => setShowReplaceConfirm(true)}
               loading={isImporting}
               disabled={isExporting}
               variant="destructive"
@@ -120,11 +115,20 @@ export function BackupSection() {
         )}
 
         {success && (
-          <div className="p-3 text-sm text-green-500 bg-green-500/10 rounded-md shrink-0">
+          <div className="p-3 text-sm text-success bg-success/10 rounded-md shrink-0">
             {success}
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={showReplaceConfirm}
+        title="Replace All Data"
+        description="This will permanently delete all current clips and replace them with the backup. This cannot be undone."
+        confirmText="Replace All"
+        onConfirm={() => handleImport('replace_all')}
+        onCancel={() => setShowReplaceConfirm(false)}
+      />
     </div>
   );
 }

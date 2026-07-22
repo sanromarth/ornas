@@ -1,3 +1,4 @@
+
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -32,13 +33,13 @@ describe('ClipboardList', () => {
       deleteClip: vi.fn(),
       toggleFavorite: vi.fn(),
       togglePin: vi.fn(),
-    } as any);
+    } as unknown as ReturnType<typeof useClipboardModule.useClipboard>);
     vi.mocked(useSearchModule.useSearch).mockReturnValue({
       results: [],
       debouncedQuery: '',
       isLoading: false,
       error: null,
-    } as any);
+    } as unknown as ReturnType<typeof useSearchModule.useSearch>);
   });
 
   it('renders spinner when loading', () => {
@@ -54,7 +55,7 @@ describe('ClipboardList', () => {
       deleteClip: vi.fn(),
       toggleFavorite: vi.fn(),
       togglePin: vi.fn(),
-    } as any);
+    } as unknown as ReturnType<typeof useClipboardModule.useClipboard>);
     const queryClient = new QueryClient();
     render(
       <QueryClientProvider client={queryClient}>
@@ -72,7 +73,7 @@ describe('ClipboardList', () => {
       deleteClip: vi.fn(),
       toggleFavorite: vi.fn(),
       togglePin: vi.fn(),
-    } as any);
+    } as unknown as ReturnType<typeof useClipboardModule.useClipboard>);
     
     render(<ClipboardList />);
     expect(screen.getByTestId('empty-state')).toBeInTheDocument();

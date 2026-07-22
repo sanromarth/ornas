@@ -5,11 +5,20 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tauri + React + Typescript</title>
+    <title>ORNAS</title>
   </head>
 
   <body>
     <div id="root"></div>
+    <script>
+      // Prevent flash of wrong theme — runs synchronously before React
+      (function() {
+        try {
+          // Default to 'system' which lets the CSS @media query handle it
+          document.documentElement.setAttribute('data-theme', 'system');
+        } catch(e) {}
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

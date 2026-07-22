@@ -1,10 +1,10 @@
 use crate::error::AppError;
 use crate::infrastructure::database::Database;
-use rusqlite::params;
-use std::sync::Arc;
-use std::path::Path;
 use mime_guess::from_path;
+use rusqlite::params;
 use std::fs;
+use std::path::Path;
+use std::sync::Arc;
 
 pub struct FileClipboardService {
     db: Arc<Database>,
@@ -21,27 +21,38 @@ impl FileClipboardService {
         }
 
         let mut conn = self.db.conn()?;
-        let tx = conn.transaction().map_err(|e| AppError::Database(e.to_string()))?;
+        let tx = conn
+            .transaction()
+            .map_err(|e| AppError::Database(e.to_string()))?;
 
         let mut file_records = Vec::new();
         let mut file_names = Vec::new();
 
         for path_str in &paths {
             let path = Path::new(path_str);
-            let file_name = path.file_name().unwrap_or_default().to_string_lossy().to_string();
+            let file_name = path
+                .file_name()
+                .unwrap_or_default()
+                .to_string_lossy()
+                .to_string();
             let extension = path.extension().map(|e| e.to_string_lossy().to_string());
             let mime_type = from_path(path).first_raw().map(|s| s.to_string());
-            
+
             let metadata = fs::metadata(path).ok();
             let file_size = metadata.as_ref().map(|m| m.len() as i64).unwrap_or(0);
             let is_dir = metadata.as_ref().map(|m| m.is_dir()).unwrap_or(false);
-            let is_readonly = metadata.as_ref().map(|m| m.permissions().readonly()).unwrap_or(false);
-            
-            let created_time = metadata.as_ref()
+            let is_readonly = metadata
+                .as_ref()
+                .map(|m| m.permissions().readonly())
+                .unwrap_or(false);
+
+            let created_time = metadata
+                .as_ref()
                 .and_then(|m| m.created().ok())
                 .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
                 .map(|d| d.as_secs() as i64);
-            let modified_time = metadata.as_ref()
+            let modified_time = metadata
+                .as_ref()
                 .and_then(|m| m.modified().ok())
                 .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
                 .map(|d| d.as_secs() as i64);
@@ -64,7 +75,7 @@ impl FileClipboardService {
         let content_text = file_names.join(" ");
         let char_count = content_text.len() as i64;
         let line_count = paths.len() as i64;
-        
+
         let mut stmt = tx.prepare(
             "INSERT INTO clips (
                 content_text, content_type, category, source_app, content_hash, char_count, line_count
@@ -77,9 +88,9 @@ impl FileClipboardService {
             params![
                 content_text,
                 "file",
-                "file", // category
+                "file",                 // category
                 Option::<String>::None, // source_app
-                "", // hash
+                "",                     // hash
                 char_count,
                 line_count
             ],
@@ -149,19 +160,23 @@ mod tests {
     fn test_process_files() {
         let db = setup_test_db();
         let service = FileClipboardService::new(db.clone());
-        
+
         let paths = vec!["/tmp/test.txt".to_string()];
         service.process_files(paths).unwrap();
-        
+
         let conn = db.conn().unwrap();
-        let mut stmt = conn.prepare("SELECT content_text, content_type FROM clips").unwrap();
-        let clip = stmt.query_row([], |row| {
-            Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
-        }).unwrap();
-        
+        let mut stmt = conn
+            .prepare("SELECT content_text, content_type FROM clips")
+            .unwrap();
+        let clip = stmt
+            .query_row([], |row| {
+                Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+            })
+            .unwrap();
+
         assert_eq!(clip.0, "test.txt");
         assert_eq!(clip.1, "file");
-        
+
         let mut stmt_files = conn.prepare("SELECT file_path FROM clip_files").unwrap();
         let file_path: String = stmt_files.query_row([], |row| row.get(0)).unwrap();
         assert_eq!(file_path, "/tmp/test.txt");

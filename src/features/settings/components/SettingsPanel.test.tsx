@@ -5,7 +5,7 @@ import * as useSettingsModule from '../hooks/useSettings';
 
 vi.mock('../hooks/useSettings');
 vi.mock('../../../shared/components/Dialog', () => ({
-  Dialog: ({ children, isOpen, onClose }: any) => (
+  Dialog: ({ children, isOpen, onClose }: { children: React.ReactNode, isOpen: boolean, onClose: () => void }) => (
     isOpen ? (
       <div data-testid="mock-dialog">
         <button onClick={onClose} data-testid="close-dialog">Close</button>
@@ -35,7 +35,7 @@ describe('SettingsPanel', () => {
       isLoading: false,
       error: null,
       updateSetting: updateSettingMock,
-    } as any);
+    } as unknown as ReturnType<typeof useSettingsModule.useSettings>);
     vi.clearAllMocks();
   });
 

@@ -1,18 +1,15 @@
 //! Crypto service — master password management and encryption logic.
 
 use crate::domain::traits::VaultRepository;
-use crate::domain::vault::{VaultConfig, VaultStatus, EncryptedClipPayload};
+use crate::domain::vault::{EncryptedClipPayload, VaultConfig, VaultStatus};
 use crate::error::AppError;
 
-use argon2::{
-    password_hash::{PasswordHasher, SaltString},
-    Argon2,
-};
+use argon2::{Argon2, password_hash::SaltString};
 use chacha20poly1305::{
-    aead::{Aead, KeyInit},
     XChaCha20Poly1305, XNonce,
+    aead::{Aead, KeyInit},
 };
-use rand::{rngs::OsRng, RngCore};
+use rand::{RngCore, rngs::OsRng};
 use std::sync::{Arc, RwLock};
 use zeroize::{Zeroize, Zeroizing};
 
@@ -54,13 +51,14 @@ impl CryptoService {
         // Encrypt the verification payload to store in DB
         let cipher = XChaCha20Poly1305::new_from_slice(key.as_slice())
             .map_err(|_| AppError::Internal("Invalid key length".into()))?;
-        
+
         let mut nonce_bytes = [0u8; 24];
         OsRng.fill_bytes(&mut nonce_bytes);
-        let nonce = XNonce::from_slice(&nonce_bytes);
-        
+        let nonce = XNonce::try_from(&nonce_bytes[..])
+            .map_err(|_| AppError::Internal("Invalid nonce size".into()))?;
+
         let encrypted_payload = cipher
-            .encrypt(nonce, VERIFICATION_PAYLOAD_STRING)
+            .encrypt(&nonce, VERIFICATION_PAYLOAD_STRING)
             .map_err(|_| AppError::Internal("Encryption failed".into()))?;
 
         let config = VaultConfig {
@@ -73,7 +71,7 @@ impl CryptoService {
         };
 
         self.vault_repo.save_config(&config)?;
-        
+
         // Lock it immediately (or we could store it in master_key to auto-unlock)
         *self.master_key.write().unwrap() = Some(key);
         Ok(())
@@ -81,24 +79,28 @@ impl CryptoService {
 
     /// Unlocks the vault by deriving the key and checking the verification payload.
     pub fn unlock_vault(&self, password: &str) -> Result<(), AppError> {
-        let config = self.vault_repo
+        let config = self
+            .vault_repo
             .load_config()?
             .ok_or_else(|| AppError::Internal("Vault not initialized".into()))?;
 
         let salt = SaltString::from_b64(
-            std::str::from_utf8(&config.salt).map_err(|_| AppError::Internal("Invalid salt encoding".into()))?
-        ).map_err(|_| AppError::Internal("Invalid salt string".into()))?;
+            std::str::from_utf8(&config.salt)
+                .map_err(|_| AppError::Internal("Invalid salt encoding".into()))?,
+        )
+        .map_err(|_| AppError::Internal("Invalid salt string".into()))?;
 
         let key = self.derive_key(password, &salt)?;
 
         let cipher = XChaCha20Poly1305::new_from_slice(key.as_slice())
             .map_err(|_| AppError::Internal("Invalid key length".into()))?;
-        
-        let nonce = XNonce::from_slice(&config.verification_nonce);
-        
+
+        let nonce = XNonce::try_from(&config.verification_nonce[..])
+            .map_err(|_| AppError::Internal("Invalid nonce size".into()))?;
+
         // Try to decrypt the verification payload
         let decrypted = cipher
-            .decrypt(nonce, config.verification_payload.as_ref())
+            .decrypt(&nonce, config.verification_payload.as_ref())
             .map_err(|_| AppError::Internal("Invalid password".into()))?;
 
         if decrypted != VERIFICATION_PAYLOAD_STRING {
@@ -121,37 +123,47 @@ impl CryptoService {
     /// Encrypts a clip payload using XChaCha20-Poly1305.
     pub fn encrypt(&self, payload: &EncryptedClipPayload) -> Result<(Vec<u8>, Vec<u8>), AppError> {
         let key_guard = self.master_key.read().unwrap();
-        let key = key_guard.as_ref().ok_or_else(|| AppError::Internal("Vault is locked".into()))?;
+        let key = key_guard
+            .as_ref()
+            .ok_or_else(|| AppError::Internal("Vault is locked".into()))?;
 
         let cipher = XChaCha20Poly1305::new_from_slice(key.as_slice())
             .map_err(|_| AppError::Internal("Invalid key length".into()))?;
-            
+
         let mut nonce_bytes = [0u8; 24];
         OsRng.fill_bytes(&mut nonce_bytes);
-        let nonce = XNonce::from_slice(&nonce_bytes);
+        let nonce = XNonce::try_from(&nonce_bytes[..])
+            .map_err(|_| AppError::Internal("Invalid nonce size".into()))?;
 
         let json = serde_json::to_vec(payload)
             .map_err(|e| AppError::Internal(format!("Serialization failed: {e}")))?;
 
         let encrypted = cipher
-            .encrypt(nonce, json.as_ref())
+            .encrypt(&nonce, json.as_ref())
             .map_err(|_| AppError::Internal("Encryption failed".into()))?;
 
         Ok((encrypted, nonce_bytes.to_vec()))
     }
 
     /// Decrypts a clip payload back to its struct.
-    pub fn decrypt(&self, encrypted_blob: &[u8], nonce: &[u8]) -> Result<EncryptedClipPayload, AppError> {
+    pub fn decrypt(
+        &self,
+        encrypted_blob: &[u8],
+        nonce: &[u8],
+    ) -> Result<EncryptedClipPayload, AppError> {
         let key_guard = self.master_key.read().unwrap();
-        let key = key_guard.as_ref().ok_or_else(|| AppError::Internal("Vault is locked".into()))?;
+        let key = key_guard
+            .as_ref()
+            .ok_or_else(|| AppError::Internal("Vault is locked".into()))?;
 
         let cipher = XChaCha20Poly1305::new_from_slice(key.as_slice())
             .map_err(|_| AppError::Internal("Invalid key length".into()))?;
-            
-        let nonce = XNonce::from_slice(nonce);
+
+        let nonce =
+            XNonce::try_from(nonce).map_err(|_| AppError::Internal("Invalid nonce size".into()))?;
 
         let decrypted = cipher
-            .decrypt(nonce, encrypted_blob)
+            .decrypt(&nonce, encrypted_blob)
             .map_err(|_| AppError::Internal("Decryption failed".into()))?;
 
         let payload = serde_json::from_slice(&decrypted)
@@ -161,12 +173,20 @@ impl CryptoService {
     }
 
     /// Derives a 32-byte key using Argon2id.
-    fn derive_key(&self, password: &str, salt: &SaltString) -> Result<Zeroizing<[u8; 32]>, AppError> {
+    fn derive_key(
+        &self,
+        password: &str,
+        salt: &SaltString,
+    ) -> Result<Zeroizing<[u8; 32]>, AppError> {
         let argon2 = Argon2::default();
         let mut key_bytes = [0u8; 32];
-        
+
         argon2
-            .hash_password_into(password.as_bytes(), salt.as_str().as_bytes(), &mut key_bytes)
+            .hash_password_into(
+                password.as_bytes(),
+                salt.as_str().as_bytes(),
+                &mut key_bytes,
+            )
             .map_err(|e| AppError::Internal(format!("Key derivation failed: {e}")))?;
 
         Ok(Zeroizing::new(key_bytes))

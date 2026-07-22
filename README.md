@@ -5,6 +5,8 @@
 
 > The open-source clipboard productivity workspace.
 
+[![CI Pipeline](https://github.com/sanromarth/ornas/actions/workflows/release.yml/badge.svg)](https://github.com/sanromarth/ornas/actions)
+[![Release](https://img.shields.io/github/v/release/sanromarth/ornas?include_prereleases)](https://github.com/sanromarth/ornas/releases)
 [![Tauri](https://img.shields.io/badge/Tauri-v2-blue?logo=tauri)](https://tauri.app)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev)
 [![Rust](https://img.shields.io/badge/Rust-2024-orange?logo=rust)](https://www.rust-lang.org)
@@ -79,6 +81,31 @@ The compiled binaries will be located in `src-tauri/target/release/bundle/`.
 ORNAS follows clean architecture principles with a Rust backend and React frontend.
 
 See [docs/ARCHITECTURE_FINAL.md](docs/ARCHITECTURE_FINAL.md) for the complete specification.
+
+## FAQ
+
+**Q: Where is my data stored?**
+A: All data is stored locally in an encrypted SQLite database on your machine. We do not use cloud synchronization or telemetry.
+
+**Q: Does ORNAS require an internet connection?**
+A: No, ORNAS is 100% offline-first by design.
+
+**Q: How do I export my data?**
+A: You can export your vault as an encrypted `.zip` archive from the Settings menu.
+
+## Troubleshooting
+
+- **Linux AppImage won't open:** Ensure FUSE is installed (`sudo apt install libfuse2`).
+- **Icons are missing:** Clear your system icon cache or restart the application.
+- **Search is slow:** Trigger a "Reindex Database" from the Settings menu to optimize the FTS5 tables.
+
+## Roadmap
+- [x] Clipboard history tracking
+- [x] SQLite FTS5 search engine
+- [x] Offline-first encrypted vault
+- [ ] Cross-device synchronization via peer-to-peer (P2P)
+- [ ] OCR for images
+- [ ] AI-assisted smart tagging
 
 ## Contributing
 

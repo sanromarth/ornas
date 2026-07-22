@@ -23,9 +23,20 @@ export function useDeleteClip() {
         selectClip(null);
       }
 
-      const removeFromList = (oldList: ClipDto[] | undefined) => {
-        if (!oldList) return oldList;
-        return oldList.filter((clip) => clip.id !== id);
+      const removeFromList = (oldData: { pages: ClipDto[][] } | undefined) => {
+        if (!oldData) return oldData;
+        if (oldData.pages) {
+          // InfiniteData
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page: ClipDto[]) =>
+              page.filter((clip) => clip.id !== id)
+            ),
+          };
+        } else if (Array.isArray(oldData)) {
+          return oldData.filter((clip) => clip.id !== id);
+        }
+        return oldData;
       };
 
       queryClient.setQueriesData({ queryKey: clipboardKeys.lists() }, removeFromList);
@@ -60,11 +71,23 @@ export function useToggleFavorite() {
       const previousState = queryClient.getQueryData(clipboardKeys.all);
 
       // Helper to optimistically update a clip in a list
-      const updateList = (oldList: ClipDto[] | undefined) => {
-        if (!oldList) return oldList;
-        return oldList.map((clip) => 
-          clip.id === id ? { ...clip, is_favorite: !clip.is_favorite } : clip
-        );
+      const updateList = (oldData: { pages: ClipDto[][] } | undefined) => {
+        if (!oldData) return oldData;
+        if (oldData.pages) {
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page: ClipDto[]) =>
+              page.map((clip) =>
+                clip.id === id ? { ...clip, is_favorite: !clip.is_favorite } : clip
+              )
+            ),
+          };
+        } else if (Array.isArray(oldData)) {
+          return oldData.map((clip) =>
+            clip.id === id ? { ...clip, is_favorite: !clip.is_favorite } : clip
+          );
+        }
+        return oldData;
       };
 
       // Optimistically update lists and searches
@@ -103,17 +126,37 @@ export function useTogglePin() {
 
       const previousState = queryClient.getQueryData(clipboardKeys.all);
 
-      const updateList = (oldList: ClipDto[] | undefined) => {
-        if (!oldList) return oldList;
-        const updated = oldList.map((clip) => 
-          clip.id === id ? { ...clip, is_pinned: !clip.is_pinned } : clip
-        );
-        // Sort: pinned first, then by creation date descending
-        return updated.sort((a, b) => {
-          if (a.is_pinned && !b.is_pinned) return -1;
-          if (!a.is_pinned && b.is_pinned) return 1;
-          return b.created_at - a.created_at;
-        });
+      const updateList = (oldData: { pages: ClipDto[][] } | undefined) => {
+        if (!oldData) return oldData;
+        
+        // Helper to update and sort a flat array
+        const updateAndSort = (arr: ClipDto[]) => {
+          const updated = arr.map((clip) => 
+            clip.id === id ? { ...clip, is_pinned: !clip.is_pinned } : clip
+          );
+          return updated.sort((a, b) => {
+            if (a.is_pinned && !b.is_pinned) return -1;
+            if (!a.is_pinned && b.is_pinned) return 1;
+            return b.created_at - a.created_at;
+          });
+        };
+
+        if (oldData.pages) {
+          // For InfiniteData, we don't re-sort across pages optimistically because 
+          // it requires shifting items between pages. We just update the item in-place
+          // and let the invalidation refetch handle the correct sorting.
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page: ClipDto[]) =>
+              page.map((clip) =>
+                clip.id === id ? { ...clip, is_pinned: !clip.is_pinned } : clip
+              )
+            ),
+          };
+        } else if (Array.isArray(oldData)) {
+          return updateAndSort(oldData);
+        }
+        return oldData;
       };
 
       queryClient.setQueriesData({ queryKey: clipboardKeys.lists() }, updateList);
@@ -146,11 +189,25 @@ export function useSetClipLanguage() {
 
       const previousState = queryClient.getQueryData(clipboardKeys.all);
 
-      const updateList = (oldList: ClipDto[] | undefined) => {
-        if (!oldList) return oldList;
-        return oldList.map((clip) => 
-          clip.id === id ? { ...clip, language, language_source } : clip
-        );
+      // Helper to optimistically update a clip in lists
+      const updateList = (oldData: { pages: ClipDto[][] } | undefined) => {
+        if (!oldData) return oldData;
+        if (oldData.pages) {
+          // InfiniteData
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page: ClipDto[]) =>
+              page.map((clip) =>
+                clip.id === id ? { ...clip, language, language_source } : clip
+              )
+            ),
+          };
+        } else if (Array.isArray(oldData)) {
+          return oldData.map((clip) =>
+            clip.id === id ? { ...clip, language, language_source } : clip
+          );
+        }
+        return oldData;
       };
 
       queryClient.setQueriesData({ queryKey: clipboardKeys.lists() }, updateList);

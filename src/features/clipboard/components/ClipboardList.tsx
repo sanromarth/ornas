@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { useClipboard } from '../hooks/useClipboard';
 import { useSearch } from '../../search/hooks/useSearch';
 import { useUIStore } from '../../../stores/ui-store';
@@ -6,6 +6,7 @@ import { ClipboardItem } from './ClipboardItem';
 import { EmptyState } from './EmptyState';
 import { useToast } from '../../../shared/components/useToast';
 import { invoke } from '@tauri-apps/api/core';
+import { useVirtualizer } from '@tanstack/react-virtual';
 
 export function ClipboardList() {
   const { selectedClipId, selectClip, selectedCollectionId, selectedTagId } = useUIStore();
@@ -15,17 +16,35 @@ export function ClipboardList() {
     tag_id: selectedTagId ?? undefined,
   };
 
-  const { clips: historyClips, isLoading: isHistoryLoading, error: historyError } = useClipboard(listParams);
+  const { clips: historyClips, isLoading: isHistoryLoading, error: historyError, fetchNextPage, hasNextPage, isFetchingNextPage } = useClipboard(listParams);
   const { debouncedQuery, results: searchClips, isLoading: isSearchLoading, error: searchError } = useSearch(listParams);
   const { addToast } = useToast();
 
   const isSearching = debouncedQuery.trim().length > 0;
   
   const clips = isSearching ? searchClips : historyClips;
-  const isLoading = isSearching ? isSearchLoading : isHistoryLoading;
+  const isLoading = isSearching ? isSearchLoading : (isHistoryLoading && clips.length === 0);
   const error = isSearching ? searchError : historyError;
 
   const listRef = useRef<HTMLDivElement>(null);
+
+  const virtualizer = useVirtualizer({
+    count: clips.length,
+    getScrollElement: () => listRef.current,
+    estimateSize: () => 80, // estimated item height
+    overscan: 5,
+  });
+
+  const items = virtualizer.getVirtualItems();
+
+  useEffect(() => {
+    if (!isSearching && hasNextPage && !isFetchingNextPage) {
+      const lastItem = items[items.length - 1];
+      if (lastItem && lastItem.index >= clips.length - 5) {
+        fetchNextPage();
+      }
+    }
+  }, [items, isSearching, hasNextPage, isFetchingNextPage, clips.length, fetchNextPage]);
 
   // Keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -37,8 +56,7 @@ export function ClipboardList() {
         e.preventDefault();
         if (currentIndex < clips.length - 1) {
           selectClip(clips[currentIndex + 1].id);
-          const nextEl = listRef.current?.querySelector(`[data-testid="clip-${clips[currentIndex + 1].id}"]`);
-          nextEl?.scrollIntoView({ block: 'nearest' });
+          virtualizer.scrollToIndex(currentIndex + 1);
         }
         break;
       }
@@ -46,22 +64,20 @@ export function ClipboardList() {
         e.preventDefault();
         if (currentIndex > 0) {
           selectClip(clips[currentIndex - 1].id);
-          const prevEl = listRef.current?.querySelector(`[data-testid="clip-${clips[currentIndex - 1].id}"]`);
-          prevEl?.scrollIntoView({ block: 'nearest' });
+          virtualizer.scrollToIndex(currentIndex - 1);
         }
         break;
       }
       case 'Home': {
         e.preventDefault();
         selectClip(clips[0].id);
-        listRef.current?.scrollTo({ top: 0 });
+        virtualizer.scrollToIndex(0);
         break;
       }
       case 'End': {
         e.preventDefault();
         selectClip(clips[clips.length - 1].id);
-        const lastEl = listRef.current?.querySelector(`[data-testid="clip-${clips[clips.length - 1].id}"]`);
-        lastEl?.scrollIntoView({ block: 'nearest' });
+        virtualizer.scrollToIndex(clips.length - 1);
         break;
       }
       case 'Enter': {
@@ -77,7 +93,7 @@ export function ClipboardList() {
           if (clip.content_type === 'file') {
             invoke('restore_files_to_clipboard', { clipId: clip.id })
               .then(() => addToast({ title: 'Files copied to clipboard', variant: 'success' }))
-              .catch((err: any) => addToast({ title: 'Failed to copy files', description: err.message || String(err), variant: 'error' }));
+              .catch((err: unknown) => addToast({ title: 'Failed to copy files', description: (err instanceof Error ? err.message : String(err)) || String(err), variant: 'error' }));
           } else {
             const content = clip.content_text ?? clip.preview;
             if (content) {
@@ -101,7 +117,7 @@ export function ClipboardList() {
 
   if (isLoading) {
     return (
-      <div data-testid="clipboard-list-loading" className="flex-1 overflow-hidden p-4 bg-background">
+      <div data-testid="clipboard-list-loading" className="flex-1 overflow-hidden p-4 bg-transparent">
         <div className="space-y-4 animate-pulse">
           <div className="h-16 bg-surface rounded-md"></div>
           <div className="h-16 bg-surface rounded-md"></div>
@@ -115,9 +131,9 @@ export function ClipboardList() {
 
   if (error) {
     return (
-      <div data-testid="clipboard-list-error" className="flex-1 flex flex-col items-center justify-center text-danger p-4 text-center bg-background">
+      <div data-testid="clipboard-list-error" className="flex-1 flex flex-col items-center justify-center text-danger p-4 text-center bg-transparent">
         <p className="font-medium mb-1">Failed to load {isSearching ? 'search results' : 'clipboard history'}</p>
-        <p className="text-sm opacity-80">{error instanceof Error ? error.message : String(error)}</p>
+        <p className="text-sm opacity-80">{error instanceof Error ? (error instanceof Error ? error.message : String(error)) : String(error)}</p>
       </div>
     );
   }
@@ -133,20 +149,45 @@ export function ClipboardList() {
       onKeyDown={handleKeyDown}
       aria-label="Clipboard history"
       data-testid="clipboard-list" 
-      className="flex-1 overflow-y-auto overflow-x-hidden border-r border-border bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring"
+      className="flex-1 overflow-y-auto overflow-x-hidden border-r border-border bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring"
     >
       <div 
         key={isSearching ? `search-${debouncedQuery}` : 'history'}
-        className="flex flex-col transition-opacity duration-150 ease-out starting:opacity-0"
+        className="relative w-full transition-opacity duration-150 ease-out starting:opacity-0"
+        style={{ height: `${virtualizer.getTotalSize()}px` }}
       >
-        {clips.map((clip) => (
-          <ClipboardItem
-            key={clip.id}
-            clip={clip}
-            isSelected={clip.id === selectedClipId}
-            onSelect={selectClip}
-          />
-        ))}
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            transform: `translateY(${items[0]?.start ?? 0}px)`,
+          }}
+        >
+          {items.map((virtualItem) => {
+            const clip = clips[virtualItem.index];
+            return (
+              <div
+                key={virtualItem.key}
+                data-index={virtualItem.index}
+                ref={virtualizer.measureElement}
+              >
+                <ClipboardItem
+                  clip={clip}
+                  isSelected={clip.id === selectedClipId}
+                  onSelect={selectClip}
+                  tabIndex={clip.id === selectedClipId ? 0 : -1}
+                />
+              </div>
+            );
+          })}
+        </div>
+        {!isSearching && isFetchingNextPage && (
+          <div className="absolute bottom-0 w-full p-4 text-center text-text-tertiary text-sm">
+            Loading more...
+          </div>
+        )}
       </div>
     </div>
   );

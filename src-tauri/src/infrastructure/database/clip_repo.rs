@@ -50,7 +50,9 @@ pub(crate) fn row_to_clip(row: &Row) -> Result<Clip, rusqlite::Error> {
         language: row.get("language").unwrap_or(None),
         is_code: row.get::<_, i64>("is_code").unwrap_or(0) != 0,
         detection_confidence: row.get("detection_confidence").unwrap_or(0.0),
-        language_source: row.get("language_source").unwrap_or_else(|_| "auto".to_string()),
+        language_source: row
+            .get("language_source")
+            .unwrap_or_else(|_| "auto".to_string()),
         is_favorite: row.get::<_, i64>("is_favorite")? != 0,
         is_pinned: row.get::<_, i64>("is_pinned")? != 0,
         is_encrypted: row.get::<_, i64>("is_encrypted").unwrap_or(0) != 0,
@@ -63,19 +65,26 @@ pub(crate) fn row_to_clip(row: &Row) -> Result<Clip, rusqlite::Error> {
     })
 }
 
-fn fetch_clip_files(conn: &rusqlite::Connection, clip_ids: &[i64]) -> Result<std::collections::HashMap<i64, Vec<crate::domain::clip::ClipFile>>, AppError> {
+fn fetch_clip_files(
+    conn: &rusqlite::Connection,
+    clip_ids: &[i64],
+) -> Result<std::collections::HashMap<i64, Vec<crate::domain::clip::ClipFile>>, AppError> {
     if clip_ids.is_empty() {
         return Ok(std::collections::HashMap::new());
     }
-    
+
     let placeholders = clip_ids.iter().map(|_| "?").collect::<Vec<_>>().join(",");
-    let query = format!("SELECT id, clip_id, file_path, file_name, extension, mime_type, file_size, is_dir, is_readonly, created_time, modified_time, hash, thumbnail_path, status, selection_group, icon_type, created_at, updated_at FROM clip_files WHERE clip_id IN ({})", placeholders);
-    
+    let query = format!(
+        "SELECT id, clip_id, file_path, file_name, extension, mime_type, file_size, is_dir, is_readonly, created_time, modified_time, hash, thumbnail_path, status, selection_group, icon_type, created_at, updated_at FROM clip_files WHERE clip_id IN ({})",
+        placeholders
+    );
+
     let mut stmt = conn.prepare(&query)?;
     let mut rows = stmt.query(rusqlite::params_from_iter(clip_ids))?;
-    
-    let mut map: std::collections::HashMap<i64, Vec<crate::domain::clip::ClipFile>> = std::collections::HashMap::new();
-    
+
+    let mut map: std::collections::HashMap<i64, Vec<crate::domain::clip::ClipFile>> =
+        std::collections::HashMap::new();
+
     while let Some(row) = rows.next()? {
         let clip_id: i64 = row.get(1)?;
         let file = crate::domain::clip::ClipFile {
@@ -100,10 +109,9 @@ fn fetch_clip_files(conn: &rusqlite::Connection, clip_ids: &[i64]) -> Result<std
         };
         map.entry(clip_id).or_default().push(file);
     }
-    
+
     Ok(map)
 }
-
 
 impl ClipRepository for SqliteClipRepo {
     fn create(&self, clip: &NewClip) -> Result<Clip, AppError> {
@@ -195,17 +203,26 @@ impl ClipRepository for SqliteClipRepo {
             query.push_str(" AND cc.collection_id = ?");
             sql_params.push(col_id.into());
         }
-        
+
         if let Some(tag_id) = params.tag_id {
             query.push_str(" AND ct.tag_id = ?");
             sql_params.push(tag_id.into());
         }
 
-        query.push_str(" ORDER BY c.is_pinned DESC, c.created_at DESC LIMIT ?");
-        sql_params.push(params.limit.into());
+        if let (Some(cursor_pinned), Some(cursor_created_at), Some(cursor_id)) = (
+            params.cursor_pinned,
+            params.cursor_created_at,
+            params.cursor_id,
+        ) {
+            let p = if cursor_pinned { 1_i64 } else { 0_i64 };
+            query.push_str(" AND (c.is_pinned, c.created_at, c.id) < (?, ?, ?)");
+            sql_params.push(p.into());
+            sql_params.push(cursor_created_at.into());
+            sql_params.push(cursor_id.into());
+        }
 
-        query.push_str(" OFFSET ?");
-        sql_params.push(params.offset.into());
+        query.push_str(" ORDER BY c.is_pinned DESC, c.created_at DESC, c.id DESC LIMIT ?");
+        sql_params.push(params.limit.into());
 
         let mut stmt = conn.prepare(&query)?;
         let clip_iter = stmt.query_map(rusqlite::params_from_iter(sql_params), row_to_clip)?;
@@ -286,7 +303,7 @@ impl ClipRepository for SqliteClipRepo {
 
         if let Some(ref ver) = update.encryption_version {
             query.push_str(&format!(", encryption_version = ?{}", sql_params.len() + 1));
-            sql_params.push(ver.clone().into());
+            sql_params.push((*ver).into());
         }
 
         if let Some(ref blob) = update.encrypted_blob {
@@ -380,7 +397,7 @@ impl ClipRepository for SqliteClipRepo {
         for clip_result in clip_iter {
             clips.push(clip_result?);
         }
-        
+
         Ok(clips)
     }
 }

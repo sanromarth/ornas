@@ -23,9 +23,9 @@ export const useCollectionStore = create<CollectionState>((set) => ({
     try {
       const collections = await CollectionService.listCollections();
       set({ collections, isLoading: false });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to load collections:', err);
-      set({ error: err.toString(), isLoading: false });
+      set({ error: (err instanceof Error ? err.message : String(err)), isLoading: false });
     }
   },
 
@@ -34,8 +34,8 @@ export const useCollectionStore = create<CollectionState>((set) => ({
       const col = await CollectionService.createCollection(name, icon, color);
       set((state) => ({ collections: [col, ...state.collections] }));
       return col;
-    } catch (err: any) {
-      useToast.getState().addToast({ title: 'Failed to create collection', description: err.toString(), variant: 'error' });
+    } catch (err: unknown) {
+      useToast.getState().addToast({ title: 'Failed to create collection', description: (err instanceof Error ? err.message : String(err)), variant: 'error' });
       return null;
     }
   },
@@ -46,8 +46,8 @@ export const useCollectionStore = create<CollectionState>((set) => ({
       set((state) => ({
         collections: state.collections.map((c) => (c.id === id ? updated : c)),
       }));
-    } catch (err: any) {
-      useToast.getState().addToast({ title: 'Failed to update collection', description: err.toString(), variant: 'error' });
+    } catch (err: unknown) {
+      useToast.getState().addToast({ title: 'Failed to update collection', description: (err instanceof Error ? err.message : String(err)), variant: 'error' });
     }
   },
 
@@ -57,8 +57,8 @@ export const useCollectionStore = create<CollectionState>((set) => ({
       set((state) => ({
         collections: state.collections.filter((c) => c.id !== id),
       }));
-    } catch (err: any) {
-      useToast.getState().addToast({ title: 'Failed to delete collection', description: err.toString(), variant: 'error' });
+    } catch (err: unknown) {
+      useToast.getState().addToast({ title: 'Failed to delete collection', description: (err instanceof Error ? err.message : String(err)), variant: 'error' });
     }
   },
 }));

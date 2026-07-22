@@ -11,17 +11,22 @@ use tauri::State;
 
 /// List clipboard items with optional filtering and pagination.
 #[tauri::command]
+#[allow(clippy::too_many_arguments)]
 pub fn list_clips(
     state: State<'_, AppState>,
     limit: Option<u32>,
-    offset: Option<u32>,
+    cursor_pinned: Option<bool>,
+    cursor_created_at: Option<i64>,
+    cursor_id: Option<i64>,
     category: Option<String>,
     favorites_only: Option<bool>,
     pinned_only: Option<bool>,
 ) -> Result<Vec<Clip>, AppError> {
     let params = ListParams {
         limit: limit.unwrap_or(50),
-        offset: offset.unwrap_or(0),
+        cursor_pinned,
+        cursor_created_at,
+        cursor_id,
         category,
         favorites_only: favorites_only.unwrap_or(false),
         pinned_only: pinned_only.unwrap_or(false),
@@ -57,18 +62,28 @@ pub fn toggle_pin(state: State<'_, AppState>, id: i64) -> Result<Clip, AppError>
 
 /// Set the language of a clip manually.
 #[tauri::command]
-pub fn set_clip_language(state: State<'_, AppState>, id: i64, language: Option<String>, language_source: String) -> Result<Clip, AppError> {
-    state.clipboard_service.update_clip_language(id, language, language_source)
+pub fn set_clip_language(
+    state: State<'_, AppState>,
+    id: i64,
+    language: Option<String>,
+    language_source: String,
+) -> Result<Clip, AppError> {
+    state
+        .clipboard_service
+        .update_clip_language(id, language, language_source)
 }
 
 /// Restore file paths to the system clipboard.
 #[tauri::command]
-pub fn restore_files_to_clipboard(state: State<'_, AppState>, clip_id: i64) -> Result<(), AppError> {
+pub fn restore_files_to_clipboard(
+    state: State<'_, AppState>,
+    clip_id: i64,
+) -> Result<(), AppError> {
     let clip = state.clipboard_service.get(clip_id)?;
     if clip.content_type != crate::domain::clip::ContentType::File {
         return Err(AppError::Clipboard("Clip is not a file list".into()));
     }
-    
+
     if let Some(files) = clip.files {
         let mut paths = Vec::new();
         for f in files {
@@ -76,18 +91,33 @@ pub fn restore_files_to_clipboard(state: State<'_, AppState>, clip_id: i64) -> R
                 paths.push(f.file_path);
             }
         }
-        
+
         if paths.is_empty() {
-            return Err(AppError::Clipboard("No valid files found to restore".into()));
+            return Err(AppError::Clipboard(
+                "No valid files found to restore".into(),
+            ));
         }
-        
+
         use clipboard_rs::{Clipboard, ClipboardContext};
         let ctx = ClipboardContext::new().map_err(|e| AppError::Clipboard(e.to_string()))?;
-        ctx.set_files(paths).map_err(|e| AppError::Clipboard(e.to_string()))?;
-        
+        ctx.set_files(paths)
+            .map_err(|e| AppError::Clipboard(e.to_string()))?;
+
         Ok(())
     } else {
-        Err(AppError::Clipboard("No files associated with this clip".into()))
+        Err(AppError::Clipboard(
+            "No files associated with this clip".into(),
+        ))
     }
 }
 
+/// Write text directly to the system clipboard.
+/// Bypasses webview limitations.
+#[tauri::command]
+pub fn write_text_to_clipboard(_state: State<'_, AppState>, text: String) -> Result<(), AppError> {
+    use clipboard_rs::{Clipboard, ClipboardContext};
+    let ctx = ClipboardContext::new().map_err(|e| AppError::Clipboard(e.to_string()))?;
+    ctx.set_text(text)
+        .map_err(|e| AppError::Clipboard(e.to_string()))?;
+    Ok(())
+}

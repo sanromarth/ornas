@@ -22,7 +22,10 @@ pub struct NativeClipboardHandler {
 impl NativeClipboardHandler {
     /// Creates a new handler that sends clipboard items to the given channel.
     pub fn new(sender: Sender<ClipItem>, file_sender: Sender<Vec<String>>) -> Self {
-        Self { sender, file_sender }
+        Self {
+            sender,
+            file_sender,
+        }
     }
 }
 

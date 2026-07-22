@@ -19,15 +19,9 @@ impl TagService {
         if name.is_empty() {
             return Err(AppError::Validation("Tag name cannot be empty".into()));
         }
-        
+
         let new_tag = NewTag { name, color };
         self.repo.create(&new_tag)
-    }
-
-    pub fn get_tag(&self, id: i64) -> Result<Tag, AppError> {
-        self.repo
-            .get_by_id(id)?
-            .ok_or_else(|| AppError::NotFound(format!("Tag {id} not found")))
     }
 
     pub fn list_tags(&self) -> Result<Vec<Tag>, AppError> {

@@ -8,9 +8,9 @@ use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
+use zip::CompressionMethod;
 use zip::write::SimpleFileOptions;
 use zip::{ZipArchive, ZipWriter};
-use zip::CompressionMethod;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Manifest {
@@ -27,12 +27,6 @@ pub struct Manifest {
     pub file_count: usize,
     pub checksum: String,
     pub compression_type: String,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct BackupClip {
-    #[serde(flatten)]
-    pub clip: Clip,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -54,20 +48,26 @@ pub struct BackupManager {
 
 impl BackupManager {
     pub fn new(db: Arc<Database>, image_store_path: PathBuf) -> Self {
-        Self { db, image_store_path }
+        Self {
+            db,
+            image_store_path,
+        }
     }
 
-    pub fn export_backup(&self, export_path: &Path, app_handle: tauri::AppHandle) -> Result<(), AppError> {
+    pub fn export(
+        &self,
+        export_path: &Path,
+        _app_handle: tauri::AppHandle,
+    ) -> Result<(), AppError> {
         let file = File::create(export_path)?;
         let mut zip = ZipWriter::new(file);
-        
-        let options = SimpleFileOptions::default()
-            .compression_method(CompressionMethod::Deflated);
+
+        let options = SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
 
         // 1. Fetch Clips
         let conn = self.db.conn()?;
         let mut stmt = conn.prepare("SELECT id, content_text, content_html, content_rtf, image_path, content_type, category, source_app, content_hash, preview, char_count, line_count, is_favorite, is_pinned, language, is_code, detection_confidence, language_source, is_encrypted, encryption_version, encrypted_blob, nonce, created_at, updated_at FROM clips")?;
-        
+
         let clips_iter = stmt.query_map([], |row| {
             let content_type_str: String = row.get(5)?;
             let content_type = match content_type_str.as_str() {
@@ -75,7 +75,7 @@ impl BackupManager {
                 "rich_text" => ContentType::RichText,
                 _ => ContentType::Text,
             };
-            
+
             Ok(Clip {
                 id: row.get(0)?,
                 content_text: row.get(1)?,
@@ -104,32 +104,32 @@ impl BackupManager {
                 files: None,
             })
         })?;
-        
+
         let mut clips = Vec::new();
         let mut image_count = 0;
-        for c in clips_iter {
-            if let Ok(clip) = c {
-                if clip.image_path.is_some() {
-                    image_count += 1;
-                }
-                clips.push(clip);
+        for clip in clips_iter.flatten() {
+            if clip.image_path.is_some() {
+                image_count += 1;
             }
+            clips.push(clip);
         }
-        
+
         let item_count = clips.len();
-        
+
         // Settings
         let mut stmt = conn.prepare("SELECT key, value, updated_at FROM settings")?;
         let settings_iter = stmt.query_map([], |row| {
-            Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, i64>(2)?))
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, i64>(2)?,
+            ))
         })?;
         let mut settings = Vec::new();
-        for s in settings_iter {
-            if let Ok(setting) = s {
-                settings.push(setting);
-            }
+        for setting in settings_iter.flatten() {
+            settings.push(setting);
         }
-        
+
         // Clip files
         let mut stmt = conn.prepare("SELECT id, clip_id, file_path, file_name, extension, mime_type, file_size, is_dir, is_readonly, created_time, modified_time, hash, thumbnail_path, status, selection_group, icon_type, created_at, updated_at FROM clip_files")?;
         let clip_files_iter = stmt.query_map([], |row| {
@@ -155,30 +155,32 @@ impl BackupManager {
             })
         })?;
         let mut clip_files = Vec::new();
-        for cf in clip_files_iter {
-            if let Ok(file) = cf {
-                clip_files.push(file);
-            }
+        for file in clip_files_iter.flatten() {
+            clip_files.push(file);
         }
         let file_count = clip_files.len();
 
         // write clipboard.json
-        zip.start_file("clipboard.json", options.clone())?;
-        let clips_json = serde_json::to_string_pretty(&clips).map_err(|e| AppError::Internal(e.to_string()))?;
+        zip.start_file("clipboard.json", options)?;
+        let clips_json =
+            serde_json::to_string_pretty(&clips).map_err(|e| AppError::Internal(e.to_string()))?;
         zip.write_all(clips_json.as_bytes())?;
 
         // write settings.json
-        zip.start_file("settings.json", options.clone())?;
-        let settings_json = serde_json::to_string_pretty(&settings).map_err(|e| AppError::Internal(e.to_string()))?;
+        zip.start_file("settings.json", options)?;
+        let settings_json = serde_json::to_string_pretty(&settings)
+            .map_err(|e| AppError::Internal(e.to_string()))?;
         zip.write_all(settings_json.as_bytes())?;
 
         // write clip_files.json
-        zip.start_file("clip_files.json", options.clone())?;
-        let clip_files_json = serde_json::to_string_pretty(&clip_files).map_err(|e| AppError::Internal(e.to_string()))?;
+        zip.start_file("clip_files.json", options)?;
+        let clip_files_json = serde_json::to_string_pretty(&clip_files)
+            .map_err(|e| AppError::Internal(e.to_string()))?;
         zip.write_all(clip_files_json.as_bytes())?;
 
         // Collections
-        let mut stmt = conn.prepare("SELECT id, name, icon, color, sort_order, created_at FROM collections")?;
+        let mut stmt =
+            conn.prepare("SELECT id, name, icon, color, sort_order, created_at FROM collections")?;
         let cols_iter = stmt.query_map([], |row| {
             Ok(Collection {
                 id: row.get(0)?,
@@ -190,9 +192,15 @@ impl BackupManager {
             })
         })?;
         let mut collections = Vec::new();
-        for c in cols_iter { if let Ok(col) = c { collections.push(col); } }
-        zip.start_file("collections.json", options.clone())?;
-        zip.write_all(serde_json::to_string_pretty(&collections).map_err(|e| AppError::Internal(e.to_string()))?.as_bytes())?;
+        for col in cols_iter.flatten() {
+            collections.push(col);
+        }
+        zip.start_file("collections.json", options)?;
+        zip.write_all(
+            serde_json::to_string_pretty(&collections)
+                .map_err(|e| AppError::Internal(e.to_string()))?
+                .as_bytes(),
+        )?;
 
         // Tags
         let mut stmt = conn.prepare("SELECT id, name, color FROM tags")?;
@@ -204,37 +212,61 @@ impl BackupManager {
             })
         })?;
         let mut tags = Vec::new();
-        for t in tags_iter { if let Ok(tag) = t { tags.push(tag); } }
-        zip.start_file("tags.json", options.clone())?;
-        zip.write_all(serde_json::to_string_pretty(&tags).map_err(|e| AppError::Internal(e.to_string()))?.as_bytes())?;
+        for tag in tags_iter.flatten() {
+            tags.push(tag);
+        }
+        zip.start_file("tags.json", options)?;
+        zip.write_all(
+            serde_json::to_string_pretty(&tags)
+                .map_err(|e| AppError::Internal(e.to_string()))?
+                .as_bytes(),
+        )?;
 
         // Clip-Collections
         let mut stmt = conn.prepare("SELECT clip_id, collection_id FROM clip_collections")?;
         let cc_iter = stmt.query_map([], |row| {
-            Ok(BackupClipCollection { clip_id: row.get(0)?, collection_id: row.get(1)? })
+            Ok(BackupClipCollection {
+                clip_id: row.get(0)?,
+                collection_id: row.get(1)?,
+            })
         })?;
         let mut clip_collections = Vec::new();
-        for cc in cc_iter { if let Ok(c) = cc { clip_collections.push(c); } }
-        zip.start_file("clip_collections.json", options.clone())?;
-        zip.write_all(serde_json::to_string_pretty(&clip_collections).map_err(|e| AppError::Internal(e.to_string()))?.as_bytes())?;
+        for c in cc_iter.flatten() {
+            clip_collections.push(c);
+        }
+        zip.start_file("clip_collections.json", options)?;
+        zip.write_all(
+            serde_json::to_string_pretty(&clip_collections)
+                .map_err(|e| AppError::Internal(e.to_string()))?
+                .as_bytes(),
+        )?;
 
         // Clip-Tags
         let mut stmt = conn.prepare("SELECT clip_id, tag_id FROM clip_tags")?;
         let ct_iter = stmt.query_map([], |row| {
-            Ok(BackupClipTag { clip_id: row.get(0)?, tag_id: row.get(1)? })
+            Ok(BackupClipTag {
+                clip_id: row.get(0)?,
+                tag_id: row.get(1)?,
+            })
         })?;
         let mut clip_tags = Vec::new();
-        for ct in ct_iter { if let Ok(c) = ct { clip_tags.push(c); } }
-        zip.start_file("clip_tags.json", options.clone())?;
-        zip.write_all(serde_json::to_string_pretty(&clip_tags).map_err(|e| AppError::Internal(e.to_string()))?.as_bytes())?;
+        for c in ct_iter.flatten() {
+            clip_tags.push(c);
+        }
+        zip.start_file("clip_tags.json", options)?;
+        zip.write_all(
+            serde_json::to_string_pretty(&clip_tags)
+                .map_err(|e| AppError::Internal(e.to_string()))?
+                .as_bytes(),
+        )?;
 
         // copy images
-        zip.add_directory("images/", options.clone())?;
+        zip.add_directory("images/", options)?;
         for clip in &clips {
             if let Some(ref img_name) = clip.image_path {
                 let img_path = self.image_store_path.join(img_name);
                 if img_path.exists() {
-                    zip.start_file(format!("images/{}", img_name), options.clone())?;
+                    zip.start_file(format!("images/{}", img_name), options)?;
                     let mut img_file = File::open(&img_path)?;
                     let mut buffer = Vec::new();
                     img_file.read_to_end(&mut buffer)?;
@@ -244,14 +276,17 @@ impl BackupManager {
         }
 
         // Add files directory
-        zip.add_directory("files/", options.clone())?;
+        zip.add_directory("files/", options)?;
 
         // write manifest
         let manifest = Manifest {
             ornas_version: env!("CARGO_PKG_VERSION").to_string(),
             backup_version: "1.0".to_string(),
             schema_version: "1.0".to_string(), // we can query pragma user_version, but hardcoding for simplicity
-            timestamp: std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs() as i64,
+            timestamp: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs() as i64,
             platform: std::env::consts::OS.to_string(),
             os_version: std::env::consts::ARCH.to_string(),
             db_engine: "sqlite".to_string(),
@@ -264,7 +299,8 @@ impl BackupManager {
         };
 
         zip.start_file("manifest.json", options)?;
-        let manifest_json = serde_json::to_string_pretty(&manifest).map_err(|e| AppError::Internal(e.to_string()))?;
+        let manifest_json = serde_json::to_string_pretty(&manifest)
+            .map_err(|e| AppError::Internal(e.to_string()))?;
         zip.write_all(manifest_json.as_bytes())?;
 
         zip.finish()?;
@@ -272,18 +308,24 @@ impl BackupManager {
         Ok(())
     }
 
-    pub fn import_backup(&self, import_path: &Path, mode: &str, app_handle: tauri::AppHandle) -> Result<(), AppError> {
+    pub fn import(
+        &self,
+        import_path: &Path,
+        mode: &str,
+        _app_handle: tauri::AppHandle,
+    ) -> Result<(), AppError> {
         let file = File::open(import_path)?;
         let mut archive = ZipArchive::new(file)?;
-        
+
         // Find manifest
         let mut manifest_str = String::new();
         {
             let mut manifest_file = archive.by_name("manifest.json")?;
             manifest_file.read_to_string(&mut manifest_str)?;
         }
-        let manifest: Manifest = serde_json::from_str(&manifest_str).map_err(|e| AppError::Internal(e.to_string()))?;
-        
+        let manifest: Manifest =
+            serde_json::from_str(&manifest_str).map_err(|e| AppError::Internal(e.to_string()))?;
+
         if manifest.backup_version != "1.0" {
             return Err(AppError::Internal("Unsupported backup version".into()));
         }
@@ -294,7 +336,8 @@ impl BackupManager {
             let mut clips_file = archive.by_name("clipboard.json")?;
             clips_file.read_to_string(&mut clips_str)?;
         }
-        let clips: Vec<Clip> = serde_json::from_str(&clips_str).map_err(|e| AppError::Internal(e.to_string()))?;
+        let clips: Vec<Clip> =
+            serde_json::from_str(&clips_str).map_err(|e| AppError::Internal(e.to_string()))?;
 
         // Find settings.json
         let mut settings_str = String::new();
@@ -325,28 +368,44 @@ impl BackupManager {
         if let Ok(mut f) = archive.by_name("collections.json") {
             f.read_to_string(&mut collections_str)?;
         }
-        let collections: Vec<Collection> = if !collections_str.is_empty() { serde_json::from_str(&collections_str).unwrap_or_default() } else { Vec::new() };
+        let collections: Vec<Collection> = if !collections_str.is_empty() {
+            serde_json::from_str(&collections_str).unwrap_or_default()
+        } else {
+            Vec::new()
+        };
 
         // Find tags.json
         let mut tags_str = String::new();
         if let Ok(mut f) = archive.by_name("tags.json") {
             f.read_to_string(&mut tags_str)?;
         }
-        let tags: Vec<Tag> = if !tags_str.is_empty() { serde_json::from_str(&tags_str).unwrap_or_default() } else { Vec::new() };
+        let tags: Vec<Tag> = if !tags_str.is_empty() {
+            serde_json::from_str(&tags_str).unwrap_or_default()
+        } else {
+            Vec::new()
+        };
 
         // Find clip_collections.json
         let mut cc_str = String::new();
         if let Ok(mut f) = archive.by_name("clip_collections.json") {
             f.read_to_string(&mut cc_str)?;
         }
-        let clip_collections: Vec<BackupClipCollection> = if !cc_str.is_empty() { serde_json::from_str(&cc_str).unwrap_or_default() } else { Vec::new() };
+        let clip_collections: Vec<BackupClipCollection> = if !cc_str.is_empty() {
+            serde_json::from_str(&cc_str).unwrap_or_default()
+        } else {
+            Vec::new()
+        };
 
         // Find clip_tags.json
         let mut ct_str = String::new();
         if let Ok(mut f) = archive.by_name("clip_tags.json") {
             f.read_to_string(&mut ct_str)?;
         }
-        let clip_tags: Vec<BackupClipTag> = if !ct_str.is_empty() { serde_json::from_str(&ct_str).unwrap_or_default() } else { Vec::new() };
+        let clip_tags: Vec<BackupClipTag> = if !ct_str.is_empty() {
+            serde_json::from_str(&ct_str).unwrap_or_default()
+        } else {
+            Vec::new()
+        };
 
         let mut conn = self.db.conn()?;
         let tx = conn.transaction()?;
@@ -359,7 +418,7 @@ impl BackupManager {
             tx.execute("DELETE FROM clip_tags", [])?;
             tx.execute("DELETE FROM settings", [])?;
             tx.execute("DELETE FROM clip_files", [])?;
-            
+
             // clear image dir
             if self.image_store_path.exists() {
                 let _ = fs::remove_dir_all(&self.image_store_path);
@@ -397,11 +456,34 @@ impl BackupManager {
                 nonce=excluded.nonce,
                 updated_at=excluded.updated_at
             ")?;
-            
+
             for clip in &clips {
                 let content_type = clip.content_type.as_str();
                 stmt.execute(rusqlite::params![
-                    clip.id, clip.content_text, clip.content_html, clip.content_rtf, clip.image_path, content_type, clip.category, clip.source_app, clip.content_hash, clip.preview, clip.char_count, clip.line_count, clip.is_favorite as i64, clip.is_pinned as i64, clip.language, clip.is_code as i64, clip.detection_confidence, clip.language_source, clip.is_encrypted as i64, clip.encryption_version, clip.encrypted_blob, clip.nonce, clip.created_at, clip.updated_at
+                    clip.id,
+                    clip.content_text,
+                    clip.content_html,
+                    clip.content_rtf,
+                    clip.image_path,
+                    content_type,
+                    clip.category,
+                    clip.source_app,
+                    clip.content_hash,
+                    clip.preview,
+                    clip.char_count,
+                    clip.line_count,
+                    clip.is_favorite as i64,
+                    clip.is_pinned as i64,
+                    clip.language,
+                    clip.is_code as i64,
+                    clip.detection_confidence,
+                    clip.language_source,
+                    clip.is_encrypted as i64,
+                    clip.encryption_version,
+                    clip.encrypted_blob,
+                    clip.nonce,
+                    clip.created_at,
+                    clip.updated_at
                 ])?;
             }
         }
@@ -438,10 +520,27 @@ impl BackupManager {
                 icon_type=excluded.icon_type,
                 updated_at=excluded.updated_at
             ")?;
-            
+
             for cf in &clip_files {
                 stmt.execute(rusqlite::params![
-                    cf.id, cf.clip_id, cf.file_path, cf.file_name, cf.extension, cf.mime_type, cf.file_size, cf.is_dir as i64, cf.is_readonly as i64, cf.created_time, cf.modified_time, cf.hash, cf.thumbnail_path, cf.status, cf.selection_group, cf.icon_type, cf.created_at, cf.updated_at
+                    cf.id,
+                    cf.clip_id,
+                    cf.file_path,
+                    cf.file_name,
+                    cf.extension,
+                    cf.mime_type,
+                    cf.file_size,
+                    cf.is_dir as i64,
+                    cf.is_readonly as i64,
+                    cf.created_time,
+                    cf.modified_time,
+                    cf.hash,
+                    cf.thumbnail_path,
+                    cf.status,
+                    cf.selection_group,
+                    cf.icon_type,
+                    cf.created_at,
+                    cf.updated_at
                 ])?;
             }
         }
@@ -450,7 +549,14 @@ impl BackupManager {
         {
             let mut stmt = tx.prepare("INSERT INTO collections (id, name, icon, color, sort_order, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6) ON CONFLICT(id) DO UPDATE SET name=excluded.name, icon=excluded.icon, color=excluded.color, sort_order=excluded.sort_order")?;
             for col in &collections {
-                stmt.execute(rusqlite::params![col.id, col.name, col.icon, col.color, col.sort_order, col.created_at])?;
+                stmt.execute(rusqlite::params![
+                    col.id,
+                    col.name,
+                    col.icon,
+                    col.color,
+                    col.sort_order,
+                    col.created_at
+                ])?;
             }
         }
 
@@ -464,7 +570,9 @@ impl BackupManager {
 
         // Import clip_collections
         {
-            let mut stmt = tx.prepare("INSERT OR IGNORE INTO clip_collections (clip_id, collection_id) VALUES (?1, ?2)")?;
+            let mut stmt = tx.prepare(
+                "INSERT OR IGNORE INTO clip_collections (clip_id, collection_id) VALUES (?1, ?2)",
+            )?;
             for cc in &clip_collections {
                 stmt.execute(rusqlite::params![cc.clip_id, cc.collection_id])?;
             }
@@ -472,7 +580,8 @@ impl BackupManager {
 
         // Import clip_tags
         {
-            let mut stmt = tx.prepare("INSERT OR IGNORE INTO clip_tags (clip_id, tag_id) VALUES (?1, ?2)")?;
+            let mut stmt =
+                tx.prepare("INSERT OR IGNORE INTO clip_tags (clip_id, tag_id) VALUES (?1, ?2)")?;
             for ct in &clip_tags {
                 stmt.execute(rusqlite::params![ct.clip_id, ct.tag_id])?;
             }
