@@ -5,7 +5,8 @@ import { convertFileSrc } from '@tauri-apps/api/core';
 import { appDataDir, join } from '@tauri-apps/api/path';
 import { useClipQuery, useClipCollectionsQuery, useClipTagsQuery } from '../api/queries';
 
-import { Star, Pin, Trash2, Copy, Check, MousePointer, Plus, Lock, Unlock } from 'lucide-react';
+import { Star, Pin, Trash2, Copy, Check, MousePointer, Plus, Lock, Unlock, File, FolderOpen } from 'lucide-react';
+import { formatFileSize } from '../../../shared/lib/utils';
 import { EmptyState } from '../../../shared/components/EmptyState';
 import { Dialog } from '../../../shared/components/Dialog';
 import { ConfirmDialog } from '../../../shared/components/ConfirmDialog';
@@ -207,7 +208,7 @@ export function ClipboardPreview() {
         <div className="flex items-start justify-between gap-4">
           <div className="flex flex-col gap-1.5">
             <h3 className="text-xl font-semibold text-text-primary tracking-tight font-outfit">
-              {(clip.content_type as string) === 'image' ? 'Image Clip' : (clip.content_type as string) === 'link' ? 'Link Clip' : (clip.content_type as string) === 'code' ? 'Code Clip' : 'Text Clip'}
+              {(clip.content_type as string) === 'image' ? 'Image Clip' : (clip.content_type as string) === 'file' ? 'File Clip' : (clip.content_type as string) === 'link' ? 'Link Clip' : (clip.content_type as string) === 'code' ? 'Code Clip' : 'Text Clip'}
             </h3>
             <div className="text-[13px] text-text-secondary">
               {new Date(clip.created_at * 1000).toLocaleString(undefined, { month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
@@ -268,6 +269,27 @@ export function ClipboardPreview() {
       <div className="flex-1 overflow-hidden flex flex-col relative z-0">
         {clip.content_type === 'image' && clip.image_path ? (
           <ImagePreview imagePath={clip.image_path} />
+        ) : clip.content_type === 'file' && clip.files && clip.files.length > 0 ? (
+          <div className="p-6 overflow-auto h-full">
+            <div className="flex flex-col gap-3">
+              {clip.files.map((f) => (
+                <div key={f.id} className="flex items-center gap-3 p-3 rounded-lg bg-hover border border-border">
+                  <div className="shrink-0 flex items-center justify-center w-10 h-10 rounded-md bg-surface border border-border text-text-secondary">
+                    {f.is_dir ? <FolderOpen size={20} /> : <File size={20} />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-text-primary truncate">{f.file_name}</div>
+                    <div className="flex items-center gap-2 text-[11px] text-text-secondary mt-0.5">
+                      {f.mime_type && <span>{f.mime_type}</span>}
+                      {f.file_size > 0 && <><span className="opacity-50">·</span><span>{formatFileSize(f.file_size)}</span></>}
+                      {f.extension && <><span className="opacity-50">·</span><span>.{f.extension}</span></>}
+                    </div>
+                    <div className="text-[11px] text-text-tertiary mt-0.5 truncate">{f.file_path}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         ) : (
           <Suspense fallback={<div className="p-6 text-text-tertiary">Loading snippet...</div>}>
             <CodeSnippetPreview clip={clip} />

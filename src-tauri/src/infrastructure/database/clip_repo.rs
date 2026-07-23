@@ -31,6 +31,7 @@ pub(crate) fn row_to_clip(row: &Row) -> Result<Clip, rusqlite::Error> {
         "text" => ContentType::Text,
         "image" => ContentType::Image,
         "rich_text" => ContentType::RichText,
+        "file" => ContentType::File,
         _ => ContentType::Text,
     };
 

@@ -285,7 +285,7 @@ impl BackupManager {
             schema_version: "1.0".to_string(), // we can query pragma user_version, but hardcoding for simplicity
             timestamp: std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
+                .unwrap_or_default()
                 .as_secs() as i64,
             platform: std::env::consts::OS.to_string(),
             os_version: std::env::consts::ARCH.to_string(),
@@ -294,7 +294,7 @@ impl BackupManager {
             item_count,
             image_count,
             file_count,
-            checksum: "TODO".to_string(),
+            checksum: String::new(),
             compression_type: "deflate".to_string(),
         };
 

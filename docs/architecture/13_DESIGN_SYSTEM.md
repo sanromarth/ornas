@@ -313,12 +313,12 @@ Base unit: **4px**. All spacing is a multiple of 4px.
 
 ```mermaid
 graph TD
-    A[Design Tokens] --> B[globals.css<br/>CSS Custom Properties]
-    A --> C[tailwind.config.ts<br/>Theme Extension]
-    B --> D[Shared Components<br/>Button, Input, Badge...]
+    A[Design Tokens] --> B["globals.css CSS Custom Properties"]
+    A --> C["tailwind.config.ts Theme Extension"]
+    B --> D["Shared Components Button, Input, Badge..."]
     C --> D
-    D --> E[Feature Components<br/>ClipboardItem, SearchBar...]
-    E --> F[Layouts<br/>MainLayout, SearchWindowLayout]
+    D --> E["Feature Components ClipboardItem, SearchBar..."]
+    E --> F["Layouts MainLayout, SearchWindowLayout"]
 ```
 
 | Layer | Token Source | Example |

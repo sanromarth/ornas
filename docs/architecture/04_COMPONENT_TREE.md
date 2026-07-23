@@ -9,7 +9,7 @@
 ```mermaid
 graph TD
     MAIN["main.tsx"] --> APP["App"]
-    APP --> PROV["Providers<br/>(QueryClient + Theme)"]
+    APP --> PROV["Providers (QueryClient + Theme)"]
     PROV --> ML["MainLayout"]
     PROV --> SWL["SearchWindowLayout"]
 
@@ -18,16 +18,16 @@ graph TD
     ML --> CP["ClipboardPreview"]
 
     CL --> VL["VirtualList"]
-    VL --> CI["ClipboardItem ×n<br/>(React.memo)"]
+    VL --> CI["ClipboardItem ×n (React.memo)"]
     CL --> ES["EmptyState"]
 
     ML --> SEARCH["SearchBar"]
     SEARCH --> SR["SearchResults"]
 
-    ML --> CMD["CommandPalette<br/>(lazy)"]
+    ML --> CMD["CommandPalette (lazy)"]
     CMD --> CMI["CommandItem ×n"]
 
-    ML --> SET["SettingsPanel<br/>(lazy)"]
+    ML --> SET["SettingsPanel (lazy)"]
     SET --> SETR["SettingRow ×n"]
 
     SWL --> SWSB["SearchBar"]
@@ -158,10 +158,10 @@ graph LR
     end
 
     subgraph Frontend["React Frontend"]
-        TQ["TanStack Query<br/>(server state cache)"]
-        COMP["Components<br/>(render UI)"]
-        ZS["Zustand<br/>(client state)"]
-        HOOK["useTauriEvent<br/>(event listener)"]
+        TQ["TanStack Query (server state cache)"]
+        COMP["Components (render UI)"]
+        ZS["Zustand (client state)"]
+        HOOK["useTauriEvent (event listener)"]
     end
 
     SVC -->|response| INVOKE
@@ -172,8 +172,8 @@ graph LR
     COMP -->|mutations| INVOKE
     INVOKE -->|command| SVC
 
-    EVENT -->|"clip-created<br/>clip-deleted<br/>clip-updated<br/>settings-changed"| HOOK
-    HOOK -->|"invalidateQueries()"| TQ
+    EVENT -->|clip-created, clip-deleted, clip-updated, settings-changed| HOOK
+    HOOK -->|invalidateQueries()| TQ
 ```
 
 ### State Ownership

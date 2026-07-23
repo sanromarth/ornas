@@ -1,26 +1,26 @@
 //! Native clipboard monitor using `clipboard-rs`.
 //!
 //! Implements the `ClipboardWatcherContext` callback to receive
-//! clipboard change notifications and forward them through a channel.
+//! clipboard change notifications and forward classified content
+//! through channels for pipeline and file processing.
 
 use crate::domain::pipeline::ClipItem;
-use clipboard_rs::common::RustImage;
-use clipboard_rs::{
-    Clipboard, ClipboardContext, ClipboardHandler, ClipboardWatcher, ClipboardWatcherContext,
-};
+use crate::infrastructure::clipboard::classifier::{self, ClipboardContent};
+use clipboard_rs::{ClipboardContext, ClipboardHandler, ClipboardWatcher, ClipboardWatcherContext};
 use std::sync::mpsc::Sender;
 
 /// Handler that receives clipboard change callbacks from `clipboard-rs`.
 ///
-/// On each change, reads the clipboard content and sends a `ClipItem`
-/// through the provided channel for pipeline processing.
+/// On each change, delegates to the Clipboard Classifier to determine
+/// content type, then routes the classified content to the appropriate
+/// downstream channel.
 pub struct NativeClipboardHandler {
     sender: Sender<ClipItem>,
     file_sender: Sender<Vec<String>>,
 }
 
 impl NativeClipboardHandler {
-    /// Creates a new handler that sends clipboard items to the given channel.
+    /// Creates a new handler that sends clipboard items to the given channels.
     pub fn new(sender: Sender<ClipItem>, file_sender: Sender<Vec<String>>) -> Self {
         Self {
             sender,
@@ -39,43 +39,36 @@ impl ClipboardHandler for NativeClipboardHandler {
             }
         };
 
-        // Try reading files first
-        if let Ok(files) = ctx.get_files() {
-            if !files.is_empty() {
-                if let Err(e) = self.file_sender.send(files) {
+        // Delegate all detection logic to the Clipboard Classifier.
+        // The classifier examines available formats in priority order
+        // (raw image → file list → text) and returns a single canonical result.
+        let content = match classifier::classify(&ctx) {
+            Some(content) => content,
+            None => return,
+        };
+
+        match content {
+            ClipboardContent::RawImage { bytes } => {
+                let item = ClipItem::from_image(bytes);
+                if let Err(e) = self.sender.send(item) {
+                    tracing::error!("Failed to send clipboard image to pipeline: {e}");
+                }
+                tracing::debug!("Clipboard raw image captured");
+            }
+
+            ClipboardContent::FileList { paths } => {
+                if let Err(e) = self.file_sender.send(paths) {
                     tracing::error!("Failed to send clipboard files to pipeline: {e}");
                 }
                 tracing::debug!("Clipboard files captured");
-                return;
             }
-        }
 
-        // Try reading text first
-        if let Ok(text) = ctx.get_text() {
-            if !text.trim().is_empty() {
+            ClipboardContent::Text { text } => {
                 let item = ClipItem::from_text(text);
                 if let Err(e) = self.sender.send(item) {
-                    tracing::error!("Failed to send clipboard item to pipeline: {e}");
+                    tracing::error!("Failed to send clipboard text to pipeline: {e}");
                 }
                 tracing::debug!("Clipboard text captured");
-                return;
-            }
-        }
-
-        // Try reading image
-        if let Ok(image) = ctx.get_image() {
-            match image.to_png() {
-                Ok(buffer) => {
-                    let bytes = buffer.get_bytes().to_vec();
-                    let item = ClipItem::from_image(bytes);
-                    if let Err(e) = self.sender.send(item) {
-                        tracing::error!("Failed to send clipboard image to pipeline: {e}");
-                    }
-                    tracing::debug!("Clipboard image captured");
-                }
-                Err(e) => {
-                    tracing::warn!("Failed to convert image to PNG: {e}");
-                }
             }
         }
     }

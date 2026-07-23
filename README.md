@@ -19,7 +19,7 @@ ORNAS is a lightweight, offline-first desktop application that captures, organiz
 
 *(Screenshots coming soon)*
 
-## Features (V1.0)
+## Features (v0.9.0-beta)
 
 - 📋 **Automatic clipboard capture** — text, images, rich text
 - 🔍 **Instant full-text search** — FTS5 powered, sub-50ms on 10k items
@@ -51,7 +51,7 @@ You can download the latest release for your platform from the [Releases page](h
 
 ### Prerequisites
 
-- [Rust](https://rustup.rs) (1.77+)
+- [Rust](https://rustup.rs) (1.85+)
 - [Node.js](https://nodejs.org) (20+)
 - Linux: `libwebkit2gtk-4.1-dev`, `libgtk-3-dev`, `libayatana-appindicator3-dev`
 

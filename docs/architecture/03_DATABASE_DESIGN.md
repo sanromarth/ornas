@@ -90,9 +90,9 @@ All timestamps are stored as `INTEGER` Unix epoch seconds via `DEFAULT (unixepoc
 
 ```mermaid
 flowchart LR
-    A["clips table<br/>(content owner)"] -->|"content='clips'"| B["clips_fts<br/>(FTS5 virtual table)"]
-    B -->|"Indexes"| C["content_text column"]
-    B -->|"Indexes"| D["preview column"]
+    A["clips table (content owner)"] -->|content='clips'| B["clips_fts (FTS5 virtual table)"]
+    B -->|Indexes| C["content_text column"]
+    B -->|Indexes| D["preview column"]
     style B fill:#2563eb,color:#fff
 ```
 
@@ -144,9 +144,9 @@ Migrations are stored in `src-tauri/migrations/` as numbered SQL files. The `rus
 ```mermaid
 flowchart TD
     A["App starts"] --> B["Open SQLite connection"]
-    B --> C["rusqlite_migration reads<br/>PRAGMA user_version"]
+    B --> C["rusqlite_migration reads PRAGMA user_version"]
     C --> D{"user_version < latest?"}
-    D -->|Yes| E["Apply pending migrations<br/>in order"]
+    D -->|Yes| E["Apply pending migrations in order"]
     D -->|No| F["Skip — schema is current"]
     E --> F
     F --> G["Continue startup"]

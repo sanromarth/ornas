@@ -153,14 +153,14 @@ ORNAS/
 
 ```mermaid
 graph TD
-    CMD["commands/"] -->|"calls via traits"| SVC["services/"]
-    SVC -->|"depends on"| DOM["domain/"]
-    INFRA["infrastructure/"] -->|"implements"| DOM
+    CMD["commands/"] -->|calls via traits| SVC["services/"]
+    SVC -->|depends on| DOM["domain/"]
+    INFRA["infrastructure/"] -->|implements| DOM
 
-    CMD -.-x|"NEVER imports"| INFRA
-    INFRA -.-x|"NEVER imports"| CMD
-    INFRA -.-x|"NEVER imports"| SVC
-    DOM -.-x|"NEVER imports"| ANYTHING_EXTERNAL["External crates"]
+    CMD -.->|NEVER imports| INFRA
+    INFRA -.->|NEVER imports| CMD
+    INFRA -.->|NEVER imports| SVC
+    DOM -.->|NEVER imports| ANYTHING_EXTERNAL["External crates"]
 
     style DOM fill:#4a9,stroke:#2a7,color:#fff
     style CMD fill:#59b,stroke:#37a,color:#fff
@@ -178,17 +178,17 @@ graph TD
 
 ```mermaid
 graph TD
-    APP["app/"] -->|"imports"| FEAT["features/"]
-    APP -->|"imports"| SHARED["shared/"]
-    APP -->|"imports"| STORES["stores/"]
+    APP["app/"] -->|imports| FEAT["features/"]
+    APP -->|imports| SHARED["shared/"]
+    APP -->|imports| STORES["stores/"]
 
-    FEAT -->|"imports via barrel"| SHARED
-    FEAT -->|"imports"| SVC["services/"]
-    FEAT -->|"imports"| STORES
+    FEAT -->|imports via barrel| SHARED
+    FEAT -->|imports| SVC["services/"]
+    FEAT -->|imports| STORES
 
-    SHARED -.-x|"NEVER imports"| FEAT
-    SVC -.-x|"NEVER imports"| FEAT
-    FEAT_A["feature A"] -.-x|"NEVER imports internals of"| FEAT_B["feature B"]
+    SHARED -.->|NEVER imports| FEAT
+    SVC -.->|NEVER imports| FEAT
+    FEAT_A["feature A"] -.->|NEVER imports internals of| FEAT_B["feature B"]
 
     style SHARED fill:#4a9,stroke:#2a7,color:#fff
     style FEAT fill:#59b,stroke:#37a,color:#fff

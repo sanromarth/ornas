@@ -44,6 +44,7 @@ impl PipelineStage for Persister {
         let content_type = match item.content_type.as_str() {
             "image" => ContentType::Image,
             "rich_text" => ContentType::RichText,
+            "file" => ContentType::File,
             _ => ContentType::Text,
         };
 
