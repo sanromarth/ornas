@@ -66,7 +66,11 @@ impl AppState {
     /// 8. Build pipeline
     pub fn new(app_handle: tauri::AppHandle) -> Result<Self, AppError> {
         // 1-3. Open database
-        let db_path = connection::database_path()?;
+        use tauri::Manager;
+        let app_data_dir = app_handle.path().app_data_dir()
+            .map_err(|e| AppError::Internal(format!("Failed to get app data dir: {}", e)))?;
+        
+        let db_path = connection::database_path(&app_data_dir)?;
         tracing::info!(path = %db_path.display(), "Opening database");
         let mut conn = connection::open_database(&db_path)?;
 
@@ -148,7 +152,20 @@ impl AppState {
         })
     }
 
-    /// Builds the 7-stage clipboard processing pipeline.
+    /// Builds the 8-stage clipboard processing pipeline and background job queue.
+    ///
+    /// Pipeline stages (fast path):
+    ///   1. Normalizer — trim, clean line endings
+    ///   2. CodeDetector — detect programming language
+    ///   3. Hasher — compute xxHash64
+    ///   4. Dedup — LRU cache + DB fallback
+    ///   5. Categorizer — content category detection
+    ///   6. Metadata — char/line counts, preview
+    ///   7. Persister — DB INSERT only (no image I/O)
+    ///   8. Dispatcher — emit clip-created + dispatch background jobs
+    ///
+    /// Background (off critical path):
+    ///   - JobQueue worker thread processes ImageJobs
     fn build_pipeline(
         config: &AppConfig,
         clip_repo: Arc<dyn ClipRepository>,
@@ -156,9 +173,18 @@ impl AppState {
         app_handle: tauri::AppHandle,
     ) -> PipelineRunner {
         use crate::infrastructure::pipeline::{
-            categorizer::Categorizer, code_detector::CodeDetector, dedup::Dedup, hasher::Hasher,
-            metadata::Metadata, normalizer::Normalizer, notifier::Notifier, persister::Persister,
+            categorizer::Categorizer, code_detector::CodeDetector, dedup::Dedup,
+            dispatcher::Dispatcher, hasher::Hasher, job_queue::JobQueue, metadata::Metadata,
+            normalizer::Normalizer, persister::Persister,
         };
+
+        // Start the background job queue worker thread
+        let job_queue = Arc::new(JobQueue::start(
+            Arc::clone(&image_store),
+            Arc::clone(&clip_repo),
+            app_handle.clone(),
+        ));
+        tracing::info!("Background job queue started");
 
         let stages: Vec<Box<dyn crate::domain::pipeline::PipelineStage>> = vec![
             Box::new(Normalizer),
@@ -167,10 +193,11 @@ impl AppState {
             Box::new(Dedup::new(config.dedup_cache_size, Arc::clone(&clip_repo))),
             Box::new(Categorizer),
             Box::new(Metadata),
-            Box::new(Persister::new(Arc::clone(&clip_repo), image_store)),
-            Box::new(Notifier::new(app_handle)),
+            Box::new(Persister::new(Arc::clone(&clip_repo))),
+            Box::new(Dispatcher::new(app_handle, job_queue)),
         ];
 
         PipelineRunner::new(stages)
     }
 }
+

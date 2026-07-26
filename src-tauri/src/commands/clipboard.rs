@@ -111,6 +111,77 @@ pub fn restore_files_to_clipboard(
     }
 }
 
+/// Restore image to the system clipboard.
+#[tauri::command]
+pub fn restore_image_to_clipboard(
+    app_handle: tauri::AppHandle,
+    state: State<'_, AppState>,
+    clip_id: i64,
+) -> Result<(), AppError> {
+    let clip = state.clipboard_service.get(clip_id)?;
+    if clip.content_type != crate::domain::clip::ContentType::Image {
+        return Err(AppError::Clipboard("Clip is not an image".into()));
+    }
+
+    if let Some(image_path) = clip.image_path {
+        use tauri::Manager;
+        let base_path = app_handle.path().app_data_dir().unwrap().join("images");
+        let full_path = base_path.join(image_path);
+
+        if !full_path.exists() {
+            return Err(AppError::Clipboard("Image file not found".into()));
+        }
+
+        #[cfg(target_os = "linux")]
+        {
+            let is_wayland = std::env::var("WAYLAND_DISPLAY").is_ok()
+                || std::env::var("XDG_SESSION_TYPE")
+                    .map(|s| s == "wayland")
+                    .unwrap_or(false);
+
+            if is_wayland {
+                let (tx, rx) = std::sync::mpsc::channel();
+                let path_buf = full_path.clone();
+                app_handle
+                    .run_on_main_thread(move || {
+                        let res = (|| -> Result<(), String> {
+                            let clipboard = gtk::Clipboard::get(&gtk::gdk::SELECTION_CLIPBOARD);
+                            let pixbuf = gtk::gdk_pixbuf::Pixbuf::from_file(&path_buf)
+                                .map_err(|e| format!("Failed to load image for Wayland: {}", e))?;
+                            clipboard.set_image(&pixbuf);
+                            // Optional but recommended to persist clipboard
+                            clipboard.store();
+                            Ok(())
+                        })();
+                        let _ = tx.send(res);
+                    })
+                    .map_err(|e| AppError::Clipboard(e.to_string()))?;
+
+                return rx
+                    .recv()
+                    .unwrap_or(Err("Main thread panicked".to_string()))
+                    .map_err(AppError::Clipboard);
+            }
+        }
+
+        use clipboard_rs::{Clipboard, ClipboardContext, common::RustImage};
+        let ctx = ClipboardContext::new().map_err(|e| AppError::Clipboard(e.to_string()))?;
+
+        // Read the image using RustImage::from_path
+        let img = RustImage::from_path(full_path.to_string_lossy().as_ref())
+            .map_err(|e| AppError::Clipboard(format!("Failed to load image: {}", e)))?;
+
+        ctx.set_image(img)
+            .map_err(|e| AppError::Clipboard(format!("Failed to set image on clipboard: {}", e)))?;
+
+        Ok(())
+    } else {
+        Err(AppError::Clipboard(
+            "No image path associated with this clip".into(),
+        ))
+    }
+}
+
 /// Write text directly to the system clipboard.
 /// Bypasses webview limitations.
 #[tauri::command]

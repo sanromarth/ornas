@@ -5,9 +5,12 @@
 pub mod categorizer;
 pub mod code_detector;
 pub mod dedup;
+pub mod dispatcher;
 pub mod hasher;
+pub mod job_queue;
 pub mod metadata;
 pub mod normalizer;
-pub mod notifier;
+
 pub mod persister;
 pub mod runner;
+

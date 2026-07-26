@@ -2,6 +2,7 @@
 
 use crate::domain::pipeline::{ClipItem, PipelineStage, StageAction};
 use crate::error::AppError;
+use std::time::Instant;
 
 /// Executes pipeline stages sequentially on a clipboard item.
 pub struct PipelineRunner {
@@ -15,22 +16,50 @@ impl PipelineRunner {
     }
 
     /// Processes a clip item through all stages.
+    ///
+    /// Each stage is timed individually. Total pipeline time is logged
+    /// at info level for performance monitoring.
     pub fn process(&self, item: &mut ClipItem) -> Result<(), AppError> {
+        let pipeline_start = Instant::now();
         tracing::info!("Pipeline started");
 
         for stage in &self.stages {
+            let stage_start = Instant::now();
             match stage.process(item)? {
                 StageAction::Continue => {
-                    tracing::debug!(stage = stage.name(), "stage completed");
+                    let stage_elapsed = stage_start.elapsed();
+                    tracing::info!(
+                        stage = stage.name(),
+                        elapsed_us = stage_elapsed.as_micros() as u64,
+                        elapsed_ms = format!("{:.2}", stage_elapsed.as_secs_f64() * 1000.0).as_str(),
+                        "stage completed"
+                    );
                 }
                 StageAction::Skip { reason } => {
-                    tracing::debug!(stage = stage.name(), reason, "pipeline skipped");
+                    let stage_elapsed = stage_start.elapsed();
+                    tracing::info!(
+                        stage = stage.name(),
+                        reason,
+                        elapsed_us = stage_elapsed.as_micros() as u64,
+                        "pipeline skipped"
+                    );
+                    let total_elapsed = pipeline_start.elapsed();
+                    tracing::info!(
+                        total_ms = format!("{:.2}", total_elapsed.as_secs_f64() * 1000.0).as_str(),
+                        total_us = total_elapsed.as_micros() as u64,
+                        "Pipeline ended (skipped)"
+                    );
                     return Ok(());
                 }
             }
         }
 
-        tracing::info!("Pipeline ended");
+        let total_elapsed = pipeline_start.elapsed();
+        tracing::info!(
+            total_ms = format!("{:.2}", total_elapsed.as_secs_f64() * 1000.0).as_str(),
+            total_us = total_elapsed.as_micros() as u64,
+            "Pipeline ended"
+        );
         Ok(())
     }
 }

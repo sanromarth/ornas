@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { Pin, Star, Type, Image as ImageIcon, Trash2, Copy, Link, Code, File, Lock } from 'lucide-react';
 import { cn, formatFileSize } from '../../../shared/lib/utils';
@@ -8,6 +8,44 @@ import { useToggleFavorite, useTogglePin, useDeleteClip } from '../api/mutations
 import { IconButton } from '../../../shared/components/IconButton';
 import { ConfirmDialog } from '../../../shared/components/ConfirmDialog';
 import { useToast } from '../../../shared/components/useToast';
+import { convertFileSrc } from '@tauri-apps/api/core';
+import { appDataDir, join } from '@tauri-apps/api/path';
+
+function ThumbnailImage({ imagePath, isSelected }: { imagePath: string, isSelected: boolean }) {
+  const [src, setSrc] = useState<string>('');
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const base = await appDataDir();
+        const fullPath = await join(base, 'images', 'thumbnails', imagePath);
+        console.log(`[Thumbnail] Resolved path requested by frontend: ${fullPath}`);
+        setSrc(convertFileSrc(fullPath));
+      } catch (err) {
+        setError(true);
+      }
+    }
+    load();
+  }, [imagePath]);
+
+  if (error || !src) {
+    return (
+      <div className={cn("w-10 h-8 rounded overflow-hidden flex items-center justify-center border", isSelected ? "bg-primary/20 border-primary/30 text-primary-foreground/70" : "bg-surface border-border text-text-tertiary")}>
+        <ImageIcon size={14} />
+      </div>
+    );
+  }
+
+  return (
+    <img 
+      src={src} 
+      alt="Thumbnail" 
+      className={cn("w-10 h-8 object-cover rounded border", isSelected ? "border-primary/50" : "border-border")}
+      onError={() => setError(true)}
+    />
+  );
+}
 
 interface Props {
   clip: ClipDto;
@@ -22,6 +60,19 @@ export const ClipboardItem = React.memo(function ClipboardItem({ clip, isSelecte
   const { mutate: deleteClip, isPending: isDeletePending } = useDeleteClip();
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const { addToast } = useToast();
+  const [isNew, setIsNew] = useState(false);
+
+  useEffect(() => {
+    const checkNew = () => {
+      const lastFocused = localStorage.getItem('ornas_last_focused_at');
+      if (lastFocused) {
+        setIsNew(clip.created_at * 1000 > parseInt(lastFocused, 10));
+      }
+    };
+    checkNew();
+    window.addEventListener('ornas-focus-changed', checkNew);
+    return () => window.removeEventListener('ornas-focus-changed', checkNew);
+  }, [clip.created_at]);
 
   const handleCopy = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -31,6 +82,16 @@ export const ClipboardItem = React.memo(function ClipboardItem({ clip, isSelecte
         addToast({ title: 'Files copied to clipboard', variant: 'success' });
       } catch (err: unknown) {
         addToast({ title: 'Failed to copy files', description: (err instanceof Error ? err.message : String(err)) || String(err), variant: 'error' });
+      }
+      return;
+    }
+    
+    if (clip.content_type === 'image') {
+      try {
+        await invoke('restore_image_to_clipboard', { clipId: clip.id });
+        addToast({ title: 'Image copied to clipboard', variant: 'success' });
+      } catch (err: unknown) {
+        addToast({ title: 'Failed to copy image', description: (err instanceof Error ? err.message : String(err)) || String(err), variant: 'error' });
       }
       return;
     }
@@ -71,15 +132,23 @@ export const ClipboardItem = React.memo(function ClipboardItem({ clip, isSelecte
       onClick={() => onSelect(clip.id)}
       tabIndex={tabIndex}
     >
-      <div className="flex-1 min-w-0 flex flex-col gap-1 text-left relative">
+      <div className={cn("flex-1 min-w-0 flex flex-col justify-center text-left relative", isNew ? "pl-2.5" : "pl-1")}>
+        {isNew && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-primary" title="New clip" />}
         {/* Top line */}
         <div className="flex items-center gap-2 pr-20">
-          <div className={cn("shrink-0 flex items-center justify-center", isSelected ? "text-primary-foreground opacity-90" : "text-text-secondary")}>
-            {getContentTypeIcon()}
-          </div>
-          <div className="text-[13px] font-medium truncate">
+          {clip.content_type !== 'image' && (
+            <div className={cn("shrink-0 flex items-center justify-center", isSelected ? "text-primary-foreground opacity-90" : "text-text-secondary")}>
+              {getContentTypeIcon()}
+            </div>
+          )}
+          {clip.content_type === 'image' && clip.image_path && (
+            <div className="shrink-0">
+              <ThumbnailImage imagePath={clip.image_path} isSelected={isSelected} />
+            </div>
+          )}
+          <div className="text-[13px] font-medium truncate" title={clip.content_type === 'file' ? (clip.files && clip.files.length > 1 ? `${clip.files.length} items` : (clip.files?.[0]?.file_name || clip.preview || undefined)) : (clip.is_encrypted ? undefined : (clip.preview || undefined))}>
             {clip.content_type === 'image' ? (
-              <span className="italic text-text-secondary">Image content</span>
+              clip.image_path ? <span className="text-text-secondary">Image</span> : <span className="italic text-text-secondary">Image content</span>
             ) : clip.content_type === 'file' ? (
               clip.files && clip.files.length > 1 ? (
                  <span>{clip.files.length} items</span>
@@ -95,7 +164,7 @@ export const ClipboardItem = React.memo(function ClipboardItem({ clip, isSelecte
         </div>
         
         {/* Second line */}
-        <div className={cn("flex items-center gap-2 text-[11px]", isSelected ? "text-primary-foreground/80" : "text-text-secondary")}>
+        <div className={cn("flex items-center gap-2 text-[11px] mt-1", isSelected ? "text-primary-foreground/80" : "text-text-secondary")}>
           <span>{date}</span>
           <span className="opacity-50">·</span>
           {clip.content_type === 'file' && clip.files && clip.files.length > 0 ? (
@@ -112,7 +181,7 @@ export const ClipboardItem = React.memo(function ClipboardItem({ clip, isSelecte
               )}>{clip.files[0].status}</span>
             </>
           ) : (
-            <span className="capitalize">{clip.category}</span>
+            <span>{clip.category.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</span>
           )}
           
           {/* Indicators */}
@@ -136,6 +205,7 @@ export const ClipboardItem = React.memo(function ClipboardItem({ clip, isSelecte
       )}>
         <IconButton
           onClick={handleCopy}
+          title="Copy to clipboard"
           aria-label="Copy to clipboard"
         >
           <Copy size={16} />
@@ -147,6 +217,7 @@ export const ClipboardItem = React.memo(function ClipboardItem({ clip, isSelecte
             togglePin(clip.id);
           }}
           disabled={isPinPending}
+          title={clip.is_pinned ? "Unpin item" : "Pin item"}
           aria-label={clip.is_pinned ? "Unpin item" : "Pin item"}
         >
           <Pin size={16} className={clip.is_pinned ? "fill-current" : ""} />
@@ -158,6 +229,7 @@ export const ClipboardItem = React.memo(function ClipboardItem({ clip, isSelecte
             toggleFavorite(clip.id);
           }}
           disabled={isFavoritePending}
+          title={clip.is_favorite ? "Remove from favorites" : "Add to favorites"}
           aria-label={clip.is_favorite ? "Remove from favorites" : "Add to favorites"}
         >
           <Star size={16} className={clip.is_favorite ? "fill-current" : ""} />
@@ -168,6 +240,7 @@ export const ClipboardItem = React.memo(function ClipboardItem({ clip, isSelecte
             setIsConfirmingDelete(true);
           }}
           disabled={isDeletePending}
+          title="Delete item"
           aria-label="Delete item"
           className="hover:text-danger hover:bg-danger/20"
         >

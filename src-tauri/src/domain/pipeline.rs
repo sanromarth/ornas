@@ -21,8 +21,6 @@ pub struct ClipItem {
     pub content_rtf: Option<String>,
     /// Raw image bytes (before filesystem storage).
     pub image_bytes: Option<Vec<u8>>,
-    /// Filesystem path after image is saved (set by Persister stage).
-    pub image_path: Option<String>,
     /// Content type classification.
     pub content_type: String,
     /// Detected content category (set by Categorizer stage).
@@ -56,7 +54,6 @@ impl ClipItem {
             content_html: None,
             content_rtf: None,
             image_bytes: None,
-            image_path: None,
             content_type: "text".into(),
             category: "plain_text".into(),
             source_app: None,
@@ -79,7 +76,6 @@ impl ClipItem {
             content_html: None,
             content_rtf: None,
             image_bytes: Some(bytes),
-            image_path: None,
             content_type: "image".into(),
             category: "plain_text".into(),
             source_app: None,

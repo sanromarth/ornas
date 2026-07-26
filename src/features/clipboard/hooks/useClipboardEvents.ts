@@ -1,4 +1,10 @@
-import { useQueryClient } from '@tanstack/react-query';
+/** Hook to listen and react to backend clipboard events.
+ *
+ * Must be mounted in a component that is always rendered (e.g. App)
+ * so that events are received at all times.
+ */
+
+import { useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import { useTauriEvent } from '../../../shared/hooks/useTauriEvent';
 import { TAURI_EVENTS } from '../../../shared/lib/constants';
 import { clipboardKeys } from '../../../shared/lib/queryKeys';
@@ -6,75 +12,102 @@ import type { ClipboardEventDto, ClipDto } from '../../../shared/types';
 import { getClip } from '../../../services/clipboard';
 import { useUIStore } from '../../../stores/ui-store';
 
+type ClipPages = InfiniteData<ClipDto[]>;
+
 /** Hook to listen and react to backend clipboard events. */
 export function useClipboardEvents() {
   const queryClient = useQueryClient();
 
-  useTauriEvent<ClipboardEventDto>(TAURI_EVENTS.CLIP_CREATED, async (payload) => {
-    try {
-      const newClip = await getClip(payload.id);
-      if (!newClip) return;
+  useTauriEvent<ClipboardEventDto>(TAURI_EVENTS.CLIP_CREATED, (payload) => {
+    console.log('[ORNAS] clip-created event received:', payload);
 
-      queryClient.setQueriesData({ queryKey: clipboardKeys.lists() }, (oldData: ClipDto[] | undefined) => {
-        if (!oldData) return oldData;
-        // Prevent duplicates
-        if (oldData.some(clip => clip.id === newClip.id)) {
-          return oldData;
-        }
-        
-        // Pinned items stay at the top. Insert the new clip below all pinned items.
-        // Assuming the list is already sorted correctly from the backend.
-        const pinnedCount = oldData.filter(clip => clip.is_pinned).length;
-        const newData = [...oldData];
-        newData.splice(pinnedCount, 0, newClip);
-        return newData;
+    // Immediately invalidate queries to trigger a refetch — this is the most
+    // reliable approach. The optimistic cache update below is a nice-to-have.
+    queryClient.invalidateQueries({ queryKey: clipboardKeys.lists() });
+
+    // Also try to optimistically prepend the new clip to avoid a flash
+    getClip(payload.id)
+      .then((newClip) => {
+        if (!newClip) return;
+
+        queryClient.setQueriesData<ClipPages>(
+          { queryKey: clipboardKeys.lists() },
+          (oldData) => {
+            if (!oldData?.pages?.length) return oldData;
+
+            const firstPage = oldData.pages[0];
+            // Prevent duplicates
+            if (firstPage.some(clip => clip.id === newClip.id)) {
+              return oldData;
+            }
+
+            // Insert below pinned items in the first page
+            const pinnedCount = firstPage.filter(clip => clip.is_pinned).length;
+            const updatedFirstPage = [...firstPage];
+            updatedFirstPage.splice(pinnedCount, 0, newClip);
+
+            return {
+              ...oldData,
+              pages: [updatedFirstPage, ...oldData.pages.slice(1)],
+            };
+          }
+        );
+      })
+      .catch((error) => {
+        console.error('[ORNAS] Failed to fetch new clip after clip-created:', error);
       });
-
-      // Invalidate to ensure consistency in the background
-      queryClient.invalidateQueries({ queryKey: clipboardKeys.lists() });
-    } catch (error) {
-      console.error('Failed to handle clip-created event:', error);
-    }
   });
 
-  useTauriEvent<ClipboardEventDto>(TAURI_EVENTS.CLIP_UPDATED, async (payload) => {
-    try {
-      const updatedClip = await getClip(payload.id);
-      if (!updatedClip) return;
+  useTauriEvent<ClipboardEventDto>(TAURI_EVENTS.CLIP_UPDATED, (payload) => {
+    console.log('[ORNAS] clip-updated event received:', payload);
 
-      // Update lists
-      queryClient.setQueriesData({ queryKey: clipboardKeys.lists() }, (oldData: ClipDto[] | undefined) => {
-        if (!oldData) return oldData;
-        return oldData.map(clip => clip.id === updatedClip.id ? updatedClip : clip);
+    getClip(payload.id)
+      .then((updatedClip) => {
+        if (!updatedClip) return;
+
+        queryClient.setQueriesData<ClipPages>(
+          { queryKey: clipboardKeys.lists() },
+          (oldData) => {
+            if (!oldData?.pages?.length) return oldData;
+            return {
+              ...oldData,
+              pages: oldData.pages.map(page =>
+                page.map(clip => clip.id === updatedClip.id ? updatedClip : clip)
+              ),
+            };
+          }
+        );
+
+        queryClient.setQueryData(clipboardKeys.detail(payload.id), updatedClip);
+        queryClient.invalidateQueries({ queryKey: clipboardKeys.lists() });
+      })
+      .catch((error) => {
+        console.error('[ORNAS] Failed to fetch updated clip:', error);
       });
-      
-      // Update detail cache if it exists
-      queryClient.setQueryData(clipboardKeys.detail(payload.id), updatedClip);
-      
-      // Invalidate to ensure consistency (e.g. sort order might change if pinned state changed)
-      queryClient.invalidateQueries({ queryKey: clipboardKeys.lists() });
-    } catch (error) {
-      console.error('Failed to handle clip-updated event:', error);
-    }
   });
 
   useTauriEvent<ClipboardEventDto>(TAURI_EVENTS.CLIP_DELETED, (payload) => {
-    // 1. Clear selection safely if the deleted clip is currently selected
+    console.log('[ORNAS] clip-deleted event received:', payload);
+
     const { selectedClipId, selectClip } = useUIStore.getState();
     if (selectedClipId === payload.id) {
       selectClip(null);
     }
 
-    // 2. Remove from lists
-    queryClient.setQueriesData({ queryKey: clipboardKeys.lists() }, (oldData: ClipDto[] | undefined) => {
-      if (!oldData) return oldData;
-      return oldData.filter(clip => clip.id !== payload.id);
-    });
-    
-    // 3. Remove from detail cache
+    queryClient.setQueriesData<ClipPages>(
+      { queryKey: clipboardKeys.lists() },
+      (oldData) => {
+        if (!oldData?.pages?.length) return oldData;
+        return {
+          ...oldData,
+          pages: oldData.pages.map(page =>
+            page.filter(clip => clip.id !== payload.id)
+          ),
+        };
+      }
+    );
+
     queryClient.removeQueries({ queryKey: clipboardKeys.detail(payload.id) });
-    
-    // 4. Invalidate to ensure consistency
     queryClient.invalidateQueries({ queryKey: clipboardKeys.lists() });
   });
 }

@@ -7,13 +7,10 @@ use crate::error::AppError;
 use rusqlite::Connection;
 use std::path::{Path, PathBuf};
 
-/// Resolves to ~/.local/share/ornas/ornas.db, creates parent dirs if needed
-pub fn database_path() -> Result<PathBuf, AppError> {
-    let home = std::env::var("HOME")
-        .map_err(|_| AppError::Internal("HOME environment variable not set".into()))?;
-    let path = PathBuf::from(home).join(".local/share/ornas");
-    std::fs::create_dir_all(&path)?;
-    Ok(path.join("ornas.db"))
+/// Resolves to {app_data_dir}/ornas.db, creates parent dirs if needed
+pub fn database_path(app_data_dir: &Path) -> Result<PathBuf, AppError> {
+    std::fs::create_dir_all(app_data_dir)?;
+    Ok(app_data_dir.join("ornas.db"))
 }
 
 /// Opens a SQLite connection and applies PRAGMA settings.

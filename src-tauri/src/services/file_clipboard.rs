@@ -23,6 +23,7 @@ use rusqlite::params;
 use std::fs;
 use std::path::Path;
 use std::sync::Arc;
+use tauri::Emitter;
 
 /// MIME types recognized as raster images for thumbnail generation.
 const IMAGE_MIME_PREFIXES: [&str; 6] = [
@@ -42,11 +43,17 @@ fn is_raster_image_mime(mime: &str) -> bool {
 pub struct FileClipboardService {
     db: Arc<Database>,
     image_store: Arc<ImageStore>,
+    app_handle: Option<tauri::AppHandle>,
 }
 
 impl FileClipboardService {
-    pub fn new(db: Arc<Database>, image_store: Arc<ImageStore>) -> Self {
-        Self { db, image_store }
+    pub fn new(db: Arc<Database>, image_store: Arc<ImageStore>, app_handle: tauri::AppHandle) -> Self {
+        Self { db, image_store, app_handle: Some(app_handle) }
+    }
+
+    #[cfg(test)]
+    pub fn new_for_test(db: Arc<Database>, image_store: Arc<ImageStore>) -> Self {
+        Self { db, image_store, app_handle: None }
     }
 
     pub fn process_files(&self, paths: Vec<String>) -> Result<(), AppError> {
@@ -267,6 +274,13 @@ impl FileClipboardService {
             "File clipboard processed"
         );
 
+        // Emit clip-created event so the frontend updates immediately
+        if let Some(ref handle) = self.app_handle {
+            if let Err(e) = handle.emit("clip-created", serde_json::json!({ "id": clip_id })) {
+                tracing::warn!("Failed to emit clip-created event for file clip: {e}");
+            }
+        }
+
         Ok(())
     }
 }
@@ -292,7 +306,7 @@ mod tests {
     fn test_process_files() {
         let db = setup_test_db();
         let image_store = setup_test_image_store();
-        let service = FileClipboardService::new(db.clone(), image_store);
+        let service = FileClipboardService::new_for_test(db.clone(), image_store);
 
         let paths = vec!["/tmp/test.txt".to_string()];
         service.process_files(paths).unwrap();
@@ -332,7 +346,7 @@ mod tests {
     fn test_process_empty_files() {
         let db = setup_test_db();
         let image_store = setup_test_image_store();
-        let service = FileClipboardService::new(db, image_store);
+        let service = FileClipboardService::new_for_test(db, image_store);
 
         let result = service.process_files(vec![]);
         assert!(result.is_ok());

@@ -98,14 +98,15 @@ Because ORNAS is a locally installed application that does not collect or transm
 
 ## Changes to this Policy
 
-As ORNAS grows, we may update this Privacy Policy. If we introduce features that require network access (such as optional opt-in peer-to-peer syncing in future roadmaps), this policy will be updated to clearly explain how those features work. However, our core philosophy will never change: **ORNAS will always be local-first, and you will always own your data.**
+As ORNAS grows, we may update this Privacy Policy. However, our core philosophy will never change: **ORNAS will always be local-first, and you will always own your data.**
 
 ## Contact
 
-If you have questions, concerns, or wish to report a vulnerability regarding this Privacy Policy or the security of ORNAS, please reach out:
+If you have questions, concerns, or wish to report a vulnerability regarding this Privacy Policy or the security of ORNAS, please reach out via our official channels:
 
-- **Security Concerns:** Email us at `security@ornas.io`
-- **General Inquiries:** Open a discussion on our [GitHub repository](https://github.com/sanromarth/ornas)
+- **Security Concerns:** Open a private vulnerability report on our [GitHub Repository](https://github.com/sanromarth/ornas)
+- **General Inquiries:** Open a discussion on our [GitHub Discussions](https://github.com/sanromarth/ornas/discussions)
+- **Bug Reports:** Open an issue on our [GitHub Issues](https://github.com/sanromarth/ornas/issues)
 
 ---
 *Last Updated: July 2026 (v0.9.0-beta)*

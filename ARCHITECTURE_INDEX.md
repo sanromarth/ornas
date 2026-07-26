@@ -21,7 +21,6 @@
 | 07 | [UI Wireframes](docs/architecture/07_UI_WIREFRAMES.md) | Text-based interface wireframes |
 | 08 | [Feature Matrix](docs/architecture/08_FEATURE_MATRIX.md) | Feature inventory and status |
 | 09 | [Development Guide](docs/architecture/09_DEVELOPMENT_GUIDE.md) | Developer onboarding |
-| 10 | [Plugin Architecture](docs/architecture/10_PLUGIN_ARCHITECTURE.md) | Extension points, V2 SDK vision |
 | 11 | [Security Model](docs/architecture/11_SECURITY_MODEL.md) | Threats, CSP, capabilities |
 | 12 | [Performance Strategy](docs/architecture/12_PERFORMANCE_STRATEGY.md) | Budgets and optimization |
 | 13 | [Design System](docs/architecture/13_DESIGN_SYSTEM.md) | Colors, typography, spacing |

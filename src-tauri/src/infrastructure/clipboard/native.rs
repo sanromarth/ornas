@@ -3,6 +3,9 @@
 //! Implements the `ClipboardWatcherContext` callback to receive
 //! clipboard change notifications and forward classified content
 //! through channels for pipeline and file processing.
+//!
+//! Used on X11 (Linux), macOS, and Windows.
+//! On Wayland, the GTK-based watcher in `wayland.rs` is used instead.
 
 use crate::domain::pipeline::ClipItem;
 use crate::infrastructure::clipboard::classifier::{self, ClipboardContent};
@@ -17,14 +20,21 @@ use std::sync::mpsc::Sender;
 pub struct NativeClipboardHandler {
     sender: Sender<ClipItem>,
     file_sender: Sender<Vec<String>>,
+    #[allow(dead_code)]
+    app_handle: tauri::AppHandle,
 }
 
 impl NativeClipboardHandler {
     /// Creates a new handler that sends clipboard items to the given channels.
-    pub fn new(sender: Sender<ClipItem>, file_sender: Sender<Vec<String>>) -> Self {
+    pub fn new(
+        app_handle: tauri::AppHandle,
+        sender: Sender<ClipItem>,
+        file_sender: Sender<Vec<String>>,
+    ) -> Self {
         Self {
             sender,
             file_sender,
+            app_handle,
         }
     }
 }
@@ -79,10 +89,11 @@ impl ClipboardHandler for NativeClipboardHandler {
 /// Returns a `ClipboardWatcherContext` that the caller must
 /// call `start_watch()` on in a background thread.
 pub fn start_native_watcher(
+    app_handle: tauri::AppHandle,
     sender: Sender<ClipItem>,
     file_sender: Sender<Vec<String>>,
 ) -> Result<ClipboardWatcherContext<NativeClipboardHandler>, crate::error::AppError> {
-    let handler = NativeClipboardHandler::new(sender, file_sender);
+    let handler = NativeClipboardHandler::new(app_handle, sender, file_sender);
     let mut watcher = ClipboardWatcherContext::new().map_err(|e| {
         crate::error::AppError::Clipboard(format!("Failed to create clipboard watcher: {e}"))
     })?;

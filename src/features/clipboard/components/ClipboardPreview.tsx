@@ -1,7 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { useUIStore } from '../../../stores/ui-store';
 import { useQueryClient } from '@tanstack/react-query';
-import { convertFileSrc } from '@tauri-apps/api/core';
+import { convertFileSrc, invoke } from '@tauri-apps/api/core';
 import { appDataDir, join } from '@tauri-apps/api/path';
 import { useClipQuery, useClipCollectionsQuery, useClipTagsQuery } from '../api/queries';
 
@@ -104,8 +104,33 @@ export function ClipboardPreview() {
 
   const [isCopied, setIsCopied] = useState(false);
 
-  const handleCopy = () => {
+  const handleCopy = async () => {
     if (!clip) return;
+    
+    if (clip.content_type === 'file') {
+      try {
+        await invoke('restore_files_to_clipboard', { clipId: clip.id });
+        addToast({ title: 'Files copied to clipboard', variant: 'success' });
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 1500);
+      } catch (err: unknown) {
+        addToast({ title: 'Failed to copy files', description: (err instanceof Error ? err.message : String(err)) || String(err), variant: 'error' });
+      }
+      return;
+    }
+    
+    if (clip.content_type === 'image') {
+      try {
+        await invoke('restore_image_to_clipboard', { clipId: clip.id });
+        addToast({ title: 'Image copied to clipboard', variant: 'success' });
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 1500);
+      } catch (err: unknown) {
+        addToast({ title: 'Failed to copy image', description: (err instanceof Error ? err.message : String(err)) || String(err), variant: 'error' });
+      }
+      return;
+    }
+
     const content = clip.content_text ?? clip.preview;
     if (content) {
       navigator.clipboard.writeText(content);
@@ -208,59 +233,68 @@ export function ClipboardPreview() {
         <div className="flex items-start justify-between gap-4">
           <div className="flex flex-col gap-1.5">
             <h3 className="text-xl font-semibold text-text-primary tracking-tight font-outfit">
-              {(clip.content_type as string) === 'image' ? 'Image Clip' : (clip.content_type as string) === 'file' ? 'File Clip' : (clip.content_type as string) === 'link' ? 'Link Clip' : (clip.content_type as string) === 'code' ? 'Code Clip' : 'Text Clip'}
+              {clip.content_type === 'rich_text' ? 'Rich Text' : (clip.content_type as string) === 'image' ? 'Image' : (clip.content_type as string) === 'file' ? 'File Path' : (clip.content_type as string) === 'link' ? 'Link' : (clip.content_type as string) === 'code' ? 'Code' : 'Plain Text'}
             </h3>
             <div className="text-[13px] text-text-secondary">
               {new Date(clip.created_at * 1000).toLocaleString(undefined, { month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+              {clip.source_app && <><span className="opacity-50 mx-1.5">·</span><span>From {clip.source_app}</span></>}
             </div>
           </div>
           
           <div className="flex items-center gap-1 shrink-0 flex-wrap justify-end">
-            <Button variant="secondary" size="sm" onClick={handleCopy} className={cn("gap-2 px-3 h-8 shadow-sm transition-colors", isCopied && "bg-success/10 text-success border-success/30 hover:bg-success/20")}>
-              {isCopied ? <Check size={14} /> : <Copy size={14} />} {isCopied ? 'Copied!' : 'Copy'}
+            <Button variant="secondary" size="sm" onClick={handleCopy} title="Copy to clipboard" className={cn("px-2.5 h-8 shadow-sm transition-colors", isCopied && "bg-success/10 text-success border-success/30 hover:bg-success/20")}>
+              {isCopied ? <Check size={16} /> : <Copy size={16} />}
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => togglePin(clip.id)} disabled={isPinPending} className={cn("px-2.5 h-8", clip.is_pinned && "text-primary hover:text-primary")}>
+            <Button variant="ghost" size="sm" onClick={() => togglePin(clip.id)} disabled={isPinPending} title={clip.is_pinned ? "Unpin item" : "Pin item"} className={cn("px-2.5 h-8", clip.is_pinned && "text-primary hover:text-primary")}>
               <Pin size={16} className={clip.is_pinned ? "fill-current" : ""} />
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => toggleFavorite(clip.id)} disabled={isFavoritePending} className={cn("px-2.5 h-8", clip.is_favorite && "text-primary hover:text-primary")}>
+            <Button variant="ghost" size="sm" onClick={() => toggleFavorite(clip.id)} disabled={isFavoritePending} title={clip.is_favorite ? "Remove from favorites" : "Add to favorites"} className={cn("px-2.5 h-8", clip.is_favorite && "text-primary hover:text-primary")}>
               <Star size={16} className={clip.is_favorite ? "fill-current" : ""} />
             </Button>
             {isInitialized && isUnlocked && (
-              <Button variant="ghost" size="sm" onClick={handleEncrypt} disabled={isEncrypting} className={cn("px-2.5 h-8", clip.is_encrypted && "text-primary hover:text-primary")} aria-label={clip.is_encrypted ? 'Decrypt' : 'Encrypt'}>
+              <Button variant="ghost" size="sm" onClick={handleEncrypt} disabled={isEncrypting} title={clip.is_encrypted ? "Decrypt item" : "Encrypt item"} className={cn("px-2.5 h-8", clip.is_encrypted && "text-primary hover:text-primary")} aria-label={clip.is_encrypted ? 'Decrypt' : 'Encrypt'}>
                 {clip.is_encrypted ? <Unlock size={16} /> : <Lock size={16} />}
               </Button>
             )}
-            <Button variant="ghost" size="sm" onClick={() => setIsConfirmingDelete(true)} disabled={isDeletePending} className="px-2.5 h-8 hover:text-danger hover:bg-danger/10">
+            <Button variant="ghost" size="sm" onClick={() => setIsConfirmingDelete(true)} disabled={isDeletePending} title="Delete item" className="px-2.5 h-8 hover:text-danger hover:bg-danger/10">
               <Trash2 size={16} />
             </Button>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px]">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px]">
           <div className="flex items-center gap-2">
              <span className="font-semibold text-text-tertiary uppercase tracking-wider">Details</span>
              <div className="flex gap-1.5">
                 <span className="px-2.5 py-0.5 rounded-full bg-hover text-text-secondary border border-border">{clip.char_count.toLocaleString()} chars</span>
                 <span className="px-2.5 py-0.5 rounded-full bg-hover text-text-secondary border border-border">{clip.line_count.toLocaleString()} lines</span>
-                <span className="px-2.5 py-0.5 rounded-full bg-hover text-text-secondary border border-border capitalize">{clip.content_type}</span>
+                <span className="px-2.5 py-0.5 rounded-full bg-hover text-text-secondary border border-border">{clip.content_type === 'image' ? 'Image' : clip.content_type === 'file' ? 'File Path' : 'Plain Text'}</span>
              </div>
           </div>
           
           <div className="flex items-center gap-2">
              <span className="font-semibold text-text-tertiary uppercase tracking-wider">Collections</span>
-             <div className="flex gap-1.5 items-center">
-                {collections?.length ? null : <span className="text-text-tertiary italic">None</span>}
-                {collections?.map(c => <span key={c.id} className="bg-primary/10 text-primary px-2.5 py-0.5 rounded-full font-medium">{c.name}</span>)}
-                <button onClick={() => setIsAssigningCollection(true)} className="flex items-center justify-center h-5 w-5 rounded-full bg-hover text-text-secondary hover:text-text-primary transition-colors border border-border outline-none focus-visible:ring-2 focus-visible:ring-focus-ring" aria-label="Add Collection"><Plus size={12} /></button>
+             <div className="flex gap-1.5 items-center flex-wrap">
+                {collections?.length ? (
+                  collections.map(c => <span key={c.id} className="bg-primary/10 text-primary px-2.5 py-0.5 rounded-full font-medium">{c.name}</span>)
+                ) : null}
+                <button onClick={() => setIsAssigningCollection(true)} className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-hover text-text-secondary hover:text-text-primary transition-colors border border-border outline-none focus-visible:ring-2 focus-visible:ring-focus-ring" aria-label="Add Collection">
+                  <Plus size={12} />
+                  <span>{collections?.length ? 'Add' : 'Add Collection'}</span>
+                </button>
              </div>
           </div>
 
           <div className="flex items-center gap-2">
              <span className="font-semibold text-text-tertiary uppercase tracking-wider">Tags</span>
-             <div className="flex gap-1.5 items-center">
-                {tags?.length ? null : <span className="text-text-tertiary italic">None</span>}
-                {tags?.map(t => <span key={t.id} className="bg-hover text-text-primary px-2.5 py-0.5 rounded-full border border-border">#{t.name}</span>)}
-                <button onClick={() => setIsAssigningTag(true)} className="flex items-center justify-center h-5 w-5 rounded-full bg-hover text-text-secondary hover:text-text-primary transition-colors border border-border outline-none focus-visible:ring-2 focus-visible:ring-focus-ring" aria-label="Add Tag"><Plus size={12} /></button>
+             <div className="flex gap-1.5 items-center flex-wrap">
+                {tags?.length ? (
+                  tags.map(t => <span key={t.id} className="bg-hover text-text-primary px-2.5 py-0.5 rounded-full border border-border">#{t.name}</span>)
+                ) : null}
+                <button onClick={() => setIsAssigningTag(true)} className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-hover text-text-secondary hover:text-text-primary transition-colors border border-border outline-none focus-visible:ring-2 focus-visible:ring-focus-ring" aria-label="Add Tag">
+                  <Plus size={12} />
+                  <span>{tags?.length ? 'Add' : 'Add Tag'}</span>
+                </button>
              </div>
           </div>
         </div>

@@ -105,28 +105,22 @@ gantt
 
 ## V2.0 — Extensibility
 
-**Goal:** Plugin system with WASM sandboxing.
 **Timeline:** Est. 8–12 weeks after V1.2.
 
 | # | Feature | Depends On | Effort |
 |---|---------|-----------|--------|
-| 24 | Plugin SDK (WASM sandbox) | wasmtime, manifest, hooks | Very High |
 | 25 | Event bus (broadcast channel) | `tokio::broadcast` | Medium |
-| 26 | Plugin permissions model | Capability-based manifest | High |
-| 27 | Plugin UI extensions | WebView panels for plugins | High |
 
 ---
 
 ## V3.0 — Platform
 
-**Goal:** AI, collaboration, and platform features.
+
 **Timeline:** Future.
 
 | # | Feature | Depends On | Effort |
 |---|---------|-----------|--------|
-| 28 | Clipboard sync (P2P or relay) | Sync engine, conflict resolution | Very High |
 | 29 | OCR (image → text) | Tesseract or similar | High |
-| 30 | Local AI categorization (Ollama) | HTTP client, pipeline stage | High |
 | 31 | Quick Notes | New entity + feature module | Medium |
 | 32 | Automation / workflows | Event subscriptions + actions | Very High |
 
@@ -169,16 +163,12 @@ graph TD
     end
 
     subgraph "V2.0 — Extensibility"
-        F24["#24 Plugin SDK (WASM)"]
         F25["#25 Event Bus"]
         F26["#26 Plugin Permissions"]
-        F27["#27 Plugin UI"]
     end
 
     subgraph "V3.0 — Platform"
-        F28["#28 Clipboard Sync"]
-        F29["#29 OCR"]
-        F30["#30 AI Categorization"]
+
         F31["#31 Quick Notes"]
         F32["#32 Automation"]
     end
@@ -218,8 +208,7 @@ graph TD
     %% V2.0 → V3.0
     F25 --> F32
     F24 --> F29
-    F24 --> F30
-    F1 --> F28
+
     F1 --> F31
 ```
 
@@ -268,7 +257,6 @@ graph TD
 | Wayland global shortcuts unreliable | Users can't trigger search popup | Document compositor-specific config; fallback to tray icon |
 | FTS5 performance degrades at 500k+ items | Search feels slow | Prefix indexes, candidate limit, pagination |
 | Image clipboard diverges across platforms | Inconsistent behavior | Feature-gated platform tests; graceful fallback |
-| WASM sandbox escapes (V2.0) | Plugin security compromised | Capability-based permissions; thorough audit before V2.0 GA |
 
 ---
 

@@ -83,7 +83,6 @@ These are non-negotiable. Every design decision is measured against them.
 | Snippet manager | V1.2 | Significant standalone feature with its own CRUD UI. |
 | Backup / restore | V1.2 | Manual DB file copy is a workaround until this ships. |
 | Encrypted storage | V1.2 | Complex key management. Requires OS keyring integration. |
-| Plugin SDK | V2.0 | No users exist yet to demand plugins. Extension points are ready. |
 
 ---
 
@@ -136,9 +135,6 @@ None of these require a JavaScript animation library. If layout or exit animatio
 ```toml
 [dependencies]
 tauri = { version = "2", features = ["tray-icon"] }
-tauri-plugin-global-shortcut = "2"
-tauri-plugin-dialog = "2"
-tauri-plugin-fs = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 rusqlite = { version = "0.31", features = ["bundled", "vtab"] }
@@ -636,7 +632,6 @@ When V2 needs multiple subscribers (plugins, automation), the change is:
 1. Add `tokio::broadcast` channel to `AppState`
 2. Services emit to broadcast channel instead of directly to `app_handle`
 3. Add a `TauriEventForwarder` subscriber that bridges broadcast → Tauri events
-4. Plugin host subscribes to the same broadcast channel
 
 Zero changes to domain, pipeline, or frontend code.
 
@@ -1288,18 +1283,13 @@ Activated via `Ctrl+Shift+P`. Follows VS Code pattern:
 
 | Feature | Depends On |
 |---------|-----------|
-| Plugin SDK (WASM sandbox) | wasmtime, plugin manifest, lifecycle hooks |
 | Event bus (broadcast channel) | `tokio::broadcast`, event forwarder |
-| Plugin permissions model | Capability-based, declared in manifest |
-| Plugin UI extensions | Webview panels for plugin content |
 
 ### V3.0+ — Platform (Future)
 
 | Feature | Depends On |
 |---------|-----------|
-| Clipboard sync (P2P or relay) | Sync engine, conflict resolution |
 | OCR (image → text) | Optional pipeline stage, Tesseract or similar |
-| Local AI categorization (Ollama) | HTTP client, optional pipeline stage |
 | Quick Notes | New entity, new feature module |
 | Automation / workflows | Event subscriptions + action engine |
 
@@ -1318,8 +1308,6 @@ Every item below was consciously evaluated and rejected for V1.0.
 | **DTOs** | Serde on domain entities handles serialization. Separate DTOs double struct count. |
 | **CQRS** | Single database. Read and write paths share one connection. No benefit. |
 | **Event sourcing** | Clipboard items are mutable (favorite, pin). Not an audit system. |
-| **Plugin SDK** | No users demand it yet. Traits + pipeline stages are the extension points. |
-| **WASM sandbox** | Plugin runtime. Deferred to V2.0. |
 | **Repository factory / DI container** | Rust constructors are simple. No need for a DI framework. |
 | **ORM** | `rusqlite` with handwritten SQL is more debuggable and performant than an ORM for this use case. |
 | **Multi-database** | One SQLite file. No sharding, no multi-tenant, no read replicas. |
@@ -1343,9 +1331,8 @@ Every item below was consciously evaluated and rejected for V1.0.
 
 | Omission | Reason |
 |----------|--------|
-| **Cloud sync** | Requires server infrastructure or P2P protocol. V3.0. |
+
 | **OCR** | Heavy dependency (Tesseract). Optional module for V2.0+. |
-| **AI categorization** | Ollama integration is optional. Regex-based detection is sufficient. |
 | **Rich text editing** | ORNAS is a clipboard viewer, not an editor. |
 | **Custom themes** | Dark + light is sufficient. Custom themes add CSS variable management. |
 | **Multi-window clipboard** | One main window + one search popup. No dashboard views. |

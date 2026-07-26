@@ -97,6 +97,9 @@ pub struct ClipUpdate {
     pub is_pinned: Option<bool>,
     pub language: Option<String>,
     pub language_source: Option<String>,
+    /// Image filesystem path — set by the background ImageJob
+    /// after saving the image and generating a thumbnail.
+    pub image_path: Option<String>,
 
     // Encryption fields for encrypt/decrypt workflows
     pub content_text: Option<Option<String>>,

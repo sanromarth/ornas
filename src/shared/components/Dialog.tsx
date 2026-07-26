@@ -96,7 +96,11 @@ export function Dialog({
         "fixed inset-0 z-dialog flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity",
         isVisible ? "opacity-100 duration-200 ease-[var(--ease-snappy)]" : "opacity-0 duration-100 ease-out"
       )}
-      onClick={closeOnBackdropClick ? onClose : undefined}
+      onPointerDown={(e) => {
+        if (closeOnBackdropClick && e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
     >
       <div
         ref={dialogRef}

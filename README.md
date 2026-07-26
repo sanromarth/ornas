@@ -34,6 +34,16 @@ ORNAS is a lightweight, offline-first desktop application that captures, organiz
 - ⚡ **Fast startup** — under 2 seconds cold, under 500ms warm
 - 📦 **Tiny footprint** — under 15MB binary, under 150MB memory
 
+## Platform Support
+
+| Platform | Status |
+|-----------|--------|
+| Linux | ✅ Fully Supported |
+| Windows | ✅ Supported (code signing in progress) |
+| macOS | ✅ Supported (code signing & notarization planned) |
+
+Windows and macOS builds are functional but currently unsigned. Installation warnings are expected until code signing is completed. See [SIGNING.md](SIGNING.md) for details.
+
 ## Downloads
 
 You can download the latest release for your platform from the [Releases page](https://github.com/sanromarth/ornas/releases).
@@ -84,14 +94,22 @@ See [docs/ARCHITECTURE_FINAL.md](docs/ARCHITECTURE_FINAL.md) for the complete sp
 
 ## FAQ
 
+**Q: Is ORNAS safe?**
+A: ORNAS is built with a privacy-first, offline-first philosophy. There is no telemetry, cloud tracking, or user accounts.
+
+**Q: Why does Windows say ORNAS is from an unknown publisher?**
+A: Windows releases are currently unsigned. This triggers Microsoft Defender SmartScreen or Smart App Control. The warnings are expected because the application is not yet digitally signed. Users should download releases only from the official ORNAS GitHub repository. We are actively working with the SignPath Foundation to provide digitally signed binaries. See [SIGNING.md](SIGNING.md) for details.
+
+**Q: Why does macOS warn that ORNAS cannot be verified?**
+A: macOS builds are currently unsigned and not notarized by Apple. Apple Gatekeeper displays a warning when launching applications that haven't been notarized. We plan to implement Apple code signing and notarization as soon as practical. See [SIGNING.md](SIGNING.md) for details.
+
 **Q: Where is my data stored?**
 A: All data is stored locally in an encrypted SQLite database on your machine. We do not use cloud synchronization or telemetry.
 
-**Q: Does ORNAS require an internet connection?**
-A: No, ORNAS is 100% offline-first by design.
-
 **Q: How do I export my data?**
 A: You can export your vault as an encrypted `.zip` archive from the Settings menu.
+
+For more questions, see [docs/faq.md](docs/faq.md).
 
 ## Troubleshooting
 
@@ -99,13 +117,8 @@ A: You can export your vault as an encrypted `.zip` archive from the Settings me
 - **Icons are missing:** Clear your system icon cache or restart the application.
 - **Search is slow:** Trigger a "Reindex Database" from the Settings menu to optimize the FTS5 tables.
 
-## Roadmap
-- [x] Clipboard history tracking
-- [x] SQLite FTS5 search engine
-- [x] Offline-first encrypted vault
-- [ ] Cross-device synchronization via peer-to-peer (P2P)
+## Future Work
 - [ ] OCR for images
-- [ ] AI-assisted smart tagging
 
 ## Contributing
 

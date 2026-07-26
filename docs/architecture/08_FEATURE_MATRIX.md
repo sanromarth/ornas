@@ -105,10 +105,7 @@ Listed separately for implementation tracking.
 
 | # | Feature | Priority | Complexity | Status | Rust Module | React Feature |
 |---|---------|----------|-----------|--------|-------------|---------------|
-| 24 | Plugin SDK (WASM sandbox) | P0 | L | planned | `infrastructure/plugins/host.rs`, `wasm_runner.rs` | `features/plugins/` (management UI) |
 | 25 | Event bus (broadcast channel) | P0 | M | planned | `infrastructure/events/bus.rs`, `tauri_forwarder.rs` | — (transparent to frontend) |
-| 26 | Plugin permissions model | P0 | M | planned | `domain/plugin.rs` (manifest, capabilities) | Plugin install/permission dialog |
-| 27 | Plugin UI extensions | P1 | L | planned | `infrastructure/plugins/ui_bridge.rs` | WebView panel injection |
 
 ---
 
@@ -116,9 +113,7 @@ Listed separately for implementation tracking.
 
 | # | Feature | Priority | Complexity | Status | Rust Module | React Feature |
 |---|---------|----------|-----------|--------|-------------|---------------|
-| 28 | Clipboard sync (P2P) | P1 | L | planned | `infrastructure/sync/` (sync engine) | `features/sync/` (status UI) |
 | 29 | OCR (image → text) | P2 | L | planned | `infrastructure/pipeline/ocr.rs` (optional stage) | `ClipboardPreview.tsx` (OCR text) |
-| 30 | AI categorization (Ollama) | P2 | L | planned | `infrastructure/pipeline/ai_categorizer.rs` | Settings toggle |
 | 31 | Quick Notes | P1 | M | planned | `domain/note.rs`, `commands/notes.rs` | `features/notes/` |
 | 32 | Automation / workflows | P2 | L | planned | `infrastructure/automation/` (event + action engine) | `features/automation/` |
 

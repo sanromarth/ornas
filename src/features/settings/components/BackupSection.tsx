@@ -42,8 +42,8 @@ export function BackupSection() {
   };
 
   return (
-    <div className="flex flex-col gap-6 shrink-0">
-      <h3 className="text-xs uppercase font-medium text-text-secondary tracking-wider">Backup & Restore</h3>
+    <section className="space-y-5">
+      <h3 className="text-[11px] uppercase font-bold text-text-tertiary tracking-widest pl-1">Backup & Restore</h3>
       
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-4">
@@ -129,6 +129,6 @@ export function BackupSection() {
         onConfirm={() => handleImport('replace_all')}
         onCancel={() => setShowReplaceConfirm(false)}
       />
-    </div>
+    </section>
   );
 }

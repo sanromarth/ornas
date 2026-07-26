@@ -1,31 +1,32 @@
-//! Stage 6: Persister — write clip to SQLite and save images to filesystem.
+//! Stage 7: Persister — write clip to SQLite (fast path only).
 //!
 //! Converts a pipeline `ClipItem` into a `NewClip` and persists it
-//! via the clip repository. Images are saved to the filesystem first.
+//! via the clip repository.
+//!
+//! **No image I/O happens here.** Image bytes remain on the `ClipItem`
+//! and are dispatched to the background `JobQueue` by the `Dispatcher`
+//! stage that follows. This keeps the critical clipboard path fast.
 
 use crate::domain::clip::{ContentType, NewClip};
 use crate::domain::pipeline::{ClipItem, PipelineStage, StageAction};
 use crate::domain::traits::ClipRepository;
 use crate::error::AppError;
-use crate::infrastructure::image_store::ImageStore;
 use std::sync::Arc;
+use std::time::Instant;
 
-/// Stage 6: Persists the processed clip to the database.
+/// Stage 7: Persists the processed clip to the database.
 ///
-/// For image content, saves the image file first via `ImageStore`,
-/// then inserts the clip row with the image path.
+/// Performs only the database INSERT. For image clips, `image_path`
+/// is set to `None` — the background `ImageJob` will update it later
+/// after saving the image and generating a thumbnail.
 pub struct Persister {
     clip_repo: Arc<dyn ClipRepository>,
-    image_store: Arc<ImageStore>,
 }
 
 impl Persister {
-    /// Creates a new Persister with the given repository and image store.
-    pub fn new(clip_repo: Arc<dyn ClipRepository>, image_store: Arc<ImageStore>) -> Self {
-        Self {
-            clip_repo,
-            image_store,
-        }
+    /// Creates a new Persister with the given clip repository.
+    pub fn new(clip_repo: Arc<dyn ClipRepository>) -> Self {
+        Self { clip_repo }
     }
 }
 
@@ -35,11 +36,9 @@ impl PipelineStage for Persister {
     }
 
     fn process(&self, item: &mut ClipItem) -> Result<StageAction, AppError> {
-        // Save image to filesystem if present
-        if let Some(ref bytes) = item.image_bytes {
-            let path = self.image_store.save(&item.content_hash, bytes)?;
-            item.image_path = Some(path);
-        }
+        // NOTE: image_bytes are NOT processed here.
+        // They remain on ClipItem for the Dispatcher to take() and
+        // dispatch to the background ImageJob worker.
 
         let content_type = match item.content_type.as_str() {
             "image" => ContentType::Image,
@@ -48,15 +47,17 @@ impl PipelineStage for Persister {
             _ => ContentType::Text,
         };
 
+        // For image clips, image_path is None — it will be set by
+        // the background ImageJob after saving the image to disk.
         let new_clip = NewClip {
             content_text: item.content_text.take(),
             content_html: item.content_html.take(),
             content_rtf: item.content_rtf.take(),
-            image_path: item.image_path.take(),
+            image_path: None,
             content_type,
             category: std::mem::take(&mut item.category),
             source_app: item.source_app.take(),
-            content_hash: std::mem::take(&mut item.content_hash),
+            content_hash: item.content_hash.clone(),
             preview: item.preview.take(),
             char_count: item.char_count,
             line_count: item.line_count,
@@ -70,16 +71,19 @@ impl PipelineStage for Persister {
             nonce: None,
         };
 
+        let db_start = Instant::now();
         let created = self.clip_repo.create(&new_clip)?;
+        let db_elapsed = db_start.elapsed();
         item.assigned_id = Some(created.id);
 
         tracing::info!(
             stage = self.name(),
             id = created.id,
-            category = %item.category,
+            db_insert_ms = format!("{:.2}", db_elapsed.as_secs_f64() * 1000.0).as_str(),
             "clip persisted"
         );
 
         Ok(StageAction::Continue)
     }
 }
+

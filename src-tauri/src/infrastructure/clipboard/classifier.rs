@@ -14,8 +14,8 @@
 //! - Windows: `CF_BITMAP` → `get_image()`, `CF_HDROP` → `get_files()`
 //! - macOS: `NSPasteboardTypePNG` → `get_image()`, `NSPasteboardTypeFileURL` → `get_files()`
 
+use clipboard_rs::ClipboardContext;
 use clipboard_rs::common::RustImage;
-use clipboard_rs::{Clipboard, ClipboardContext};
 
 /// The result of classifying clipboard content.
 ///
@@ -63,6 +63,20 @@ pub enum ClipboardContent {
 /// - When copying text, both `get_image()` and `get_files()` fail.
 ///   `get_text()` succeeds. Priority 3 captures this correctly.
 pub fn classify(ctx: &ClipboardContext) -> Option<ClipboardContent> {
+    use clipboard_rs::Clipboard;
+
+    if let Ok(formats) = ctx.available_formats() {
+        tracing::info!(
+            formats = ?formats,
+            "Clipboard change detected, available MIME types:"
+        );
+        for format in &formats {
+            tracing::info!("  - {}", format);
+        }
+    } else {
+        tracing::warn!("Failed to retrieve available formats from clipboard context");
+    }
+
     // Priority 1: Raw image data
     if let Ok(image) = ctx.get_image() {
         match image.to_png() {
@@ -72,13 +86,26 @@ pub fn classify(ctx: &ClipboardContext) -> Option<ClipboardContent> {
                     tracing::debug!(
                         format = "raw_image",
                         size_bytes = bytes.len(),
-                        "Clipboard classified as raw image"
+                        "Clipboard classified as raw image (PNG)"
                     );
                     return Some(ClipboardContent::RawImage { bytes });
                 }
             }
             Err(e) => {
-                tracing::debug!("Image conversion to PNG failed: {e}");
+                tracing::debug!("Image conversion to PNG failed: {e}. Trying JPEG...");
+                if let Ok(jpeg_buf) = image.to_jpeg() {
+                    let bytes = jpeg_buf.get_bytes().to_vec();
+                    if !bytes.is_empty() {
+                        tracing::debug!(
+                            format = "raw_image",
+                            size_bytes = bytes.len(),
+                            "Clipboard classified as raw image (JPEG fallback)"
+                        );
+                        return Some(ClipboardContent::RawImage { bytes });
+                    }
+                } else {
+                    tracing::warn!("Failed to convert raw clipboard image to PNG or JPEG");
+                }
             }
         }
     }

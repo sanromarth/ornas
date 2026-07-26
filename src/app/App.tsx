@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 import { useUIStore } from '../stores/ui-store';
 import { useVaultStore } from '../stores/vault-store';
 import { Toolbar } from '../shared/layout/Toolbar';
@@ -7,11 +8,41 @@ import { Sidebar } from '../shared/layout/Sidebar';
 import { SearchBar } from '../features/search';
 import { ClipboardList, ClipboardPreview } from '../features/clipboard';
 import { SettingsPanel } from '../features/settings/components/SettingsPanel';
+import { useClipboardEvents } from '../features/clipboard/hooks/useClipboardEvents';
 
 export function App() {
   const { settingsOpen, toggleSettings } = useUIStore();
   const { checkStatus } = useVaultStore();
   const { settings } = useSettings();
+
+  // Subscribe to backend clipboard events (clip-created, clip-updated, clip-deleted)
+  useClipboardEvents();
+
+  useEffect(() => {
+    // Initialize if not present
+    if (!localStorage.getItem('ornas_last_focused_at')) {
+      localStorage.setItem('ornas_last_focused_at', Date.now().toString());
+    }
+
+    let timeoutId: number;
+    const unlisten = getCurrentWindow().onFocusChanged(({ payload: focused }) => {
+      if (!focused) {
+        localStorage.setItem('ornas_last_focused_at', Date.now().toString());
+        window.dispatchEvent(new Event('ornas-focus-changed'));
+      } else {
+        // Clear "new" indicators 3 seconds after focusing
+        timeoutId = window.setTimeout(() => {
+          localStorage.setItem('ornas_last_focused_at', Date.now().toString());
+          window.dispatchEvent(new Event('ornas-focus-changed'));
+        }, 3000);
+      }
+    });
+
+    return () => {
+      unlisten.then(f => f());
+      clearTimeout(timeoutId);
+    };
+  }, []);
 
   useEffect(() => {
     checkStatus();
@@ -37,8 +68,22 @@ export function App() {
         toggleSettings();
       }
     };
+    
+    // Disable default browser context menu to prevent accidental image URL copying
+    // (Shift+RightClick still allows it for debugging)
+    const handleContextMenu = (e: MouseEvent) => {
+      if (!e.shiftKey) {
+        e.preventDefault();
+      }
+    };
+    
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('contextmenu', handleContextMenu);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('contextmenu', handleContextMenu);
+    };
   }, [settingsOpen, toggleSettings]);
 
   return (

@@ -355,4 +355,3 @@ fn new_clip(content: &str) -> NewClip {
 | V1.1 | E2E tests with Tauri test framework (WebDriver) |
 | V1.1 | Visual regression tests for new syntax highlighting |
 | V1.2 | Security tests for encrypted storage |
-| V2.0 | Plugin SDK test harness (WASM sandbox validation) |

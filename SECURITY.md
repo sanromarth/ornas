@@ -11,8 +11,8 @@
 If you discover a security vulnerability, please report it responsibly:
 
 1. **Do NOT** open a public GitHub issue
-2. Email the maintainers at security@ornas.io with details of the vulnerability
-3. Include steps to reproduce if possible
+2. Open a private vulnerability report on our [GitHub Repository](https://github.com/sanromarth/ornas/security/advisories/new) with details of the vulnerability.
+3. A maintainer will respond within 48 hours to acknowledge the report.
 
 ### Response Timeline
 
@@ -24,3 +24,9 @@ If you discover a security vulnerability, please report it responsibly:
 
 ORNAS is an offline-only application. It makes zero network calls.
 See [docs/ARCHITECTURE_FINAL.md](docs/ARCHITECTURE_FINAL.md) §15 for the full security model.
+
+## Code Signing & OS Warnings
+
+Windows (SmartScreen / Smart App Control) and macOS (Gatekeeper) may display security warnings when running ORNAS. This is expected because the binaries are currently **unsigned**. 
+
+These warnings are not security vulnerabilities and should not be reported as such. Please refer to [SIGNING.md](SIGNING.md) for the current status of code signing and notarization for this project.

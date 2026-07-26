@@ -19,6 +19,14 @@ export function EmptyState({ isSearch }: Props) {
           icon={Clipboard}
           title="Clipboard is empty"
           description="Copy text or images from any application and they will appear here."
+          action={
+            <div className="flex items-center gap-1 mt-2 text-text-tertiary">
+              <span className="text-xs">Press</span>
+              <kbd className="inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-medium font-sans uppercase bg-surface border border-border rounded shadow-sm">Ctrl</kbd>
+              <kbd className="inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-medium font-sans uppercase bg-surface border border-border rounded shadow-sm">C</kbd>
+              <span className="text-xs">anywhere to start</span>
+            </div>
+          }
         />
       )}
     </div>

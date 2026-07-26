@@ -3,6 +3,7 @@ import { useVaultStore } from '../../../stores/vault-store';
 import { Button } from '../../../shared/components/Button';
 import { Input } from '../../../shared/components/Input';
 import { useToast } from '../../../shared/components/useToast';
+import { Eye, EyeOff } from 'lucide-react';
 
 export function VaultSection() {
   const { isInitialized, isUnlocked, isChecking, setupVault, lockVault } = useVaultStore();
@@ -11,6 +12,7 @@ export function VaultSection() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   if (isChecking) {
     return <div className="text-sm text-text-secondary">Checking vault status...</div>;
@@ -49,49 +51,54 @@ export function VaultSection() {
   };
 
   return (
-    <div className="flex flex-col gap-6 shrink-0">
-      <h3 className="text-xs uppercase font-medium text-text-secondary tracking-wider">Secure Vault</h3>
+    <section className="space-y-5">
+      <h3 className="text-[11px] uppercase font-bold text-text-tertiary tracking-widest pl-1">Secure Vault</h3>
       
       {!isInitialized ? (
-        <div className="flex flex-col gap-4 bg-surface p-4 rounded-lg border border-border">
-          <div className="flex flex-col gap-1">
-            <h4 className="text-sm font-medium text-text-primary">Configure Vault</h4>
-            <p className="text-sm text-text-secondary leading-relaxed">
+        <div className="flex gap-4 items-start justify-between">
+          <div className="flex flex-col gap-1 flex-1 pr-8">
+            <label className="text-sm font-medium text-text-primary">Configure Vault</label>
+            <p className="text-[13px] text-text-secondary leading-relaxed">
               Set up a master password to encrypt sensitive clips. Keep this password safe, as it cannot be recovered.
             </p>
           </div>
-          <div className="flex flex-col gap-3 mt-2">
+          <div className="flex flex-col gap-3 shrink-0 w-64">
             <Input 
-              type="password" 
+              type={showPassword ? "text" : "password"} 
               placeholder="Master Password" 
               value={password}
               onChange={e => setPassword(e.target.value)}
+              rightIcon={showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              onRightIconClick={() => setShowPassword(!showPassword)}
             />
             <Input 
-              type="password" 
+              type={showPassword ? "text" : "password"} 
               placeholder="Confirm Password" 
               value={confirmPassword}
               onChange={e => setConfirmPassword(e.target.value)}
+              rightIcon={showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              onRightIconClick={() => setShowPassword(!showPassword)}
             />
             <Button 
               onClick={handleSetup} 
               loading={loading}
               disabled={!password || !confirmPassword}
-              className="mt-2 self-start"
+              variant="primary"
+              className="mt-1 font-semibold"
             >
               Initialize Vault
             </Button>
           </div>
         </div>
       ) : (
-        <div className="flex flex-col gap-4 bg-surface p-4 rounded-lg border border-border">
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col gap-1">
-              <h4 className="text-sm font-medium text-text-primary">Vault Status</h4>
-              <p className="text-sm text-text-secondary leading-relaxed">
-                {isUnlocked ? 'Your vault is currently unlocked.' : 'Your vault is currently locked.'}
-              </p>
-            </div>
+        <div className="flex gap-4 items-center justify-between">
+          <div className="flex flex-col gap-1 flex-1">
+            <label className="text-sm font-medium text-text-primary">Vault Status</label>
+            <p className="text-[13px] text-text-secondary leading-relaxed">
+              {isUnlocked ? 'Your vault is currently unlocked.' : 'Your vault is currently locked.'}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
             {isUnlocked && (
               <Button onClick={handleLock} variant="secondary">
                 Lock Vault
@@ -100,6 +107,6 @@ export function VaultSection() {
           </div>
         </div>
       )}
-    </div>
+    </section>
   );
 }

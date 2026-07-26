@@ -88,11 +88,9 @@ impl ImageStore {
                 let thumb = img.thumbnail(THUMBNAIL_MAX_DIM, THUMBNAIL_MAX_DIM);
                 match thumb.save_with_format(&full_path, image::ImageFormat::Png) {
                     Ok(()) => {
-                        tracing::debug!(
+                        tracing::info!(
                             path = %full_path.display(),
-                            width = thumb.width(),
-                            height = thumb.height(),
-                            "thumbnail generated"
+                            "[Thumbnail] Resolved path written by backend"
                         );
                         Some(relative)
                     }

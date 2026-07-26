@@ -47,6 +47,9 @@ blob-report/
 .vscode/*.log
 .history/
 
+# AI assistant workspace
+.ai/
+
 # Vim / Neovim
 *.swp
 *.swo

@@ -277,6 +277,11 @@ impl ClipRepository for SqliteClipRepo {
             sql_params.push(lang_src.clone().into());
         }
 
+        if let Some(ref img_path) = update.image_path {
+            query.push_str(&format!(", image_path = ?{}", sql_params.len() + 1));
+            sql_params.push(img_path.clone().into());
+        }
+
         if let Some(ref val) = update.content_text {
             query.push_str(&format!(", content_text = ?{}", sql_params.len() + 1));
             sql_params.push(val.clone().into());

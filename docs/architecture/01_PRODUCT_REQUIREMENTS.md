@@ -130,12 +130,12 @@
 
 ```mermaid
 graph LR
-    A[All 13 features<br>implemented] --> G{V1.0<br>Release}
+    A[All 13 features implemented] --> G{V1.0 Release}
     B[All NFRs met] --> G
     C[Zero critical bugs] --> G
-    D["Cross-platform<br>builds pass"] --> G
-    E["Unit + integration<br>tests pass"] --> G
-    F[Architecture docs<br>reviewed] --> G
+    D[Cross-platform builds pass] --> G
+    E[Unit and integration tests pass] --> G
+    F[Architecture docs reviewed] --> G
 ```
 
 ### Quantitative Success Metrics

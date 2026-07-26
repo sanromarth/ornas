@@ -94,6 +94,10 @@ export function ClipboardList() {
             invoke('restore_files_to_clipboard', { clipId: clip.id })
               .then(() => addToast({ title: 'Files copied to clipboard', variant: 'success' }))
               .catch((err: unknown) => addToast({ title: 'Failed to copy files', description: (err instanceof Error ? err.message : String(err)) || String(err), variant: 'error' }));
+          } else if (clip.content_type === 'image') {
+            invoke('restore_image_to_clipboard', { clipId: clip.id })
+              .then(() => addToast({ title: 'Image copied to clipboard', variant: 'success' }))
+              .catch((err: unknown) => addToast({ title: 'Failed to copy image', description: (err instanceof Error ? err.message : String(err)) || String(err), variant: 'error' }));
           } else {
             const content = clip.content_text ?? clip.preview;
             if (content) {

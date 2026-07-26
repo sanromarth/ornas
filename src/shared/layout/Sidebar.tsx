@@ -68,12 +68,12 @@ export function Sidebar() {
         </div>
 
         {/* Collections */}
-        <div className="px-2">
+        <div className="px-2 mt-2">
           <div className="flex items-center justify-between px-2 mb-2 group">
             <span className="text-[11px] font-semibold text-text-tertiary tracking-wider uppercase">Collections</span>
             <button 
               onClick={() => setIsAddingCollection(true)}
-              className="p-0.5 rounded-md text-text-tertiary hover:bg-hover hover:text-text-primary opacity-40 group-hover:opacity-100 focus-within:opacity-100 transition-all"
+              className="p-1.5 -mr-1.5 rounded-md text-text-tertiary hover:bg-hover hover:text-text-primary opacity-40 group-hover:opacity-100 focus-within:opacity-100 transition-all"
               aria-label="Add Collection"
             >
               <Plus size={14} />
@@ -113,12 +113,12 @@ export function Sidebar() {
         </div>
 
         {/* Tags */}
-        <div className="px-2">
+        <div className="px-2 mt-2">
           <div className="flex items-center justify-between px-2 mb-2 group">
             <span className="text-[11px] font-semibold text-text-tertiary tracking-wider uppercase">Tags</span>
             <button 
               onClick={() => setIsAddingTag(true)}
-              className="p-0.5 rounded-md text-text-tertiary hover:bg-hover hover:text-text-primary opacity-40 group-hover:opacity-100 focus-within:opacity-100 transition-all"
+              className="p-1.5 -mr-1.5 rounded-md text-text-tertiary hover:bg-hover hover:text-text-primary opacity-40 group-hover:opacity-100 focus-within:opacity-100 transition-all"
               aria-label="Add Tag"
             >
               <Plus size={14} />

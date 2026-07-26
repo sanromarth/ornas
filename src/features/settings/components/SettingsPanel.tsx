@@ -5,6 +5,7 @@ import { useSettings } from '../hooks/useSettings';
 import { useUIStore } from '../../../stores/ui-store';
 import { BackupSection } from './BackupSection';
 import { VaultSection } from '../../vault/components/VaultSection';
+import { ExcludedAppsInput } from './ExcludedAppsInput';
 
 import { useDebounce } from '../../../shared/hooks/useDebounce';
 import { Check, ChevronDown } from 'lucide-react';
@@ -83,8 +84,8 @@ export function SettingsPanel({ onClose }: Props) {
 
   return (
     <Dialog isOpen={settingsOpen} onClose={onClose} title="Settings" className="max-w-[600px] w-[600px] max-h-[85vh] flex flex-col p-0 overflow-hidden bg-surface shadow-2xl">
-      <div className="flex-1 overflow-y-auto">
-        <div className="p-8 space-y-10">
+      <div className="flex-1 relative overflow-hidden flex flex-col min-h-0">
+        <div className="flex-1 overflow-y-auto p-8 space-y-10 pb-16">
           {error && (
             <div className="p-3 text-sm text-danger bg-danger/10 rounded-md border border-danger/20">
               Failed to load settings.
@@ -95,7 +96,7 @@ export function SettingsPanel({ onClose }: Props) {
           <section className="space-y-5">
             <h3 className="text-[11px] uppercase font-bold text-text-tertiary tracking-widest pl-1">Appearance</h3>
             <div className="flex gap-4 items-center justify-between">
-              <div className="flex flex-col gap-0.5 flex-1">
+              <div className="flex flex-col gap-1 flex-1">
                 <label htmlFor="theme" className="text-sm font-medium text-text-primary">Theme</label>
                 <p className="text-[13px] text-text-secondary leading-relaxed">Choose your preferred color scheme.</p>
               </div>
@@ -104,7 +105,7 @@ export function SettingsPanel({ onClose }: Props) {
                 <div className="relative">
                   <select 
                     id="theme"
-                    className="appearance-none flex h-8 w-36 rounded-md border border-border bg-surface pl-3 pr-8 text-sm text-text-primary shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:border-transparent hover:bg-hover"
+                    className="appearance-none flex h-9 w-36 rounded-md border border-border bg-background pl-3 pr-8 text-sm text-text-primary shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:border-transparent hover:bg-hover"
                     value={currentTheme}
                     onChange={handleThemeChange}
                   >
@@ -126,7 +127,7 @@ export function SettingsPanel({ onClose }: Props) {
           <section className="space-y-5">
             <h3 className="text-[11px] uppercase font-bold text-text-tertiary tracking-widest pl-1">Clipboard History</h3>
             <div className="flex gap-4 items-center justify-between">
-              <div className="flex flex-col gap-0.5 flex-1">
+              <div className="flex flex-col gap-1 flex-1">
                 <label htmlFor="retention_days" className="text-sm font-medium text-text-primary">Retention Days</label>
                 <p className="text-[13px] text-text-secondary leading-relaxed">Days to keep unpinned clips before auto-deletion.</p>
               </div>
@@ -140,12 +141,12 @@ export function SettingsPanel({ onClose }: Props) {
                     isDirty.current.retention = true;
                     setRetentionDays(e.target.value);
                   }} 
-                  className="w-24 text-right h-8"
+                  className="w-24 text-right"
                 />
               </div>
             </div>
             <div className="flex gap-4 items-center justify-between">
-              <div className="flex flex-col gap-0.5 flex-1">
+              <div className="flex flex-col gap-1 flex-1">
                 <label htmlFor="history_max_size" className="text-sm font-medium text-text-primary">Max History Size</label>
                 <p className="text-[13px] text-text-secondary leading-relaxed">Maximum number of clips stored.</p>
               </div>
@@ -154,12 +155,13 @@ export function SettingsPanel({ onClose }: Props) {
                 <Input 
                   id="history_max_size"
                   type="number" 
+                  placeholder="e.g. 10000"
                   value={historyMaxSize} 
                   onChange={(e) => {
                     isDirty.current.history = true;
                     setHistoryMaxSize(e.target.value);
                   }} 
-                  className="w-24 text-right h-8"
+                  className="w-24 text-right"
                 />
               </div>
             </div>
@@ -170,22 +172,20 @@ export function SettingsPanel({ onClose }: Props) {
           {/* ── Privacy ── */}
           <section className="space-y-5">
             <h3 className="text-[11px] uppercase font-bold text-text-tertiary tracking-widest pl-1">Privacy</h3>
-            <div className="flex gap-4 items-center justify-between">
-              <div className="flex flex-col gap-0.5 flex-1">
-                <label htmlFor="excluded_apps" className="text-sm font-medium text-text-primary">Excluded Apps</label>
-                <p className="text-[13px] text-text-secondary leading-relaxed">Comma-separated list of apps to ignore.</p>
+            <div className="flex gap-4 items-start justify-between">
+              <div className="flex flex-col gap-1 flex-1">
+                <label className="text-sm font-medium text-text-primary">Excluded Apps</label>
+                <p className="text-[13px] text-text-secondary leading-relaxed">Applications ORNAS will ignore when copying.</p>
               </div>
-              <div className="flex items-center gap-2 shrink-0 relative">
-                {savedKey === 'excluded_apps' && <Check size={14} className="text-success absolute -left-5" />}
-                <Input 
-                  id="excluded_apps"
+              <div className="flex items-center gap-2 shrink-0 relative w-64 mt-0.5">
+                {savedKey === 'excluded_apps' && <Check size={14} className="text-success absolute -left-5 top-2.5" />}
+                <ExcludedAppsInput 
                   value={excludedApps} 
-                  onChange={(e) => {
+                  onChange={(val) => {
                     isDirty.current.apps = true;
-                    setExcludedApps(e.target.value);
+                    setExcludedApps(val);
                   }} 
-                  className="w-48 h-8"
-                  placeholder="e.g. 1Password, KeePassXC"
+                  placeholder="Type app and press Enter..."
                 />
               </div>
             </div>
@@ -200,7 +200,53 @@ export function SettingsPanel({ onClose }: Props) {
 
           {/* ── Backup ── */}
           <BackupSection />
+
+          <hr className="border-border" />
+
+          {/* ── Keyboard Shortcuts ── */}
+          <section className="space-y-5">
+            <h3 className="text-[11px] uppercase font-bold text-text-tertiary tracking-widest pl-1">Keyboard Shortcuts</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-background border border-border">
+                <span className="text-[13px] text-text-secondary font-medium">Search Clipboard</span>
+                <div className="flex items-center gap-1">
+                  <kbd className="inline-flex items-center justify-center px-1.5 py-0.5 text-[11px] font-medium font-sans uppercase text-text-tertiary bg-surface border border-border rounded shadow-sm">Ctrl</kbd>
+                  <kbd className="inline-flex items-center justify-center px-1.5 py-0.5 text-[11px] font-medium font-sans uppercase text-text-tertiary bg-surface border border-border rounded shadow-sm">K</kbd>
+                </div>
+              </div>
+              <div className="flex items-center justify-between p-3 rounded-lg bg-background border border-border">
+                <span className="text-[13px] text-text-secondary font-medium">Open Settings</span>
+                <div className="flex items-center gap-1">
+                  <kbd className="inline-flex items-center justify-center px-1.5 py-0.5 text-[11px] font-medium font-sans uppercase text-text-tertiary bg-surface border border-border rounded shadow-sm">Ctrl</kbd>
+                  <kbd className="inline-flex items-center justify-center px-1.5 py-0.5 text-[11px] font-medium font-sans uppercase text-text-tertiary bg-surface border border-border rounded shadow-sm">,</kbd>
+                </div>
+              </div>
+              <div className="flex items-center justify-between p-3 rounded-lg bg-background border border-border">
+                <span className="text-[13px] text-text-secondary font-medium">Navigate List</span>
+                <div className="flex items-center gap-1">
+                  <kbd className="inline-flex items-center justify-center px-1.5 py-0.5 text-[11px] font-medium font-sans uppercase text-text-tertiary bg-surface border border-border rounded shadow-sm">↑</kbd>
+                  <kbd className="inline-flex items-center justify-center px-1.5 py-0.5 text-[11px] font-medium font-sans uppercase text-text-tertiary bg-surface border border-border rounded shadow-sm">↓</kbd>
+                </div>
+              </div>
+              <div className="flex items-center justify-between p-3 rounded-lg bg-background border border-border">
+                <span className="text-[13px] text-text-secondary font-medium">Copy Item</span>
+                <div className="flex items-center gap-1">
+                  <kbd className="inline-flex items-center justify-center px-1.5 py-0.5 text-[11px] font-medium font-sans uppercase text-text-tertiary bg-surface border border-border rounded shadow-sm">Space</kbd>
+                </div>
+              </div>
+              <div className="flex items-center justify-between p-3 rounded-lg bg-background border border-border">
+                <span className="text-[13px] text-text-secondary font-medium">Delete Item</span>
+                <div className="flex items-center gap-1">
+                  <kbd className="inline-flex items-center justify-center px-1.5 py-0.5 text-[11px] font-medium font-sans uppercase text-text-tertiary bg-surface border border-border rounded shadow-sm">Del</kbd>
+                </div>
+              </div>
+            </div>
+          </section>
+
         </div>
+        
+        {/* Scroll indicator overlay */}
+        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-surface to-transparent z-10" />
       </div>
     </Dialog>
   );

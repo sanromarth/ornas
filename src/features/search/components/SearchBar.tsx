@@ -50,7 +50,7 @@ export function SearchBar() {
         aria-label="Search clipboard"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        className="w-full h-full text-[15px] pl-11 pr-16 border-none bg-transparent hover:bg-hover focus-visible:bg-background focus-visible:outline-none transition-colors duration-100 ease-out text-text-primary placeholder:text-text-secondary font-medium"
+        className="w-full h-full text-[15px] pl-12 pr-16 border-none bg-transparent hover:bg-hover focus-visible:bg-background focus-visible:outline-none transition-colors duration-100 ease-out text-text-primary placeholder:text-text-secondary font-medium"
       />
       {!query && (
         <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none flex items-center gap-1">

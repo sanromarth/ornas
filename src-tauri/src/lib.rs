@@ -51,7 +51,12 @@ pub fn run() {
             let pipeline = std::sync::Arc::clone(&app_state.pipeline);
             let db = std::sync::Arc::clone(&app_state.db);
             let image_store = std::sync::Arc::clone(&app_state.image_store);
-            infrastructure::clipboard::monitor::start_clipboard_monitor(pipeline, db, image_store);
+            infrastructure::clipboard::monitor::start_clipboard_monitor(
+                handle.clone(),
+                pipeline,
+                db,
+                image_store,
+            );
 
             // Schedule pruning task (10 seconds after startup, then every prune_interval)
             let prune_interval = app_state.config.prune_interval_secs;
@@ -89,6 +94,7 @@ pub fn run() {
             commands::clipboard::toggle_pin,
             commands::clipboard::set_clip_language,
             commands::clipboard::restore_files_to_clipboard,
+            commands::clipboard::restore_image_to_clipboard,
             commands::clipboard::write_text_to_clipboard,
             commands::search::search_clips,
             commands::settings::get_settings,

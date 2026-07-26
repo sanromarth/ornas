@@ -41,3 +41,7 @@ Read [docs/ARCHITECTURE_FINAL.md](docs/ARCHITECTURE_FINAL.md) before making stru
 - Include tests for new functionality
 - Update documentation if applicable
 - All CI checks must pass
+
+## Code Signing Note
+
+Local builds of ORNAS are **unsigned**. If you build the application from source on Windows or macOS, you may encounter security warnings (SmartScreen or Gatekeeper). This is expected. See [SIGNING.md](SIGNING.md) for details on the project's official code signing status.
