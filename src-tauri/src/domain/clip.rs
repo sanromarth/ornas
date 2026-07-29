@@ -55,6 +55,9 @@ pub struct Clip {
     pub encrypted_blob: Option<Vec<u8>>,
     pub nonce: Option<Vec<u8>>,
 
+    // Rich metadata (JSON)
+    pub metadata: Option<String>,
+
     /// Unix epoch seconds.
     pub created_at: i64,
     /// Unix epoch seconds.
@@ -88,6 +91,9 @@ pub struct NewClip {
     pub encryption_version: Option<i64>,
     pub encrypted_blob: Option<Vec<u8>>,
     pub nonce: Option<Vec<u8>>,
+
+    // Rich metadata (JSON)
+    pub metadata: Option<String>,
 }
 
 /// Fields that can be updated on an existing clip.
@@ -100,6 +106,11 @@ pub struct ClipUpdate {
     /// Image filesystem path — set by the background ImageJob
     /// after saving the image and generating a thumbnail.
     pub image_path: Option<String>,
+
+    // Classification fields — set by the reanalysis command
+    pub category: Option<String>,
+    pub is_code: Option<bool>,
+    pub detection_confidence: Option<f64>,
 
     // Encryption fields for encrypt/decrypt workflows
     pub content_text: Option<Option<String>>,
@@ -133,4 +144,16 @@ pub struct ClipFile {
     pub icon_type: String,
     pub created_at: i64,
     pub updated_at: i64,
+}
+
+/// Aggregated counts for smart sidebar filters.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct FilterCounts {
+    pub all: i64,
+    pub favorites: i64,
+    pub pinned: i64,
+    pub images: i64,
+    pub code: i64,
+    pub links: i64,
+    pub files: i64,
 }

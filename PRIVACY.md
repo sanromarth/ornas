@@ -109,4 +109,4 @@ If you have questions, concerns, or wish to report a vulnerability regarding thi
 - **Bug Reports:** Open an issue on our [GitHub Issues](https://github.com/sanromarth/ornas/issues)
 
 ---
-*Last Updated: July 2026 (v0.9.0-beta)*
+*Last Updated: July 2026 (v1.0.0-rc1)*

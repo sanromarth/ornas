@@ -2,10 +2,14 @@
 
 import { tauriInvoke } from './invoke';
 import { COMMANDS } from '../shared/lib/constants';
-import type { ClipDto, ListParams } from '../shared/types';
+import type { ClipDto, FilterCounts, ListParams } from '../shared/types';
 
 export async function listClips(params?: ListParams): Promise<ClipDto[]> {
   return tauriInvoke<ClipDto[]>(COMMANDS.LIST_CLIPS, params ? { ...params } : undefined);
+}
+
+export async function getFilterCounts(): Promise<FilterCounts> {
+  return tauriInvoke<FilterCounts>(COMMANDS.GET_FILTER_COUNTS);
 }
 
 export async function getClip(id: number): Promise<ClipDto | null> {

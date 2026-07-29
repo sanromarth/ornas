@@ -118,7 +118,7 @@ impl PipelineStage for Dedup {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::domain::clip::{Clip, ClipUpdate, ContentType, NewClip};
+    use crate::domain::clip::{Clip, ClipUpdate, ContentType, FilterCounts, NewClip};
     use crate::domain::traits::ListParams;
 
     /// In-memory mock repository for testing dedup logic.
@@ -167,6 +167,7 @@ mod tests {
                 encryption_version: None,
                 encrypted_blob: None,
                 nonce: None,
+                metadata: None,
             };
             clips.push(c.clone());
             Ok(c)
@@ -176,6 +177,17 @@ mod tests {
         }
         fn list(&self, _params: &ListParams) -> Result<Vec<Clip>, AppError> {
             Ok(vec![])
+        }
+        fn get_filter_counts(&self) -> Result<FilterCounts, AppError> {
+            Ok(FilterCounts {
+                all: 0,
+                favorites: 0,
+                pinned: 0,
+                images: 0,
+                code: 0,
+                links: 0,
+                files: 0,
+            })
         }
         fn update(&self, _id: i64, _update: &ClipUpdate) -> Result<Clip, AppError> {
             Err(AppError::NotFound("not impl".into()))
@@ -190,10 +202,20 @@ mod tests {
                 .map_err(|_| AppError::Internal("mock lock".into()))?;
             Ok(clips.iter().find(|c| c.content_hash == hash).cloned())
         }
-        fn set_favorite(&self, _id: i64, _fav: bool) -> Result<(), AppError> {
+
+        fn bulk_delete(&self, _ids: &[i64]) -> Result<(), AppError> {
             Ok(())
         }
-        fn set_pinned(&self, _id: i64, _pin: bool) -> Result<(), AppError> {
+        fn set_favorite(&self, _id: i64, _favorite: bool) -> Result<(), AppError> {
+            Ok(())
+        }
+        fn bulk_set_favorite(&self, _ids: &[i64], _favorite: bool) -> Result<(), AppError> {
+            Ok(())
+        }
+        fn set_pinned(&self, _id: i64, _pinned: bool) -> Result<(), AppError> {
+            Ok(())
+        }
+        fn bulk_set_pinned(&self, _ids: &[i64], _pinned: bool) -> Result<(), AppError> {
             Ok(())
         }
         fn touch(&self, _id: i64) -> Result<(), AppError> {
@@ -266,6 +288,7 @@ mod tests {
             encryption_version: None,
             encrypted_blob: None,
             nonce: None,
+            metadata: None,
         };
         repo.create(&new_clip).ok();
 

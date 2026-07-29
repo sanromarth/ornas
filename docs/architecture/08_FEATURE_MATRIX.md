@@ -101,24 +101,6 @@ Listed separately for implementation tracking.
 
 ---
 
-## V2.0 — Extensibility (4 Features)
-
-| # | Feature | Priority | Complexity | Status | Rust Module | React Feature |
-|---|---------|----------|-----------|--------|-------------|---------------|
-| 25 | Event bus (broadcast channel) | P0 | M | planned | `infrastructure/events/bus.rs`, `tauri_forwarder.rs` | — (transparent to frontend) |
-
----
-
-## V3.0 — Platform (5 Features)
-
-| # | Feature | Priority | Complexity | Status | Rust Module | React Feature |
-|---|---------|----------|-----------|--------|-------------|---------------|
-| 29 | OCR (image → text) | P2 | L | planned | `infrastructure/pipeline/ocr.rs` (optional stage) | `ClipboardPreview.tsx` (OCR text) |
-| 31 | Quick Notes | P1 | M | planned | `domain/note.rs`, `commands/notes.rs` | `features/notes/` |
-| 32 | Automation / workflows | P2 | L | planned | `infrastructure/automation/` (event + action engine) | `features/automation/` |
-
----
-
 ## Cross-Version Summary
 
 | Version | Features | P0 | P1 | P2 | S | M | L |
@@ -126,9 +108,7 @@ Listed separately for implementation tracking.
 | **V1.0** | 13 | 8 | 5 | 0 | 4 | 6 | 3 |
 | **V1.1** | 5 | 0 | 4 | 1 | 0 | 4 | 1 |
 | **V1.2** | 5 | 0 | 3 | 2 | 1 | 2 | 2 |
-| **V2.0** | 4 | 3 | 1 | 0 | 0 | 2 | 2 |
-| **V3.0** | 5 | 0 | 2 | 3 | 0 | 1 | 4 |
-| **Total** | **32** | **11** | **15** | **6** | **5** | **15** | **12** |
+| **Total** | **23** | **8** | **12** | **3** | **5** | **12** | **6** |
 
 ---
 

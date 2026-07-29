@@ -405,7 +405,7 @@ The settings panel is a full-height overlay or side-sheet that slides in from th
 
 ## 9. Sidebar (Future)
 
-Reserved for future navigation (e.g., Collections, Tags). The sidebar specifications are deferred until Milestone 3.
+Reserved for future navigation (e.g., Collections, Tags). The sidebar specifications are deferred until future releases.
 
 ### Tokens (Preemptive)
 

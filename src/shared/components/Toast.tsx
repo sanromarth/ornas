@@ -43,8 +43,9 @@ function ToastItem({ toast, onRemove }: { toast: ToastMessage; onRemove: (id: st
       className={cn(
         'pointer-events-auto flex w-full max-w-[360px] items-start gap-3 rounded-lg border border-border border-l-[3px] bg-surface px-4 py-3 shadow-lg',
         borderClass,
-        'transition-all duration-200 ease-[var(--ease-snappy)]',
-        isExiting ? 'opacity-0 scale-95 duration-100 ease-out' : 'starting:translate-y-2 starting:opacity-0 opacity-100 scale-100'
+        isExiting
+          ? 'transition-all duration-100 ease-out opacity-0 scale-95 translate-y-1'
+          : 'ornas-toast-enter'
       )}
     >
       <Icon className={cn('mt-0.5 shrink-0', className)} size={18} />
@@ -66,12 +67,12 @@ function ToastItem({ toast, onRemove }: { toast: ToastMessage; onRemove: (id: st
 export function ToastContainer() {
   const { toasts, removeToast } = useToast();
 
-  if (toasts.length === 0) return null;
-
   return (
     <div 
-      aria-live="polite" 
-      className="fixed bottom-0 right-0 z-toast flex max-h-screen w-full flex-col-reverse items-end justify-bottom gap-2 p-4 sm:flex-col md:max-w-[420px] pointer-events-none"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+      className="fixed bottom-0 right-0 z-toast flex max-h-screen w-full flex-col-reverse items-end gap-2 p-4 sm:flex-col md:max-w-[380px] pointer-events-none"
     >
       {toasts.map((toast) => (
         <ToastItem key={toast.id} toast={toast} onRemove={removeToast} />

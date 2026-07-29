@@ -6,13 +6,15 @@ use crate::state::AppState;
 use tauri::State;
 
 /// Search clipboard items using FTS5 full-text search.
-#[tauri::command]
+#[tauri::command(rename_all = "snake_case")]
 #[allow(clippy::too_many_arguments)]
 pub fn search_clips(
     state: State<'_, AppState>,
     query: String,
     limit: Option<u32>,
     category: Option<String>,
+    content_type: Option<String>,
+    is_code: Option<bool>,
     favorites_only: Option<bool>,
     pinned_only: Option<bool>,
     collection_id: Option<i64>,
@@ -24,6 +26,8 @@ pub fn search_clips(
         cursor_created_at: None,
         cursor_id: None,
         category,
+        content_type,
+        is_code,
         favorites_only: favorites_only.unwrap_or(false),
         pinned_only: pinned_only.unwrap_or(false),
         collection_id,

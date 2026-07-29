@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Settings, Moon, Sun, Monitor } from 'lucide-react';
 import { IconButton } from '../components/IconButton';
 import { cn } from '../lib/utils';
@@ -9,8 +10,8 @@ interface ToolbarProps {
   className?: string;
 }
 
-export function Toolbar({ className }: ToolbarProps) {
-  const { toggleSettings } = useUIStore();
+export const Toolbar = memo(function Toolbar({ className }: ToolbarProps) {
+  const toggleSettings = useUIStore((s) => s.toggleSettings);
   const { settings, updateSetting } = useSettings();
 
   const cycleTheme = () => {
@@ -23,7 +24,7 @@ export function Toolbar({ className }: ToolbarProps) {
     <header 
       data-tauri-drag-region
       className={cn(
-        "flex items-center justify-between gap-4 px-4 py-2 border-b border-border bg-background h-11 shrink-0 select-none",
+        "flex items-center justify-between gap-4 px-4 py-2 bg-background h-11 shrink-0 select-none",
         className
       )}
     >
@@ -40,7 +41,7 @@ export function Toolbar({ className }: ToolbarProps) {
         <div className="pointer-events-auto flex items-center gap-1.5">
           <div className="relative group">
             <IconButton
-              aria-label="Toggle theme"
+              aria-label={`Switch theme (current: ${settings?.theme || 'system'})`}
               onClick={cycleTheme}
               className="text-text-secondary hover:text-text-primary hover:bg-hover h-8 w-8"
             >
@@ -48,7 +49,7 @@ export function Toolbar({ className }: ToolbarProps) {
               {settings?.theme === 'dark' && <Moon size={17} />}
               {settings?.theme === 'light' && <Sun size={17} />}
             </IconButton>
-            <div className="absolute top-full mt-1.5 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none px-2 py-1 bg-elevated text-text-primary text-[11px] font-medium rounded shadow-md border border-border whitespace-nowrap z-50">
+            <div className="absolute top-full mt-1.5 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity pointer-events-none px-2 py-1 bg-elevated text-text-primary text-[11px] font-medium rounded shadow-md border border-border whitespace-nowrap z-50">
               Theme: {settings?.theme === 'dark' ? 'Dark' : settings?.theme === 'light' ? 'Light' : 'System'}
             </div>
           </div>
@@ -61,7 +62,7 @@ export function Toolbar({ className }: ToolbarProps) {
             >
               <Settings size={18} />
             </IconButton>
-            <div className="absolute top-full mt-1.5 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none px-2 py-1 bg-elevated text-text-primary text-[11px] font-medium rounded shadow-md border border-border whitespace-nowrap z-50">
+            <div className="absolute top-full mt-1.5 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity pointer-events-none px-2 py-1 bg-elevated text-text-primary text-[11px] font-medium rounded shadow-md border border-border whitespace-nowrap z-50">
               Settings (Ctrl+,)
             </div>
           </div>
@@ -69,4 +70,4 @@ export function Toolbar({ className }: ToolbarProps) {
       </div>
     </header>
   );
-}
+});

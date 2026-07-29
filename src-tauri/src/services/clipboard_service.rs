@@ -3,7 +3,7 @@
 //! Orchestrates clip CRUD operations, pruning, and event emission.
 //! Delegates all database access to repository implementations.
 
-use crate::domain::clip::{Clip, ClipUpdate};
+use crate::domain::clip::{Clip, ClipUpdate, FilterCounts};
 use crate::domain::config::AppConfig;
 use crate::domain::traits::{ClipRepository, ListParams};
 use crate::error::AppError;
@@ -38,6 +38,11 @@ impl ClipboardService {
     /// Lists clips with pagination and filtering.
     pub fn list(&self, params: &ListParams) -> Result<Vec<Clip>, AppError> {
         self.clip_repo.list(params)
+    }
+
+    /// Retrieves aggregated counts for all smart sidebar filters.
+    pub fn get_filter_counts(&self) -> Result<FilterCounts, AppError> {
+        self.clip_repo.get_filter_counts()
     }
 
     /// Gets a single clip by ID.
@@ -105,6 +110,36 @@ impl ClipboardService {
 
         tracing::debug!(id = id, pinned = new_pin, "pin toggled");
         Ok(updated)
+    }
+
+    /// Bulk deletes clips and emits a `clips-deleted` event.
+    pub fn bulk_delete(&self, ids: &[i64]) -> Result<(), AppError> {
+        self.clip_repo.bulk_delete(ids)?;
+        self.app_handle
+            .emit("clips-deleted", serde_json::json!({ "ids": ids }))
+            .map_err(|e| AppError::Internal(format!("Failed to emit event: {e}")))?;
+        tracing::info!(count = ids.len(), "bulk clips deleted");
+        Ok(())
+    }
+
+    /// Bulk toggles the favorite status of clips.
+    pub fn bulk_set_favorite(&self, ids: &[i64], favorite: bool) -> Result<(), AppError> {
+        self.clip_repo.bulk_set_favorite(ids, favorite)?;
+        self.app_handle
+            .emit("clips-updated", serde_json::json!({ "ids": ids }))
+            .map_err(|e| AppError::Internal(format!("Failed to emit event: {e}")))?;
+        tracing::debug!(count = ids.len(), favorite, "bulk favorite updated");
+        Ok(())
+    }
+
+    /// Bulk toggles the pinned status of clips.
+    pub fn bulk_set_pinned(&self, ids: &[i64], pinned: bool) -> Result<(), AppError> {
+        self.clip_repo.bulk_set_pinned(ids, pinned)?;
+        self.app_handle
+            .emit("clips-updated", serde_json::json!({ "ids": ids }))
+            .map_err(|e| AppError::Internal(format!("Failed to emit event: {e}")))?;
+        tracing::debug!(count = ids.len(), pinned, "bulk pin updated");
+        Ok(())
     }
 
     /// Updates the language of a clip and emits a `clip-updated` event.

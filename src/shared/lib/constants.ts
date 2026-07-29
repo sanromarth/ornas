@@ -13,12 +13,15 @@ export const TAURI_EVENTS = {
   CLIP_CREATED: 'clip-created',
   CLIP_DELETED: 'clip-deleted',
   CLIP_UPDATED: 'clip-updated',
+  CLIPS_DELETED: 'clips-deleted',
+  CLIPS_UPDATED: 'clips-updated',
   SETTINGS_CHANGED: 'settings-changed',
 } as const;
 
 /** Tauri IPC command names. */
 export const COMMANDS = {
   LIST_CLIPS: 'list_clips',
+  GET_FILTER_COUNTS: 'get_filter_counts',
   GET_CLIP: 'get_clip',
   DELETE_CLIP: 'delete_clip',
   TOGGLE_FAVORITE: 'toggle_favorite',

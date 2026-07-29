@@ -23,6 +23,7 @@ pub fn get_migrations() -> Migrations<'static> {
         M::up(include_str!(
             "../../../migrations/007_performance_indexes.sql"
         )),
+        M::up(include_str!("../../../migrations/008_metadata.sql")),
     ])
 }
 

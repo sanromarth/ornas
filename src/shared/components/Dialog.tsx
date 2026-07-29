@@ -46,11 +46,14 @@ export function Dialog({
     if (isVisible) {
       previousFocusRef.current = document.activeElement as HTMLElement;
       
+      const autoFocusElement = dialogRef.current?.querySelector<HTMLElement>('[autofocus], [data-autofocus]');
       const focusableElements = dialogRef.current?.querySelectorAll<HTMLElement>(
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
       );
       
-      if (focusableElements && focusableElements.length > 0) {
+      if (autoFocusElement) {
+        autoFocusElement.focus();
+      } else if (focusableElements && focusableElements.length > 0) {
         focusableElements[0].focus();
       } else {
         dialogRef.current?.focus();
@@ -93,7 +96,10 @@ export function Dialog({
   return createPortal(
     <div 
       className={cn(
-        "fixed inset-0 z-dialog flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity",
+        // ornas-dialog-backdrop: rgba(0,0,0,0.72) + backdrop-filter:blur(7px)
+        // Stronger than the previous bg-black/60 backdrop-blur-sm so the app
+        // reads as inactive while remaining spatially recognizable.
+        "ornas-dialog-backdrop fixed inset-0 z-dialog flex items-center justify-center transition-opacity",
         isVisible ? "opacity-100 duration-200 ease-[var(--ease-snappy)]" : "opacity-0 duration-100 ease-out"
       )}
       onPointerDown={(e) => {
@@ -106,10 +112,14 @@ export function Dialog({
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-labelledby={titleId}
+        aria-labelledby={!hideClose ? titleId : undefined}
+        aria-label={hideClose ? title : undefined}
         tabIndex={-1}
         className={cn(
-          "relative flex w-full max-w-[420px] flex-col rounded-lg border border-border bg-surface shadow-2xl outline-none",
+          // ornas-dialog-card: multi-layer shadow + 1px white/6 outline ring
+          // Provides ≈32px perceptual elevation so the dialog clearly
+          // floats above the blurred app behind it.
+          "ornas-dialog-card relative flex w-full max-w-[420px] flex-col rounded-lg border border-border bg-surface outline-none",
           "transition-all",
           isVisible ? "opacity-100 scale-100 duration-200 ease-[var(--ease-snappy)]" : "opacity-0 scale-95 duration-100 ease-out",
           className

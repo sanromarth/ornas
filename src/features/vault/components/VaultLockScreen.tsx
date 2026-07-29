@@ -1,9 +1,21 @@
+/**
+ * VaultLockScreen — Shown in the preview panel when an encrypted clip is selected
+ * but the vault is not yet unlocked.
+ *
+ * Design:
+ *   - Centers in the preview panel (flex-1)
+ *   - Lock icon: small and muted — the form is the hero, not the icon
+ *   - Password input: autoFocus, submits on Enter via form
+ *   - No extra decoration — the context (viewing an encrypted clip) is already established
+ */
+
 import { useState } from 'react';
 import { useVaultStore } from '../../../stores/vault-store';
 import { Button } from '../../../shared/components/Button';
 import { Input } from '../../../shared/components/Input';
 import { Lock } from 'lucide-react';
 import { useToast } from '../../../shared/components/useToast';
+import { Spinner } from '../../../shared/components/Spinner';
 
 export function VaultLockScreen() {
   const { unlockVault, isChecking } = useVaultStore();
@@ -21,7 +33,11 @@ export function VaultLockScreen() {
       addToast({ title: 'Vault unlocked', variant: 'success' });
       setPassword('');
     } catch (err: unknown) {
-      addToast({ title: 'Failed to unlock', description: (err instanceof Error ? err.message : String(err)), variant: 'error' });
+      addToast({
+        title: 'Incorrect password',
+        description: err instanceof Error ? err.message : String(err),
+        variant: 'error',
+      });
     } finally {
       setLoading(false);
     }
@@ -29,37 +45,45 @@ export function VaultLockScreen() {
 
   if (isChecking) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-surface p-8">
-        <p className="text-text-secondary">Checking vault status...</p>
+      <div className="flex-1 flex items-center justify-center text-text-tertiary gap-2">
+        <Spinner size={14} />
+        <span className="text-sm">Checking vault…</span>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center bg-surface p-8 text-center">
-      <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-6">
-        <Lock className="w-8 h-8 text-primary" />
+    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+      {/* Lock icon — small, muted, not the focus */}
+      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-hover border border-border mb-5">
+        <Lock size={18} className="text-text-tertiary" aria-hidden="true" />
       </div>
-      <h2 className="text-xl font-medium text-text-primary mb-2">Vault is Locked</h2>
-      <p className="text-sm text-text-secondary max-w-sm mb-8">
-        This clip is encrypted. Please enter your master password to unlock the vault and view this clip.
+
+      <h2 className="text-[15px] font-medium text-text-primary mb-1">
+        Vault is locked
+      </h2>
+      <p className="text-[13px] text-text-tertiary max-w-[28ch] mx-auto leading-relaxed mb-6">
+        Enter your master password to decrypt this clip.
       </p>
-      
-      <form onSubmit={handleUnlock} className="flex flex-col gap-4 w-full max-w-xs">
-        <Input 
-          type="password" 
-          placeholder="Master Password" 
+
+      <form onSubmit={handleUnlock} className="flex flex-col gap-3 w-full max-w-[240px]">
+        <Input
+          type="password"
+          placeholder="Master password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           autoFocus
+          aria-label="Master password"
         />
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
+          variant="primary"
+          size="sm"
           loading={loading}
           disabled={!password}
           className="w-full"
         >
-          Unlock Vault
+          Unlock
         </Button>
       </form>
     </div>

@@ -19,11 +19,11 @@ export function useClipboardEvents() {
   const queryClient = useQueryClient();
 
   useTauriEvent<ClipboardEventDto>(TAURI_EVENTS.CLIP_CREATED, (payload) => {
-    console.log('[ORNAS] clip-created event received:', payload);
 
     // Immediately invalidate queries to trigger a refetch — this is the most
     // reliable approach. The optimistic cache update below is a nice-to-have.
     queryClient.invalidateQueries({ queryKey: clipboardKeys.lists() });
+    queryClient.invalidateQueries({ queryKey: clipboardKeys.counts() });
 
     // Also try to optimistically prepend the new clip to avoid a flash
     getClip(payload.id)
@@ -59,7 +59,6 @@ export function useClipboardEvents() {
   });
 
   useTauriEvent<ClipboardEventDto>(TAURI_EVENTS.CLIP_UPDATED, (payload) => {
-    console.log('[ORNAS] clip-updated event received:', payload);
 
     getClip(payload.id)
       .then((updatedClip) => {
@@ -80,6 +79,7 @@ export function useClipboardEvents() {
 
         queryClient.setQueryData(clipboardKeys.detail(payload.id), updatedClip);
         queryClient.invalidateQueries({ queryKey: clipboardKeys.lists() });
+        queryClient.invalidateQueries({ queryKey: clipboardKeys.counts() });
       })
       .catch((error) => {
         console.error('[ORNAS] Failed to fetch updated clip:', error);
@@ -87,7 +87,6 @@ export function useClipboardEvents() {
   });
 
   useTauriEvent<ClipboardEventDto>(TAURI_EVENTS.CLIP_DELETED, (payload) => {
-    console.log('[ORNAS] clip-deleted event received:', payload);
 
     const { selectedClipId, selectClip } = useUIStore.getState();
     if (selectedClipId === payload.id) {
@@ -109,5 +108,33 @@ export function useClipboardEvents() {
 
     queryClient.removeQueries({ queryKey: clipboardKeys.detail(payload.id) });
     queryClient.invalidateQueries({ queryKey: clipboardKeys.lists() });
+    queryClient.invalidateQueries({ queryKey: clipboardKeys.counts() });
+  });
+
+  useTauriEvent<{ ids: number[] }>(TAURI_EVENTS.CLIPS_DELETED, (payload) => {
+    const { selectedClipId, selectedClipIds, selectClip, setSelectedClipIds } = useUIStore.getState();
+    if (selectedClipId !== null && payload.ids.includes(selectedClipId)) {
+      selectClip(null);
+    }
+    const newSelectedIds = new Set(selectedClipIds);
+    payload.ids.forEach(id => newSelectedIds.delete(id));
+    if (newSelectedIds.size !== selectedClipIds.size) {
+      setSelectedClipIds(newSelectedIds);
+    }
+    
+    // We could optimize this by removing from cache manually, but invalidating is safer
+    payload.ids.forEach(id => {
+      queryClient.removeQueries({ queryKey: clipboardKeys.detail(id) });
+    });
+    queryClient.invalidateQueries({ queryKey: clipboardKeys.lists() });
+    queryClient.invalidateQueries({ queryKey: clipboardKeys.counts() });
+  });
+
+  useTauriEvent<{ ids: number[] }>(TAURI_EVENTS.CLIPS_UPDATED, (payload) => {
+    queryClient.invalidateQueries({ queryKey: clipboardKeys.lists() });
+    queryClient.invalidateQueries({ queryKey: clipboardKeys.counts() });
+    payload.ids.forEach(id => {
+      queryClient.invalidateQueries({ queryKey: clipboardKeys.detail(id) });
+    });
   });
 }

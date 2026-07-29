@@ -45,6 +45,14 @@ impl SearchRepository for SqliteSearchRepo {
             sql.push_str(" AND c.category = ?");
             sql_params.push(cat.clone().into());
         }
+        if let Some(content_type) = &params.content_type {
+            sql.push_str(" AND c.content_type = ?");
+            sql_params.push(content_type.clone().into());
+        }
+        if let Some(is_code) = params.is_code {
+            sql.push_str(" AND c.is_code = ?");
+            sql_params.push((if is_code { 1 } else { 0 }).into());
+        }
         if params.favorites_only {
             sql.push_str(" AND c.is_favorite = 1");
         }
@@ -131,6 +139,7 @@ mod tests {
             encryption_version: None,
             encrypted_blob: None,
             nonce: None,
+            metadata: None,
         };
         clip_repo.create(&new_clip).unwrap();
 

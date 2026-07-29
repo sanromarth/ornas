@@ -25,10 +25,6 @@ use std::sync::Arc;
 use std::time::Instant;
 use tauri::{AppHandle, Emitter};
 
-// ---------------------------------------------------------------------------
-// Job definitions
-// ---------------------------------------------------------------------------
-
 /// A background job dispatched after clip persistence.
 ///
 /// Add new variants here for future background workers.
@@ -50,10 +46,6 @@ pub struct ImageJob {
     pub image_bytes: Vec<u8>,
 }
 
-// ---------------------------------------------------------------------------
-// Job context (shared resources available to all jobs)
-// ---------------------------------------------------------------------------
-
 /// Shared resources available to background job handlers.
 ///
 /// Passed to each job's processing function. Add fields here
@@ -63,10 +55,6 @@ struct JobContext {
     clip_repo: Arc<dyn ClipRepository>,
     app_handle: AppHandle,
 }
-
-// ---------------------------------------------------------------------------
-// Job queue
-// ---------------------------------------------------------------------------
 
 /// Manages background job processing on a dedicated thread.
 ///
@@ -87,7 +75,7 @@ impl JobQueue {
         image_store: Arc<ImageStore>,
         clip_repo: Arc<dyn ClipRepository>,
         app_handle: AppHandle,
-    ) -> Self {
+    ) -> Result<Self, crate::error::AppError> {
         // Bounded queue of 50 items prevents Out-Of-Memory under extreme load.
         let (sender, receiver) = mpsc::bounded::<BackgroundJob>(50);
 
@@ -104,12 +92,17 @@ impl JobQueue {
                 Self::worker_loop(receiver, &ctx);
                 tracing::info!("Background job worker stopped cleanly");
             })
-            .expect("failed to spawn background-job-worker thread");
+            .map_err(|e| {
+                crate::error::AppError::Internal(format!(
+                    "failed to spawn background-job-worker thread: {}",
+                    e
+                ))
+            })?;
 
-        Self {
+        Ok(Self {
             sender,
             worker_handle: std::sync::Mutex::new(Some(worker_handle)),
-        }
+        })
     }
 
     /// Enqueues an essential job for background processing.
@@ -137,12 +130,24 @@ impl JobQueue {
         tracing::info!("Initiating graceful shutdown of JobQueue...");
         let _ = self.sender.send(BackgroundJob::Shutdown);
 
-        if let Some(handle) = self.worker_handle.lock().unwrap().take() {
-            // Rust standard library doesn't have a threaded timeout join,
+        let handle_opt = match self.worker_handle.lock() {
+            Ok(mut guard) => guard.take(),
+            Err(poisoned) => {
+                tracing::warn!(
+                    "JobQueue worker handle mutex was poisoned. Background thread may have panicked."
+                );
+                poisoned.into_inner().take()
+            }
+        };
+
+        if let Some(handle) = handle_opt {
             // but closing the channel and sending Shutdown is usually fast enough.
             // For production hardening, we log queue depth before joining.
-            tracing::info!(pending_jobs = self.sender.len(), "Waiting for JobQueue worker to finish in-flight jobs");
-            
+            tracing::info!(
+                pending_jobs = self.sender.len(),
+                "Waiting for JobQueue worker to finish in-flight jobs"
+            );
+
             // Note: Since we want a timeout, the best we can do natively is block on join
             // assuming the worker will drain quickly because no new jobs can enter.
             if let Err(e) = handle.join() {
@@ -224,7 +229,8 @@ impl JobQueue {
             Ok(path) => {
                 tracing::debug!(
                     clip_id = clip_id,
-                    elapsed_ms = format!("{:.2}", job_start.elapsed().as_secs_f64() * 1000.0).as_str(),
+                    elapsed_ms =
+                        format!("{:.2}", job_start.elapsed().as_secs_f64() * 1000.0).as_str(),
                     "image saved"
                 );
                 path
@@ -237,7 +243,8 @@ impl JobQueue {
 
         // 2. Generate thumbnail
         let thumb_start = Instant::now();
-        ctx.image_store.generate_thumbnail(&job.content_hash, &job.image_bytes);
+        ctx.image_store
+            .generate_thumbnail(&job.content_hash, &job.image_bytes);
         tracing::debug!(
             clip_id = clip_id,
             elapsed_ms = format!("{:.2}", thumb_start.elapsed().as_secs_f64() * 1000.0).as_str(),
@@ -256,10 +263,10 @@ impl JobQueue {
         }
 
         // 4. Emit clip-updated event so the UI refreshes the thumbnail
-        if let Err(e) = ctx.app_handle.emit(
-            "clip-updated",
-            serde_json::json!({ "id": clip_id }),
-        ) {
+        if let Err(e) = ctx
+            .app_handle
+            .emit("clip-updated", serde_json::json!({ "id": clip_id }))
+        {
             tracing::error!(clip_id = clip_id, error = %e, "ImageJob: failed to emit clip-updated");
         }
 

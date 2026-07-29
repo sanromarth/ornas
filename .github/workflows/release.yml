@@ -1,31 +1,57 @@
-# ───────────────────────────────────────────────────────────────
-# ORNAS — Cross-Platform Release Workflow
-# ───────────────────────────────────────────────────────────────
-# Triggers on version tags (v*), builds for Linux/Windows/macOS,
-# and uploads all binaries to a GitHub Release.
-#
-# Tauri v2 · React + Vite · Rust · npm
-# ───────────────────────────────────────────────────────────────
-
 name: Release
 
 on:
   push:
     tags:
       - 'v*'
-
-  # Allow manual triggering from the Actions tab
   workflow_dispatch:
 
-# Required for creating/updating GitHub Releases
 permissions:
   contents: write
 
 jobs:
-  release:
-    # Guard against RPM bundler hangs (known Tauri issue on Linux CI).
-    # Normal builds complete in ~20 min; 60 min gives plenty of headroom
-    # while still catching infinite hangs.
+  # ──────────────────────────────────────────────────────────
+  # Job 1: Create the GitHub Release (runs once)
+  # ──────────────────────────────────────────────────────────
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.create.outputs.id }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Create GitHub Release
+        id: create
+        uses: softprops/action-gh-release@v3
+        with:
+          name: 'ORNAS ${{ github.ref_name }}'
+          body: |
+            ## ORNAS ${{ github.ref_name }}
+
+            Download the installer for your platform below.
+
+            | Platform | File |
+            |----------|------|
+            | **Linux (Debian/Ubuntu)** | `.deb` |
+            | **Linux (Fedora/RHEL)** | `.rpm` |
+            | **Linux (Universal)** | `.AppImage` |
+            | **Windows** | `.msi` or `.exe` |
+            | **macOS** | `.dmg` |
+
+            ---
+
+            > **Windows & macOS**: Binaries are currently unsigned. Your OS may display a security warning. See [SIGNING.md](https://github.com/sanromarth/ornas/blob/main/SIGNING.md) for bypass instructions.
+
+            See the [CHANGELOG](https://github.com/sanromarth/ornas/blob/main/CHANGELOG.md) for a full list of changes.
+          draft: true
+          prerelease: true
+
+  # ──────────────────────────────────────────────────────────
+  # Job 2: Build on each platform and upload to the release
+  # ──────────────────────────────────────────────────────────
+  build-and-upload:
+    needs: create-release
     timeout-minutes: 60
 
     strategy:
@@ -59,13 +85,13 @@ jobs:
       # 1. Checkout
       # ────────────────────────────────────────────────────────
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       # ────────────────────────────────────────────────────────
       # 2. Node.js
       # ────────────────────────────────────────────────────────
       - name: Setup Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v7
         with:
           node-version: lts/*
           cache: npm
@@ -105,50 +131,15 @@ jobs:
         run: npm ci
 
       # ────────────────────────────────────────────────────────
-      # 6. Build Tauri app & create GitHub Release
+      # 6. Build Tauri app & upload to existing release
       # ────────────────────────────────────────────────────────
-      - name: Build and release
+      - name: Build and upload
         uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NO_STRIP: "true"
           APPIMAGE_EXTRACT_AND_RUN: "1"
-
-          # ── macOS Code Signing (optional) ──────────────────
-          # Uncomment and configure these if you have an
-          # Apple Developer certificate for signed builds.
-          # See "Setup Instructions" below for details.
-          #
-          # APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          # APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          # APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-
-          # ── macOS Notarization (optional) ──────────────────
-          # Required for Gatekeeper-approved distribution.
-          #
-          # APPLE_ID: ${{ secrets.APPLE_ID }}
-          # APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          # APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-
         with:
           tagName: ${{ github.ref_name }}
-          releaseName: 'ORNAS ${{ github.ref_name }}'
-          releaseBody: |
-            ## ORNAS ${{ github.ref_name }}
-
-            Download the installer for your platform below.
-
-            | Platform | File |
-            |----------|------|
-            | **Linux (Debian/Ubuntu)** | `.deb` |
-            | **Linux (Fedora/RHEL)** | `.rpm` |
-            | **Linux (Universal)** | `.AppImage` |
-            | **Windows** | `.msi` or `.exe` |
-            | **macOS** | `.dmg` |
-
-            ---
-
-            > First beta release? See the [README](https://github.com/sanromarth/ornas) for installation instructions.
-          releaseDraft: true
-          prerelease: true
+          releaseId: ${{ needs.create-release.outputs.release_id }}
           args: ${{ matrix.args }}

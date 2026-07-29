@@ -26,7 +26,7 @@
 14. [Final Keyboard-First UX](#14-final-keyboard-first-ux)
 15. [Final Security Model](#15-final-security-model)
 16. [Final Compatibility Matrix](#16-final-compatibility-matrix)
-17. [Final V2+ Roadmap](#17-final-v2-roadmap)
+17. [Final Roadmap](#17-final-roadmap)
 18. [Things Intentionally NOT Included](#18-things-intentionally-not-included)
 
 ---
@@ -493,13 +493,17 @@ Raw clipboard content (from monitor)
                    ▼
 ┌──────────────────────────────────────────┐
 │  Stage 4: CATEGORIZER                     │
-│  • Run detection functions in order:      │
-│    URL → Email → FilePath → JSON → XML →  │
-│    Markdown → SQL → Shell → Python → JS → │
-│    Rust → HTML → CSS → Git → Docker →     │
-│    Phone → PlainText (fallback)           │
-│  • First match wins                       │
-│  Output: clip.category = "url"            │
+│  • Precomputes Shared Text Metrics        │
+│  • Pass 1: ContentClassifier (15 signals) │
+│    → Evaluates all detectors concurrently │
+│    → Confidence-Gap disambiguation        │
+│    → Applies NL penalty to code types     │
+│  • Pass 2: LanguageClassifier (gated)     │
+│    → Runs only if Pass 1 is SourceCode    │
+│    → Evaluates 11 languages concurrently  │
+│    → Confidence-Gap disambiguation        │
+│  • Output: clip.category, clip.language,  │
+│            clip.detection_confidence      │
 └──────────────────┬───────────────────────┘
                    ▼
 ┌──────────────────────────────────────────┐
@@ -625,9 +629,9 @@ USER ACTION EVENT:
 
 **4 events. Each has exactly one producer and one consumer.** No event spam, no unused events.
 
-### How This Enables V2 Event Bus
+### How This Enables Event Bus
 
-When V2 needs multiple subscribers (plugins, automation), the change is:
+When the system needs multiple subscribers (plugins, automation), the change is:
 
 1. Add `tokio::broadcast` channel to `AppState`
 2. Services emit to broadcast channel instead of directly to `app_handle`
@@ -1257,7 +1261,7 @@ Activated via `Ctrl+Shift+P`. Follows VS Code pattern:
 
 ---
 
-## 17. Final V2+ Roadmap
+## 17. Final Roadmap
 
 ### V1.1 — Organization (Est. 4–6 weeks after V1.0)
 
@@ -1279,19 +1283,10 @@ Activated via `Ctrl+Shift+P`. Follows VS Code pattern:
 | Sensitive item auto-expiry | New `expires_at` column + background task |
 | Encrypted favorites storage | OS keyring + SQLCipher or AES-256-GCM |
 
-### V2.0 — Extensibility (Est. 8–12 weeks after V1.2)
+### Future Considerations
 
-| Feature | Depends On |
-|---------|-----------|
-| Event bus (broadcast channel) | `tokio::broadcast`, event forwarder |
-
-### V3.0+ — Platform (Future)
-
-| Feature | Depends On |
-|---------|-----------|
-| OCR (image → text) | Optional pipeline stage, Tesseract or similar |
-| Quick Notes | New entity, new feature module |
-| Automation / workflows | Event subscriptions + action engine |
+Future features will be defined based on community feedback and real-world usage.
+ORNAS will remain focused on its core principles: Privacy First, Fully Offline, Zero Telemetry, Ultra Lightweight.
 
 ---
 
@@ -1332,14 +1327,14 @@ Every item below was consciously evaluated and rejected for V1.0.
 | Omission | Reason |
 |----------|--------|
 
-| **OCR** | Heavy dependency (Tesseract). Optional module for V2.0+. |
+| **OCR** | Heavy dependency (Tesseract). Not aligned with the ultra-lightweight philosophy. |
 | **Rich text editing** | ORNAS is a clipboard viewer, not an editor. |
 | **Custom themes** | Dark + light is sufficient. Custom themes add CSS variable management. |
 | **Multi-window clipboard** | One main window + one search popup. No dashboard views. |
 | **Tray icon menu** | Tray icon exists for background presence. Context menu deferred. |
 | **Drag and drop** | Clipboard items can be copied, not dragged. Simplifies interaction model. |
-| **Undo/redo** | Delete is permanent in V1.0. Undo requires action history tracking. |
-| **Clipboard sharing** | Network feature. V3.0. |
+| **Undo/redo** | Delete is permanent. Undo requires action history tracking. |
+| **Clipboard sharing** | Network feature. Conflicts with offline-first philosophy. |
 
 ---
 

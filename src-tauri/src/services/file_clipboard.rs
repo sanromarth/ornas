@@ -47,13 +47,25 @@ pub struct FileClipboardService {
 }
 
 impl FileClipboardService {
-    pub fn new(db: Arc<Database>, image_store: Arc<ImageStore>, app_handle: tauri::AppHandle) -> Self {
-        Self { db, image_store, app_handle: Some(app_handle) }
+    pub fn new(
+        db: Arc<Database>,
+        image_store: Arc<ImageStore>,
+        app_handle: tauri::AppHandle,
+    ) -> Self {
+        Self {
+            db,
+            image_store,
+            app_handle: Some(app_handle),
+        }
     }
 
     #[cfg(test)]
     pub fn new_for_test(db: Arc<Database>, image_store: Arc<ImageStore>) -> Self {
-        Self { db, image_store, app_handle: None }
+        Self {
+            db,
+            image_store,
+            app_handle: None,
+        }
     }
 
     pub fn process_files(&self, paths: Vec<String>) -> Result<(), AppError> {

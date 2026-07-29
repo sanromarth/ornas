@@ -14,5 +14,5 @@ export default tseslint.config(
       '@typescript-eslint/no-explicit-any': 'warn',
     },
   },
-  { ignores: ['dist/', 'src-tauri/'] },
+  { ignores: ['dist/', 'src-tauri/', 'scripts/', 'e2e/'] },
 );

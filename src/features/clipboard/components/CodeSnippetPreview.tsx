@@ -63,9 +63,10 @@ function useIsDarkTheme(): boolean {
 
 interface CodeSnippetPreviewProps {
   clip: ClipDto;
+  forceLanguage?: string;
 }
 
-export function CodeSnippetPreview({ clip }: CodeSnippetPreviewProps) {
+export function CodeSnippetPreview({ clip, forceLanguage }: CodeSnippetPreviewProps) {
   const [isPlain, setIsPlain] = useState(false);
   const [isWrapped, setIsWrapped] = useState(false);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
@@ -74,7 +75,7 @@ export function CodeSnippetPreview({ clip }: CodeSnippetPreviewProps) {
   const { mutate: setLanguage } = useSetClipLanguage();
   
   const content = clip.content_text ?? clip.preview ?? '';
-  const currentLang = clip.language || 'text';
+  const currentLang = forceLanguage || clip.language || 'text';
   
   const handleLanguageSelect = (langId: string) => {
     setLanguage({

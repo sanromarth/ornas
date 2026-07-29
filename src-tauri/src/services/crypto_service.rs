@@ -192,3 +192,101 @@ impl CryptoService {
         Ok(Zeroizing::new(key_bytes))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::infrastructure::database::vault_repo::SqliteVaultRepository;
+    use crate::infrastructure::database::{
+        Database, connection::open_in_memory, migrations::run_migrations,
+    };
+
+    fn setup_test_service() -> CryptoService {
+        let mut conn = open_in_memory().unwrap();
+        run_migrations(&mut conn).unwrap();
+        let db = Arc::new(Database::new(conn));
+        let repo = Arc::new(SqliteVaultRepository::new(db));
+        CryptoService::new(repo)
+    }
+
+    #[test]
+    fn test_vault_setup_and_status() {
+        let service = setup_test_service();
+
+        // Initial state
+        let status = service.get_status().unwrap();
+        assert!(!status.is_initialized);
+        assert!(!status.is_unlocked);
+
+        // Setup vault
+        service.setup_vault("my_secure_password").unwrap();
+
+        // Status after setup (should be initialized and auto-unlocked)
+        let status = service.get_status().unwrap();
+        assert!(status.is_initialized);
+        assert!(status.is_unlocked);
+
+        // Try setting up again (should fail)
+        let err = service.setup_vault("another_password");
+        assert!(err.is_err());
+    }
+
+    #[test]
+    fn test_vault_lock_and_unlock() {
+        let service = setup_test_service();
+        service.setup_vault("my_secure_password").unwrap();
+
+        // Lock vault
+        service.lock_vault().unwrap();
+        let status = service.get_status().unwrap();
+        assert!(status.is_initialized);
+        assert!(!status.is_unlocked);
+
+        // Unlock with wrong password
+        let err = service.unlock_vault("wrong_password");
+        assert!(err.is_err());
+        assert!(!service.get_status().unwrap().is_unlocked);
+
+        // Unlock with correct password
+        service.unlock_vault("my_secure_password").unwrap();
+        assert!(service.get_status().unwrap().is_unlocked);
+    }
+
+    #[test]
+    fn test_vault_encryption_roundtrip() {
+        let service = setup_test_service();
+        service.setup_vault("password123").unwrap();
+
+        let payload = EncryptedClipPayload {
+            content_text: Some("Super secret string".into()),
+            content_html: None,
+            content_rtf: None,
+            preview: None,
+        };
+
+        // Encrypt
+        let (encrypted_blob, nonce) = service.encrypt(&payload).unwrap();
+        assert!(!encrypted_blob.is_empty());
+
+        // Decrypt
+        let decrypted = service.decrypt(&encrypted_blob, &nonce).unwrap();
+        assert_eq!(decrypted.content_text.unwrap(), "Super secret string");
+    }
+
+    #[test]
+    fn test_vault_encryption_fails_when_locked() {
+        let service = setup_test_service();
+        service.setup_vault("password123").unwrap();
+        service.lock_vault().unwrap();
+
+        let payload = EncryptedClipPayload {
+            content_text: Some("Secret".into()),
+            content_html: None,
+            content_rtf: None,
+            preview: None,
+        };
+
+        let err = service.encrypt(&payload);
+        assert!(err.is_err()); // Vault is locked
+    }
+}

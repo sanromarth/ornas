@@ -6,7 +6,7 @@
 //!
 //! **No I/O or database types appear here.** Only domain entities and errors.
 
-use crate::domain::clip::{Clip, ClipUpdate, NewClip};
+use crate::domain::clip::{Clip, ClipUpdate, FilterCounts, NewClip};
 use crate::domain::collection::{Collection, CollectionUpdate, NewCollection};
 use crate::domain::tag::{NewTag, Tag, TagUpdate};
 use crate::domain::vault::VaultConfig;
@@ -22,6 +22,10 @@ pub struct ListParams {
     pub cursor_id: Option<i64>,
     /// Optional category filter.
     pub category: Option<String>,
+    /// Optional content type filter (e.g. "image", "file").
+    pub content_type: Option<String>,
+    /// Optional code snippet filter.
+    pub is_code: Option<bool>,
     /// If true, show only favorites.
     pub favorites_only: bool,
     /// If true, show only pinned items.
@@ -40,6 +44,8 @@ impl Default for ListParams {
             cursor_created_at: None,
             cursor_id: None,
             category: None,
+            content_type: None,
+            is_code: None,
             favorites_only: false,
             pinned_only: false,
             collection_id: None,
@@ -55,9 +61,12 @@ pub trait ClipRepository: Send + Sync {
     fn list(&self, params: &ListParams) -> Result<Vec<Clip>, AppError>;
     fn update(&self, id: i64, update: &ClipUpdate) -> Result<Clip, AppError>;
     fn delete(&self, id: i64) -> Result<(), AppError>;
+    fn bulk_delete(&self, ids: &[i64]) -> Result<(), AppError>;
     fn find_by_hash(&self, hash: &str) -> Result<Option<Clip>, AppError>;
     fn set_favorite(&self, id: i64, favorite: bool) -> Result<(), AppError>;
+    fn bulk_set_favorite(&self, ids: &[i64], favorite: bool) -> Result<(), AppError>;
     fn set_pinned(&self, id: i64, pinned: bool) -> Result<(), AppError>;
+    fn bulk_set_pinned(&self, ids: &[i64], pinned: bool) -> Result<(), AppError>;
     fn touch(&self, id: i64) -> Result<(), AppError>;
     /// Prunes clips older than the specified retention period (in seconds)
     /// that are neither pinned nor favorited.
@@ -66,6 +75,8 @@ pub trait ClipRepository: Send + Sync {
     fn get_encrypted_clips(&self) -> Result<Vec<Clip>, AppError>;
     #[allow(dead_code)]
     fn count(&self) -> Result<u64, AppError>;
+    /// Retrieves aggregated counts for all smart sidebar filters in a single query.
+    fn get_filter_counts(&self) -> Result<FilterCounts, AppError>;
 }
 
 /// Contract for collections persistence.

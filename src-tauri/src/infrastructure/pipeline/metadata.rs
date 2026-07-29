@@ -25,6 +25,15 @@ impl PipelineStage for Metadata {
                 .to_string();
             item.preview = Some(preview);
 
+            let word_count = text.split_whitespace().count() as i64;
+
+            let meta = serde_json::json!({
+                "word_count": word_count,
+                "has_html": item.content_html.is_some(),
+                "has_rtf": item.content_rtf.is_some(),
+            });
+            item.metadata = Some(meta.to_string());
+
             tracing::debug!(
                 stage = self.name(),
                 chars = item.char_count,

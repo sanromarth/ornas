@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import { Button } from '../../../shared/components/Button';
-import { ConfirmDialog } from '../../../shared/components/ConfirmDialog';
-import { BackupService, BackupProgress, ImportMode } from '../services/BackupService';
+import { BackupService, BackupProgress } from '../services/BackupService';
+
+import { RestoreWizard } from './RestoreWizard';
 
 export function BackupSection() {
   const [progress, setProgress] = useState<BackupProgress | null>(null);
   const [isExporting, setIsExporting] = useState(false);
-  const [isImporting, setIsImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [showReplaceConfirm, setShowReplaceConfirm] = useState(false);
+  const [showRestoreWizard, setShowRestoreWizard] = useState(false);
 
   const handleExport = async () => {
     setError(null);
@@ -26,23 +26,10 @@ export function BackupSection() {
     }
   };
 
-  const handleImport = async (mode: ImportMode) => {
-    setError(null);
-    setSuccess(null);
-    setIsImporting(true);
-    try {
-      await BackupService.importBackup(mode, (p) => setProgress(p));
-      setSuccess("Backup imported successfully. Please restart ORNAS to refresh state.");
-    } catch (err: unknown) {
-      setError((err instanceof Error ? err.message : String(err)) || String(err));
-    } finally {
-      setIsImporting(false);
-      setProgress(null);
-    }
-  };
+
 
   return (
-    <section className="space-y-5">
+    <section className="space-y-6">
       <h3 className="text-[11px] uppercase font-bold text-text-tertiary tracking-widest pl-1">Backup & Restore</h3>
       
       <div className="flex flex-col gap-6">
@@ -55,7 +42,6 @@ export function BackupSection() {
             <Button 
               onClick={handleExport}
               loading={isExporting}
-              disabled={isImporting}
               variant="secondary"
             >
               Export ZIP
@@ -64,31 +50,14 @@ export function BackupSection() {
 
           <div className="flex gap-4 items-center justify-between">
             <div className="flex flex-col gap-1 flex-1">
-              <label className="text-sm font-medium text-text-primary">Import Database (Merge)</label>
-              <p className="text-sm text-text-secondary leading-relaxed">Import a ZIP backup. Existing clips will be kept, and new ones will be added (upsert).</p>
+              <label className="text-sm font-medium text-text-primary">Restore Database</label>
+              <p className="text-sm text-text-secondary leading-relaxed">Import a ZIP backup to merge or replace your current database.</p>
             </div>
             <Button 
-              onClick={() => handleImport('merge')}
-              loading={isImporting}
-              disabled={isExporting}
+              onClick={() => setShowRestoreWizard(true)}
               variant="secondary"
             >
-              Merge ZIP
-            </Button>
-          </div>
-
-          <div className="flex gap-4 items-center justify-between">
-            <div className="flex flex-col gap-1 flex-1">
-              <label className="text-sm font-medium text-danger">Import Database (Replace All)</label>
-              <p className="text-sm text-text-secondary leading-relaxed">Completely overwrite your current history with the backup.</p>
-            </div>
-            <Button 
-              onClick={() => setShowReplaceConfirm(true)}
-              loading={isImporting}
-              disabled={isExporting}
-              variant="destructive"
-            >
-              Replace All
+              Restore Backup
             </Button>
           </div>
         </div>
@@ -121,14 +90,9 @@ export function BackupSection() {
         )}
       </div>
 
-      <ConfirmDialog
-        open={showReplaceConfirm}
-        title="Replace All Data"
-        description="This will permanently delete all current clips and replace them with the backup. This cannot be undone."
-        confirmText="Replace All"
-        onConfirm={() => handleImport('replace_all')}
-        onCancel={() => setShowReplaceConfirm(false)}
-      />
+      {showRestoreWizard && (
+        <RestoreWizard onClose={() => setShowRestoreWizard(false)} />
+      )}
     </section>
   );
 }

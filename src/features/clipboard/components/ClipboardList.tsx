@@ -1,24 +1,44 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, memo, useCallback } from 'react';
 import { useClipboard } from '../hooks/useClipboard';
 import { useSearch } from '../../search/hooks/useSearch';
 import { useUIStore } from '../../../stores/ui-store';
+import type { SmartFilter } from '../../../stores/ui-store';
 import { ClipboardItem } from './ClipboardItem';
 import { EmptyState } from './EmptyState';
-import { useToast } from '../../../shared/components/useToast';
-import { invoke } from '@tauri-apps/api/core';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import type { ListParams } from '../../../shared/types';
+import { useClipboardActions } from '../hooks/useClipboardActions';
 
-export function ClipboardList() {
-  const { selectedClipId, selectClip, selectedCollectionId, selectedTagId } = useUIStore();
+/** Translate a smart filter into backend-compatible ListParams. */
+function smartFilterToParams(filter: SmartFilter): Partial<ListParams> {
+  switch (filter) {
+    case 'favorites': return { favorites_only: true };
+    case 'pinned': return { pinned_only: true };
+    case 'images': return { content_type: 'image' };
+    case 'code': return { is_code: true };
+    case 'links': return { category: 'url' };
+    case 'files': return { content_type: 'file' };
+    default: return {};
+  }
+}
+
+export const ClipboardList = memo(function ClipboardList() {
+  const selectedClipId = useUIStore((s) => s.selectedClipId);
+  const selectedClipIds = useUIStore((s) => s.selectedClipIds);
+  const selectedCollectionId = useUIStore((s) => s.selectedCollectionId);
+  const selectedTagId = useUIStore((s) => s.selectedTagId);
+  const smartFilter = useUIStore((s) => s.smartFilter);
+  const selectClip = useUIStore((s) => s.selectClip);
+  const setSelectedClipIds = useUIStore((s) => s.setSelectedClipIds);
   
-  const listParams = {
+  const listParams: ListParams = {
     collection_id: selectedCollectionId ?? undefined,
     tag_id: selectedTagId ?? undefined,
+    ...smartFilterToParams(smartFilter),
   };
 
   const { clips: historyClips, isLoading: isHistoryLoading, error: historyError, fetchNextPage, hasNextPage, isFetchingNextPage } = useClipboard(listParams);
   const { debouncedQuery, results: searchClips, isLoading: isSearchLoading, error: searchError } = useSearch(listParams);
-  const { addToast } = useToast();
 
   const isSearching = debouncedQuery.trim().length > 0;
   
@@ -31,9 +51,52 @@ export function ClipboardList() {
   const virtualizer = useVirtualizer({
     count: clips.length,
     getScrollElement: () => listRef.current,
-    estimateSize: () => 80, // estimated item height
+    estimateSize: () => 56, // matches h-14 in ClipboardItem
     overscan: 5,
   });
+
+  const handleSelect = useCallback((id: number, e?: React.MouseEvent | React.KeyboardEvent) => {
+    const clickedIndex = clips.findIndex(c => c.id === id);
+    if (clickedIndex === -1) return;
+
+    const state = useUIStore.getState();
+    const currentSelectedId = state.selectedClipId;
+    const currentSelectedIds = state.selectedClipIds;
+
+    if (e && e.shiftKey) {
+      let anchorIndex = clips.findIndex(c => c.id === currentSelectedId);
+      if (anchorIndex === -1) anchorIndex = 0;
+      
+      const start = Math.min(anchorIndex, clickedIndex);
+      const end = Math.max(anchorIndex, clickedIndex);
+      
+      const newIds = new Set(currentSelectedIds);
+      for (let i = start; i <= end; i++) {
+        newIds.add(clips[i].id);
+      }
+      state.setSelectedClipIds(newIds);
+      // Do not change the anchor (currentSelectedId) so subsequent shift-clicks extend from the same anchor.
+    } else if (e && (e.ctrlKey || e.metaKey)) {
+      const newIds = new Set(currentSelectedIds);
+      if (newIds.has(id)) {
+        newIds.delete(id);
+      } else {
+        newIds.add(id);
+      }
+      state.setSelectedClipIds(newIds);
+      if (newIds.has(id)) {
+        state.selectClip(id);
+      } else if (currentSelectedId === id && newIds.size > 0) {
+        // Find another selected item to be the anchor
+        state.selectClip(Array.from(newIds)[0]);
+      }
+    } else {
+      state.selectClip(id);
+    }
+  }, [clips]);
+
+  // Wire clipboard item actions to ActionRegistry
+  useClipboardActions(clips, virtualizer, listRef);
 
   const items = virtualizer.getVirtualItems();
 
@@ -46,88 +109,30 @@ export function ClipboardList() {
     }
   }, [items, isSearching, hasNextPage, isFetchingNextPage, clips.length, fetchNextPage]);
 
-  // Keyboard navigation
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!clips || clips.length === 0) return;
-    const currentIndex = clips.findIndex(c => c.id === selectedClipId);
-    
-    switch (e.key) {
-      case 'ArrowDown': {
-        e.preventDefault();
-        if (currentIndex < clips.length - 1) {
-          selectClip(clips[currentIndex + 1].id);
-          virtualizer.scrollToIndex(currentIndex + 1);
-        }
-        break;
+  // Synchronize Preview Panel selection when active filter or search changes
+  useEffect(() => {
+    if (isLoading) return;
+    if (clips.length === 0) {
+      if (selectedClipId !== null) {
+        selectClip(null);
       }
-      case 'ArrowUp': {
-        e.preventDefault();
-        if (currentIndex > 0) {
-          selectClip(clips[currentIndex - 1].id);
-          virtualizer.scrollToIndex(currentIndex - 1);
-        }
-        break;
-      }
-      case 'Home': {
-        e.preventDefault();
+    } else {
+      const exists = clips.some(c => c.id === selectedClipId);
+      if (!exists) {
         selectClip(clips[0].id);
-        virtualizer.scrollToIndex(0);
-        break;
-      }
-      case 'End': {
-        e.preventDefault();
-        selectClip(clips[clips.length - 1].id);
-        virtualizer.scrollToIndex(clips.length - 1);
-        break;
-      }
-      case 'Enter': {
-        e.preventDefault();
-        const previewEl = document.querySelector('[data-testid="clipboard-preview"]') as HTMLElement;
-        previewEl?.focus();
-        break;
-      }
-      case ' ': { // Space
-        e.preventDefault();
-        if (currentIndex !== -1) {
-          const clip = clips[currentIndex];
-          if (clip.content_type === 'file') {
-            invoke('restore_files_to_clipboard', { clipId: clip.id })
-              .then(() => addToast({ title: 'Files copied to clipboard', variant: 'success' }))
-              .catch((err: unknown) => addToast({ title: 'Failed to copy files', description: (err instanceof Error ? err.message : String(err)) || String(err), variant: 'error' }));
-          } else if (clip.content_type === 'image') {
-            invoke('restore_image_to_clipboard', { clipId: clip.id })
-              .then(() => addToast({ title: 'Image copied to clipboard', variant: 'success' }))
-              .catch((err: unknown) => addToast({ title: 'Failed to copy image', description: (err instanceof Error ? err.message : String(err)) || String(err), variant: 'error' }));
-          } else {
-            const content = clip.content_text ?? clip.preview;
-            if (content) {
-              navigator.clipboard.writeText(content);
-              addToast({ title: 'Copied to clipboard', variant: 'success' });
-            }
-          }
-        }
-        break;
-      }
-      case 'Delete':
-      case 'Backspace': {
-        if (currentIndex !== -1) {
-          const trashButton = listRef.current?.querySelector(`[data-testid="clip-${clips[currentIndex].id}"] [aria-label="Delete item"]`) as HTMLButtonElement;
-          trashButton?.click();
-        }
-        break;
       }
     }
-  };
+  }, [clips, isLoading, selectedClipId, selectClip]);
 
   if (isLoading) {
     return (
       <div data-testid="clipboard-list-loading" className="flex-1 overflow-hidden p-4 bg-transparent">
         <div className="space-y-4 animate-pulse">
-          <div className="h-16 bg-surface rounded-md"></div>
-          <div className="h-16 bg-surface rounded-md"></div>
-          <div className="h-16 bg-surface rounded-md"></div>
-          <div className="h-16 bg-surface rounded-md"></div>
-          <div className="h-16 bg-surface rounded-md"></div>
+          <div className="h-14 bg-surface rounded-md"></div>
+          <div className="h-14 bg-surface rounded-md"></div>
+          <div className="h-14 bg-surface rounded-md"></div>
+          <div className="h-14 bg-surface rounded-md"></div>
+          <div className="h-14 bg-surface rounded-md"></div>
         </div>
       </div>
     );
@@ -150,14 +155,29 @@ export function ClipboardList() {
     <div 
       ref={listRef}
       tabIndex={0}
-      onKeyDown={handleKeyDown}
+      role="listbox"
+      onKeyDown={(e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+          e.preventDefault();
+          setSelectedClipIds(new Set(clips.map(c => c.id)));
+        } else if (e.key === 'Escape') {
+          setSelectedClipIds(new Set());
+        }
+      }}
+      onClick={(e) => {
+        // If clicking directly on the list container or the padding space, clear selection
+        if (e.target === e.currentTarget || e.target === listRef.current?.firstChild) {
+          setSelectedClipIds(new Set());
+        }
+      }}
+      aria-activedescendant={selectedClipId ? `clip-${selectedClipId}` : undefined}
       aria-label="Clipboard history"
       data-testid="clipboard-list" 
-      className="flex-1 overflow-y-auto overflow-x-hidden border-r border-border bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring"
+      className="flex-1 overflow-y-auto overflow-x-hidden bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus-ring"
     >
       <div 
         key={isSearching ? `search-${debouncedQuery}` : 'history'}
-        className="relative w-full transition-opacity duration-150 ease-out starting:opacity-0"
+        className="relative w-full animate-[ornas-fade-in_150ms_ease-out]"
         style={{ height: `${virtualizer.getTotalSize()}px` }}
       >
         <div
@@ -166,7 +186,7 @@ export function ClipboardList() {
             top: 0,
             left: 0,
             width: '100%',
-            transform: `translateY(${items[0]?.start ?? 0}px)`,
+            transform: `translateY(${Math.round(items[0]?.start ?? 0)}px)`,
           }}
         >
           {items.map((virtualItem) => {
@@ -179,9 +199,10 @@ export function ClipboardList() {
               >
                 <ClipboardItem
                   clip={clip}
-                  isSelected={clip.id === selectedClipId}
-                  onSelect={selectClip}
+                  isSelected={selectedClipIds.has(clip.id) || clip.id === selectedClipId}
+                  onSelect={handleSelect}
                   tabIndex={clip.id === selectedClipId ? 0 : -1}
+                  searchQuery={isSearching ? debouncedQuery : undefined}
                 />
               </div>
             );
@@ -195,4 +216,4 @@ export function ClipboardList() {
       </div>
     </div>
   );
-}
+});

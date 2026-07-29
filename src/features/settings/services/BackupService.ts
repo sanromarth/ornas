@@ -9,6 +9,16 @@ export interface BackupProgress {
   progress: number;
 }
 
+export interface BackupManifest {
+  ornas_version: string;
+  backup_version: string;
+  timestamp: number;
+  platform: string;
+  item_count: number;
+  image_count: number;
+  file_count: number;
+}
+
 export class BackupService {
   /**
    * Triggers the native save dialog and exports the backup to the selected ZIP file.
@@ -60,6 +70,48 @@ export class BackupService {
       return;
     }
 
+    let unlisten: UnlistenFn | null = null;
+    if (onProgress) {
+      unlisten = await listen<BackupProgress>('backup-progress', (event) => {
+        onProgress(event.payload);
+      });
+    }
+
+    try {
+      await invoke('import_backup', { path: filePath, mode });
+    } finally {
+      if (unlisten) {
+        unlisten();
+      }
+    }
+  }
+
+  /**
+   * Opens the file dialog, selects a backup, and validates it.
+   * Returns the manifest and the selected file path.
+   */
+  static async validateBackup(): Promise<{ manifest: BackupManifest; filePath: string } | null> {
+    const filePath = await open({
+      filters: [{ name: 'ORNAS Backup', extensions: ['zip'] }],
+      multiple: false,
+    });
+
+    if (!filePath || Array.isArray(filePath)) {
+      return null; // User cancelled
+    }
+
+    const manifest: BackupManifest = await invoke('validate_backup', { path: filePath });
+    return { manifest, filePath };
+  }
+
+  /**
+   * Executes a restore given a previously selected file path.
+   */
+  static async executeRestore(
+    filePath: string,
+    mode: ImportMode,
+    onProgress?: (progress: BackupProgress) => void
+  ): Promise<void> {
     let unlisten: UnlistenFn | null = null;
     if (onProgress) {
       unlisten = await listen<BackupProgress>('backup-progress', (event) => {
