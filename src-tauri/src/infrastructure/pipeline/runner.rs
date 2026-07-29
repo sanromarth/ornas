@@ -31,7 +31,8 @@ impl PipelineRunner {
                     tracing::info!(
                         stage = stage.name(),
                         elapsed_us = stage_elapsed.as_micros() as u64,
-                        elapsed_ms = format!("{:.2}", stage_elapsed.as_secs_f64() * 1000.0).as_str(),
+                        elapsed_ms =
+                            format!("{:.2}", stage_elapsed.as_secs_f64() * 1000.0).as_str(),
                         "stage completed"
                     );
                 }

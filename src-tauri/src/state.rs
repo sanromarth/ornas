@@ -15,8 +15,11 @@ use crate::infrastructure::database::search_repo::SqliteSearchRepo;
 use crate::infrastructure::database::settings_repo::SqliteSettingsRepo;
 use crate::infrastructure::image_store::ImageStore;
 use crate::infrastructure::pipeline::runner::PipelineRunner;
+use crate::platform::PlatformContext;
+use crate::services::backup_manager::BackupManager;
 use crate::services::clipboard_service::ClipboardService;
 use crate::services::crypto_service::CryptoService;
+use crate::services::maintenance_service::MaintenanceService;
 use crate::services::search_service::SearchService;
 use crate::services::settings_service::SettingsService;
 use std::path::PathBuf;
@@ -48,8 +51,16 @@ pub struct AppState {
     pub image_store: Arc<ImageStore>,
     /// Pipeline runner.
     pub pipeline: Arc<PipelineRunner>,
+    /// Backup Manager
+    pub backup_manager: Arc<BackupManager>,
+    /// Maintenance Service
+    pub maintenance_service: Arc<MaintenanceService>,
     /// Database connection.
     pub db: Arc<Database>,
+    /// Platform Context
+    pub platform: Arc<PlatformContext>,
+    /// Log worker guard
+    pub _log_guard: tracing_appender::non_blocking::WorkerGuard,
 }
 
 impl AppState {
@@ -66,13 +77,22 @@ impl AppState {
     /// 8. Build pipeline
     pub fn new(app_handle: tauri::AppHandle) -> Result<Self, AppError> {
         // 1-3. Open database
+        use tauri::Emitter;
         use tauri::Manager;
-        let app_data_dir = app_handle.path().app_data_dir()
+        let app_data_dir = app_handle
+            .path()
+            .app_data_dir()
             .map_err(|e| AppError::Internal(format!("Failed to get app data dir: {}", e)))?;
-        
+
+        let _log_guard = crate::logging::init_logging(&app_data_dir);
+
         let db_path = connection::database_path(&app_data_dir)?;
         tracing::info!(path = %db_path.display(), "Opening database");
-        let mut conn = connection::open_database(&db_path)?;
+        let (mut conn, was_corrupted) = connection::open_database(&db_path)?;
+
+        if was_corrupted {
+            let _ = app_handle.emit("database-corrupted", ());
+        }
 
         // 4. Run migrations
         migrations::run_migrations(&mut conn)?;
@@ -119,12 +139,12 @@ impl AppState {
             Arc::clone(&clip_repo),
             Arc::clone(&image_store),
             app_handle.clone(),
-        );
+        )?;
         let pipeline = Arc::new(pipeline);
 
         // 10. Build services
         let clipboard_service =
-            ClipboardService::new(Arc::clone(&clip_repo), config.clone(), app_handle);
+            ClipboardService::new(Arc::clone(&clip_repo), config.clone(), app_handle.clone());
         let crypto_service = Arc::new(CryptoService::new(vault_repo));
         let search_service = SearchService::new(
             Arc::clone(&search_repo),
@@ -134,8 +154,17 @@ impl AppState {
         let collection_service =
             crate::services::collection_service::CollectionService::new(collection_repo);
         let tag_service = crate::services::tag_service::TagService::new(tag_repo);
+        let maintenance_service = Arc::new(MaintenanceService::new(Arc::clone(&db)));
+
+        let images_dir = db_path
+            .parent()
+            .map(|p| p.join("images"))
+            .unwrap_or_else(|| PathBuf::from("images"));
+        let backup_manager = Arc::new(BackupManager::new(Arc::clone(&db), images_dir));
 
         tracing::info!("Application state initialized");
+
+        let platform = Arc::new(PlatformContext::new(app_handle.clone()));
 
         Ok(Self {
             config,
@@ -145,24 +174,27 @@ impl AppState {
             settings_service,
             collection_service,
             tag_service,
+            backup_manager,
+            maintenance_service,
             clip_repo,
             image_store,
             pipeline,
             db,
+            platform,
+            _log_guard,
         })
     }
 
-    /// Builds the 8-stage clipboard processing pipeline and background job queue.
+    /// Builds the 7-stage clipboard processing pipeline and background job queue.
     ///
     /// Pipeline stages (fast path):
     ///   1. Normalizer — trim, clean line endings
-    ///   2. CodeDetector — detect programming language
-    ///   3. Hasher — compute xxHash64
-    ///   4. Dedup — LRU cache + DB fallback
-    ///   5. Categorizer — content category detection
-    ///   6. Metadata — char/line counts, preview
-    ///   7. Persister — DB INSERT only (no image I/O)
-    ///   8. Dispatcher — emit clip-created + dispatch background jobs
+    ///   2. Hasher — compute xxHash64
+    ///   3. Dedup — LRU cache + DB fallback
+    ///   4. Categorizer — two-stage content + language classification
+    ///   5. Metadata — char/line counts, preview
+    ///   6. Persister — DB INSERT only (no image I/O)
+    ///   7. Dispatcher — emit clip-created + dispatch background jobs
     ///
     /// Background (off critical path):
     ///   - JobQueue worker thread processes ImageJobs
@@ -171,11 +203,10 @@ impl AppState {
         clip_repo: Arc<dyn ClipRepository>,
         image_store: Arc<ImageStore>,
         app_handle: tauri::AppHandle,
-    ) -> PipelineRunner {
+    ) -> Result<PipelineRunner, AppError> {
         use crate::infrastructure::pipeline::{
-            categorizer::Categorizer, code_detector::CodeDetector, dedup::Dedup,
-            dispatcher::Dispatcher, hasher::Hasher, job_queue::JobQueue, metadata::Metadata,
-            normalizer::Normalizer, persister::Persister,
+            categorizer::Categorizer, dedup::Dedup, dispatcher::Dispatcher, hasher::Hasher,
+            job_queue::JobQueue, metadata::Metadata, normalizer::Normalizer, persister::Persister,
         };
 
         // Start the background job queue worker thread
@@ -183,21 +214,19 @@ impl AppState {
             Arc::clone(&image_store),
             Arc::clone(&clip_repo),
             app_handle.clone(),
-        ));
+        )?);
         tracing::info!("Background job queue started");
 
         let stages: Vec<Box<dyn crate::domain::pipeline::PipelineStage>> = vec![
             Box::new(Normalizer),
-            Box::new(CodeDetector::new()),
             Box::new(Hasher),
             Box::new(Dedup::new(config.dedup_cache_size, Arc::clone(&clip_repo))),
-            Box::new(Categorizer),
+            Box::new(Categorizer::new()),
             Box::new(Metadata),
             Box::new(Persister::new(Arc::clone(&clip_repo))),
             Box::new(Dispatcher::new(app_handle, job_queue)),
         ];
 
-        PipelineRunner::new(stages)
+        Ok(PipelineRunner::new(stages))
     }
 }
-

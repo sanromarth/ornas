@@ -42,6 +42,10 @@ pub enum ClipboardContent {
     Text {
         /// The text content.
         text: String,
+        /// Optional HTML content.
+        html: Option<String>,
+        /// Optional RTF content.
+        rtf: Option<String>,
     },
 }
 
@@ -123,15 +127,20 @@ pub fn classify(ctx: &ClipboardContext) -> Option<ClipboardContent> {
         }
     }
 
-    // Priority 3: Plain text
+    // Priority 3: Plain text + HTML + RTF (Composite Payload)
     if let Ok(text) = ctx.get_text() {
         if !text.trim().is_empty() {
+            let html = ctx.get_html().ok();
+            let rtf = ctx.get_rich_text().ok();
+
             tracing::debug!(
                 format = "text",
                 len = text.len(),
-                "Clipboard classified as text"
+                has_html = html.is_some(),
+                has_rtf = rtf.is_some(),
+                "Clipboard classified as text (with rich formats)"
             );
-            return Some(ClipboardContent::Text { text });
+            return Some(ClipboardContent::Text { text, html, rtf });
         }
     }
 
@@ -154,6 +163,8 @@ mod tests {
         };
         let _text = ClipboardContent::Text {
             text: "hello".to_string(),
+            html: None,
+            rtf: None,
         };
     }
 }

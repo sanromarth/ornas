@@ -5,6 +5,7 @@
 //! databases, or frameworks. It depends only on the Rust standard library.
 
 pub mod category;
+pub mod classifier;
 pub mod clip;
 pub mod collection;
 pub mod config;

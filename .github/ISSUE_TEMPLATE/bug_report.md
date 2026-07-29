@@ -24,7 +24,7 @@ If applicable, add screenshots to help explain your problem.
 
 **Environment:**
  - OS: [e.g. Windows 11, macOS 14, Ubuntu 24.04]
- - App Version: [e.g. 0.9.0-beta]
+ - App Version: [e.g. 1.0.0-rc1]
  - Installation method: [e.g. .deb, .dmg, .msi]
 
 **Additional context**

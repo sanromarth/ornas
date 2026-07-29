@@ -3,7 +3,7 @@
 //! All raw SQL for clip CRUD operations lives in this file.
 //! Implements the domain::traits::ClipRepository trait.
 
-use crate::domain::clip::{Clip, ClipUpdate, ContentType, NewClip};
+use crate::domain::clip::{Clip, ClipUpdate, ContentType, FilterCounts, NewClip};
 use crate::domain::traits::{ClipRepository, ListParams};
 use crate::error::AppError;
 use crate::infrastructure::database::Database;
@@ -60,6 +60,7 @@ pub(crate) fn row_to_clip(row: &Row) -> Result<Clip, rusqlite::Error> {
         encryption_version: row.get("encryption_version").unwrap_or(None),
         encrypted_blob: row.get("encrypted_blob").unwrap_or(None),
         nonce: row.get("nonce").unwrap_or(None),
+        metadata: row.get("metadata").unwrap_or(None),
         created_at: row.get("created_at")?,
         updated_at: row.get("updated_at")?,
         files: None,
@@ -70,45 +71,49 @@ fn fetch_clip_files(
     conn: &rusqlite::Connection,
     clip_ids: &[i64],
 ) -> Result<std::collections::HashMap<i64, Vec<crate::domain::clip::ClipFile>>, AppError> {
-    if clip_ids.is_empty() {
-        return Ok(std::collections::HashMap::new());
-    }
-
-    let placeholders = clip_ids.iter().map(|_| "?").collect::<Vec<_>>().join(",");
-    let query = format!(
-        "SELECT id, clip_id, file_path, file_name, extension, mime_type, file_size, is_dir, is_readonly, created_time, modified_time, hash, thumbnail_path, status, selection_group, icon_type, created_at, updated_at FROM clip_files WHERE clip_id IN ({})",
-        placeholders
-    );
-
-    let mut stmt = conn.prepare(&query)?;
-    let mut rows = stmt.query(rusqlite::params_from_iter(clip_ids))?;
-
     let mut map: std::collections::HashMap<i64, Vec<crate::domain::clip::ClipFile>> =
         std::collections::HashMap::new();
 
-    while let Some(row) = rows.next()? {
-        let clip_id: i64 = row.get(1)?;
-        let file = crate::domain::clip::ClipFile {
-            id: row.get(0)?,
-            clip_id,
-            file_path: row.get(2)?,
-            file_name: row.get(3)?,
-            extension: row.get(4)?,
-            mime_type: row.get(5)?,
-            file_size: row.get(6)?,
-            is_dir: row.get::<_, i64>(7)? != 0,
-            is_readonly: row.get::<_, i64>(8)? != 0,
-            created_time: row.get(9)?,
-            modified_time: row.get(10)?,
-            hash: row.get(11)?,
-            thumbnail_path: row.get(12)?,
-            status: row.get(13)?,
-            selection_group: row.get(14)?,
-            icon_type: row.get(15)?,
-            created_at: row.get(16)?,
-            updated_at: row.get(17)?,
-        };
-        map.entry(clip_id).or_default().push(file);
+    if clip_ids.is_empty() {
+        return Ok(map);
+    }
+
+    // SQLite has a maximum number of host parameters (often 999 or 32766).
+    // We chunk the IDs to avoid hitting this limit on large selections.
+    for chunk in clip_ids.chunks(500) {
+        let placeholders = chunk.iter().map(|_| "?").collect::<Vec<_>>().join(",");
+        let query = format!(
+            "SELECT id, clip_id, file_path, file_name, extension, mime_type, file_size, is_dir, is_readonly, created_time, modified_time, hash, thumbnail_path, status, selection_group, icon_type, created_at, updated_at FROM clip_files WHERE clip_id IN ({})",
+            placeholders
+        );
+
+        let mut stmt = conn.prepare(&query)?;
+        let mut rows = stmt.query(rusqlite::params_from_iter(chunk))?;
+
+        while let Some(row) = rows.next()? {
+            let clip_id: i64 = row.get(1)?;
+            let file = crate::domain::clip::ClipFile {
+                id: row.get(0)?,
+                clip_id,
+                file_path: row.get(2)?,
+                file_name: row.get(3)?,
+                extension: row.get(4)?,
+                mime_type: row.get(5)?,
+                file_size: row.get(6)?,
+                is_dir: row.get::<_, i64>(7)? != 0,
+                is_readonly: row.get::<_, i64>(8)? != 0,
+                created_time: row.get(9)?,
+                modified_time: row.get(10)?,
+                hash: row.get(11)?,
+                thumbnail_path: row.get(12)?,
+                status: row.get(13)?,
+                selection_group: row.get(14)?,
+                icon_type: row.get(15)?,
+                created_at: row.get(16)?,
+                updated_at: row.get(17)?,
+            };
+            map.entry(clip_id).or_default().push(file);
+        }
     }
 
     Ok(map)
@@ -123,9 +128,9 @@ impl ClipRepository for SqliteClipRepo {
                 content_text, content_html, content_rtf, image_path,
                 content_type, category, source_app, content_hash,
                 preview, char_count, line_count, language, is_code, detection_confidence, language_source,
-                is_encrypted, encryption_version, encrypted_blob, nonce
+                is_encrypted, encryption_version, encrypted_blob, nonce, metadata
             ) VALUES (
-                ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19
+                ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20
             ) RETURNING *",
         )?;
 
@@ -150,6 +155,7 @@ impl ClipRepository for SqliteClipRepo {
                 clip.encryption_version,
                 clip.encrypted_blob,
                 clip.nonce,
+                clip.metadata,
             ],
             row_to_clip,
         )?;
@@ -190,6 +196,16 @@ impl ClipRepository for SqliteClipRepo {
         if let Some(category) = &params.category {
             query.push_str(" AND c.category = ?");
             sql_params.push(category.clone().into());
+        }
+
+        if let Some(content_type) = &params.content_type {
+            query.push_str(" AND c.content_type = ?");
+            sql_params.push(content_type.clone().into());
+        }
+
+        if let Some(is_code) = params.is_code {
+            query.push_str(" AND c.is_code = ?");
+            sql_params.push((if is_code { 1 } else { 0 }).into());
         }
 
         if params.favorites_only {
@@ -282,6 +298,24 @@ impl ClipRepository for SqliteClipRepo {
             sql_params.push(img_path.clone().into());
         }
 
+        if let Some(ref cat) = update.category {
+            query.push_str(&format!(", category = ?{}", sql_params.len() + 1));
+            sql_params.push(cat.clone().into());
+        }
+
+        if let Some(is_code) = update.is_code {
+            query.push_str(&format!(", is_code = ?{}", sql_params.len() + 1));
+            sql_params.push(if is_code { 1_i64 } else { 0_i64 }.into());
+        }
+
+        if let Some(conf) = update.detection_confidence {
+            query.push_str(&format!(
+                ", detection_confidence = ?{}",
+                sql_params.len() + 1
+            ));
+            sql_params.push(conf.into());
+        }
+
         if let Some(ref val) = update.content_text {
             query.push_str(&format!(", content_text = ?{}", sql_params.len() + 1));
             sql_params.push(val.clone().into());
@@ -340,6 +374,21 @@ impl ClipRepository for SqliteClipRepo {
         Ok(())
     }
 
+    fn bulk_delete(&self, ids: &[i64]) -> Result<(), AppError> {
+        let mut conn = self.db.conn()?;
+        let tx = conn.transaction()?;
+
+        for chunk in ids.chunks(500) {
+            let placeholders = chunk.iter().map(|_| "?").collect::<Vec<_>>().join(",");
+            let query = format!("DELETE FROM clips WHERE id IN ({})", placeholders);
+            let mut stmt = tx.prepare(&query)?;
+            stmt.execute(rusqlite::params_from_iter(chunk))?;
+        }
+
+        tx.commit()?;
+        Ok(())
+    }
+
     fn find_by_hash(&self, hash: &str) -> Result<Option<Clip>, AppError> {
         let conn = self.db.conn()?;
         let mut stmt = conn.prepare(
@@ -357,11 +406,62 @@ impl ClipRepository for SqliteClipRepo {
         Ok(())
     }
 
+    fn bulk_set_favorite(&self, ids: &[i64], favorite: bool) -> Result<(), AppError> {
+        let mut conn = self.db.conn()?;
+        let tx = conn.transaction()?;
+        let fav_val = if favorite { 1 } else { 0 };
+
+        for chunk in ids.chunks(500) {
+            let placeholders = chunk.iter().map(|_| "?").collect::<Vec<_>>().join(",");
+            let query = format!(
+                "UPDATE clips SET is_favorite = ?1, updated_at = unixepoch() WHERE id IN ({})",
+                placeholders
+            );
+            let mut stmt = tx.prepare(&query)?;
+
+            // First param is fav_val, followed by the chunk IDs
+            let mut params_vec: Vec<&dyn rusqlite::ToSql> = Vec::with_capacity(chunk.len() + 1);
+            params_vec.push(&fav_val);
+            for id in chunk {
+                params_vec.push(id);
+            }
+            stmt.execute(rusqlite::params_from_iter(params_vec))?;
+        }
+
+        tx.commit()?;
+        Ok(())
+    }
+
     fn set_pinned(&self, id: i64, pinned: bool) -> Result<(), AppError> {
         let conn = self.db.conn()?;
         let mut stmt = conn
             .prepare("UPDATE clips SET is_pinned = ?1, updated_at = unixepoch() WHERE id = ?2")?;
         stmt.execute(params![if pinned { 1 } else { 0 }, id])?;
+        Ok(())
+    }
+
+    fn bulk_set_pinned(&self, ids: &[i64], pinned: bool) -> Result<(), AppError> {
+        let mut conn = self.db.conn()?;
+        let tx = conn.transaction()?;
+        let pin_val = if pinned { 1 } else { 0 };
+
+        for chunk in ids.chunks(500) {
+            let placeholders = chunk.iter().map(|_| "?").collect::<Vec<_>>().join(",");
+            let query = format!(
+                "UPDATE clips SET is_pinned = ?1, updated_at = unixepoch() WHERE id IN ({})",
+                placeholders
+            );
+            let mut stmt = tx.prepare(&query)?;
+
+            let mut params_vec: Vec<&dyn rusqlite::ToSql> = Vec::with_capacity(chunk.len() + 1);
+            params_vec.push(&pin_val);
+            for id in chunk {
+                params_vec.push(id);
+            }
+            stmt.execute(rusqlite::params_from_iter(params_vec))?;
+        }
+
+        tx.commit()?;
         Ok(())
     }
 
@@ -392,6 +492,34 @@ impl ClipRepository for SqliteClipRepo {
         let mut stmt = conn.prepare("SELECT COUNT(*) FROM clips")?;
         let count: i64 = stmt.query_row([], |row| row.get(0))?;
         Ok(count as u64)
+    }
+
+    fn get_filter_counts(&self) -> Result<FilterCounts, AppError> {
+        let conn = self.db.conn()?;
+        let query = "
+            SELECT
+                COUNT(*),
+                COALESCE(SUM(CASE WHEN is_favorite = 1 THEN 1 ELSE 0 END), 0),
+                COALESCE(SUM(CASE WHEN is_pinned = 1 THEN 1 ELSE 0 END), 0),
+                COALESCE(SUM(CASE WHEN content_type = 'image' THEN 1 ELSE 0 END), 0),
+                COALESCE(SUM(CASE WHEN is_code = 1 THEN 1 ELSE 0 END), 0),
+                COALESCE(SUM(CASE WHEN category = 'url' THEN 1 ELSE 0 END), 0),
+                COALESCE(SUM(CASE WHEN content_type = 'file' THEN 1 ELSE 0 END), 0)
+            FROM clips
+        ";
+        let mut stmt = conn.prepare(query)?;
+        let counts = stmt.query_row([], |row| {
+            Ok(FilterCounts {
+                all: row.get(0)?,
+                favorites: row.get(1)?,
+                pinned: row.get(2)?,
+                images: row.get(3)?,
+                code: row.get(4)?,
+                links: row.get(5)?,
+                files: row.get(6)?,
+            })
+        })?;
+        Ok(counts)
     }
 
     fn get_encrypted_clips(&self) -> Result<Vec<Clip>, AppError> {
@@ -445,6 +573,7 @@ mod tests {
             encryption_version: None,
             encrypted_blob: None,
             nonce: None,
+            metadata: None,
         };
 
         // Create

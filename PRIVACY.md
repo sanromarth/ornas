@@ -41,7 +41,7 @@ When you copy text, images, or files, ORNAS detects this activity via your opera
 ## Encryption
 
 ORNAS includes an **Encrypted Vault** feature to protect sensitive clips.
-- When you enable the Vault, your selected clips are encrypted locally using authenticated encryption (ChaCha20Poly1305 / Argon2).
+- When you enable the Vault, your selected clips are encrypted locally using XChaCha20-Poly1305 with encryption keys derived using Argon2id.
 - The encryption keys are derived from a master password that you set, and these keys remain strictly on your machine.
 - **Important:** Because everything is local and we have no servers, **we cannot recover your data if you lose your master password**. 
 
@@ -109,4 +109,4 @@ If you have questions, concerns, or wish to report a vulnerability regarding thi
 - **Bug Reports:** Open an issue on our [GitHub Issues](https://github.com/sanromarth/ornas/issues)
 
 ---
-*Last Updated: July 2026 (v0.9.0-beta)*
+*Last Updated: July 2026 (v1.0.0-rc1)*

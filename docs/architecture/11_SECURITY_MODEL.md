@@ -230,9 +230,9 @@ flowchart LR
 | Aspect | V1.0 | V1.2 (Planned) |
 |--------|------|----------------|
 | File permissions | `0600` (owner read/write only) | Same |
-| Encryption | None | SQLCipher or AES-256-GCM |
-| Key storage | N/A | OS keyring (Secret Service / Keychain / DPAPI) |
-| Backup encryption | N/A | Encrypted at rest |
+| Encryption | XChaCha20-Poly1305 with Argon2id for Vault clips | Same |
+| Key storage | Derived from master password (no persistent storage) | Same |
+| Backup encryption | Vault clips encrypted at rest | Full database encryption |
 
 ### File Permission Enforcement
 

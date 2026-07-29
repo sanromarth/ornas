@@ -35,14 +35,16 @@ pub struct ClipItem {
     pub char_count: i64,
     /// Line count (set by Metadata stage).
     pub line_count: i64,
-    /// Detected language (set by CodeDetector stage).
+    /// Detected programming language (set by Categorizer stage).
     pub language: Option<String>,
-    /// Whether this is code (set by CodeDetector stage).
+    /// Whether this is source code (set by Categorizer stage).
     pub is_code: bool,
-    /// Detection confidence (set by CodeDetector stage).
+    /// Classification confidence score 0.0–1.0 (set by Categorizer stage).
     pub detection_confidence: f64,
-    /// Language source, auto or manual (set by CodeDetector stage).
+    /// Language source: "auto" or "manual" (set by Categorizer stage).
     pub language_source: String,
+    /// Rich metadata (JSON)
+    pub metadata: Option<String>,
 }
 
 impl ClipItem {
@@ -65,6 +67,7 @@ impl ClipItem {
             is_code: false,
             detection_confidence: 0.0,
             language_source: "auto".to_string(),
+            metadata: None,
         }
     }
 
@@ -87,6 +90,7 @@ impl ClipItem {
             is_code: false,
             detection_confidence: 0.0,
             language_source: "auto".to_string(),
+            metadata: None,
         }
     }
 }

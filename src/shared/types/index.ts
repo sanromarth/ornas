@@ -31,6 +31,8 @@ export interface ClipDto {
   updated_at: number;
   /** Associated files (if content_type === 'file') */
   files?: ClipFileDto[];
+  /** Rich metadata (JSON string) */
+  metadata?: string;
 }
 
 /** Represents a file copied to the clipboard. */
@@ -74,6 +76,8 @@ export interface ListParams {
   cursor_created_at?: number;
   cursor_id?: number;
   category?: string;
+  content_type?: string;
+  is_code?: boolean;
   favorites_only?: boolean;
   pinned_only?: boolean;
   collection_id?: number;
@@ -88,3 +92,45 @@ export type SettingsDto = Record<string, string>;
 export interface ClipboardEventDto {
   id: number;
 }
+
+/** Aggregated counts for smart sidebar filters. */
+export interface FilterCounts {
+  all: number;
+  favorites: number;
+  pinned: number;
+  images: number;
+  code: number;
+  links: number;
+  files: number;
+}
+
+export type DisplayServer = 'Wayland' | 'X11' | 'Win32' | 'Cocoa' | 'Unknown';
+
+export interface PlatformCapabilities {
+  supports_html: boolean;
+  supports_rtf: boolean;
+  supports_images: boolean;
+  supports_files: boolean;
+  supports_primary_selection: boolean;
+  native_monitoring: boolean;
+}
+
+export interface PlatformInfo {
+  operating_system: string;
+  platform_version: string;
+  display_server: DisplayServer;
+  desktop_environment: string;
+  capabilities: PlatformCapabilities;
+}
+
+export interface DiagnosticsInfo {
+  clipboard_monitor_status: string;
+  database_health: string;
+  wal_status: string;
+  storage_engine: string;
+  clipboard_backend: string;
+  recovery_status: string;
+  recent_errors: string[];
+  queue_status: string;
+}
+

@@ -49,16 +49,14 @@ impl PipelineStage for Dispatcher {
             return Ok(StageAction::Continue);
         };
 
-        // ── 1. Emit clip-created → UI shows the clip immediately ──
+        // Notify UI immediately so the user sees the new clip
         self.app_handle
             .emit("clip-created", serde_json::json!({ "id": id }))
-            .map_err(|e| {
-                AppError::Internal(format!("Failed to emit clip-created event: {e}"))
-            })?;
+            .map_err(|e| AppError::Internal(format!("Failed to emit clip-created event: {e}")))?;
 
         tracing::info!(stage = self.name(), id = id, "clip-created event emitted");
 
-        // ── 2. Schedule background jobs ──
+        // Schedule async background work (e.g. image processing)
 
         // Image processing: save to filesystem + generate thumbnail
         if let Some(image_bytes) = item.image_bytes.take() {
@@ -67,7 +65,11 @@ impl PipelineStage for Dispatcher {
                 content_hash: item.content_hash.clone(),
                 image_bytes,
             }));
-            tracing::info!(stage = self.name(), id = id, "ImageJob dispatched to background queue");
+            tracing::info!(
+                stage = self.name(),
+                id = id,
+                "ImageJob dispatched to background queue"
+            );
         }
 
         // Future background jobs would be dispatched here:

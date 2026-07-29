@@ -69,6 +69,7 @@ impl PipelineStage for Persister {
             encryption_version: None,
             encrypted_blob: None,
             nonce: None,
+            metadata: item.metadata.clone(),
         };
 
         let db_start = Instant::now();
@@ -86,4 +87,3 @@ impl PipelineStage for Persister {
         Ok(StageAction::Continue)
     }
 }
-

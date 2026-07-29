@@ -8,6 +8,8 @@ mod commands;
 mod domain;
 mod error;
 mod infrastructure;
+pub mod logging;
+mod platform;
 mod services;
 mod state;
 
@@ -21,20 +23,11 @@ use tauri::Manager;
 /// registers all Tauri commands and plugins, and starts the event loop.
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    // Initialize tracing subscriber for structured logging
-    tracing_subscriber::fmt()
-        .with_env_filter(
-            tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("ornas=info")),
-        )
-        .init();
-
-    tracing::info!("ORNAS starting");
-
     tauri::Builder::default()
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_opener::init())
         .setup(|app| {
             let handle = app.handle().clone();
 
@@ -51,11 +44,13 @@ pub fn run() {
             let pipeline = std::sync::Arc::clone(&app_state.pipeline);
             let db = std::sync::Arc::clone(&app_state.db);
             let image_store = std::sync::Arc::clone(&app_state.image_store);
+            let platform = std::sync::Arc::clone(&app_state.platform);
             infrastructure::clipboard::monitor::start_clipboard_monitor(
                 handle.clone(),
                 pipeline,
                 db,
                 image_store,
+                platform,
             );
 
             // Schedule pruning task (10 seconds after startup, then every prune_interval)
@@ -81,6 +76,32 @@ pub fn run() {
                 })
                 .ok();
 
+            // Schedule Maintenance & Auto-Backup
+            let maintenance_service = std::sync::Arc::clone(&app_state.maintenance_service);
+            let backup_manager = std::sync::Arc::clone(&app_state.backup_manager);
+            let handle_clone = handle.clone();
+            std::thread::Builder::new()
+                .name("maintenance".into())
+                .spawn(move || {
+                    // Wait 5 minutes before first run so we don't slow down startup
+                    std::thread::sleep(std::time::Duration::from_secs(300));
+                    loop {
+                        if let Err(e) = maintenance_service.run_maintenance() {
+                            tracing::error!("Maintenance failed: {e}");
+                        }
+
+                        if let Err(e) =
+                            backup_manager.run_automatic_backup_if_needed(handle_clone.clone())
+                        {
+                            tracing::error!("Automatic backup failed: {e}");
+                        }
+
+                        // Run every 6 hours
+                        std::thread::sleep(std::time::Duration::from_secs(6 * 3600));
+                    }
+                })
+                .ok();
+
             app.manage(app_state);
 
             tracing::info!("ORNAS initialized successfully");
@@ -88,17 +109,24 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             commands::clipboard::list_clips,
+            commands::clipboard::get_filter_counts,
             commands::clipboard::get_clip,
             commands::clipboard::delete_clip,
+            commands::clipboard::bulk_delete_clips,
             commands::clipboard::toggle_favorite,
+            commands::clipboard::bulk_set_favorite,
             commands::clipboard::toggle_pin,
+            commands::clipboard::bulk_set_pinned,
             commands::clipboard::set_clip_language,
             commands::clipboard::restore_files_to_clipboard,
             commands::clipboard::restore_image_to_clipboard,
             commands::clipboard::write_text_to_clipboard,
+            commands::system::get_platform_info,
+            commands::system::get_diagnostics_info,
             commands::search::search_clips,
             commands::settings::get_settings,
             commands::settings::update_setting,
+            commands::backup::validate_backup,
             commands::backup::export_backup,
             commands::backup::import_backup,
             commands::collections::create_collection,
@@ -122,11 +150,12 @@ pub fn run() {
             commands::vault::encrypt_clip,
             commands::vault::decrypt_clip,
             commands::vault::get_decrypted_clip,
+            commands::diagnostics::run_integrity_check,
+            commands::diagnostics::export_diagnostics,
+            commands::classification::reanalyze_library,
+            #[cfg(debug_assertions)]
+            commands::dev::dev_generate_clips,
         ])
         .run(tauri::generate_context!())
-        .map_err(|e| {
-            tracing::error!("Tauri runtime error: {e}");
-            e
-        })
-        .ok();
+        .expect("error while running tauri application");
 }

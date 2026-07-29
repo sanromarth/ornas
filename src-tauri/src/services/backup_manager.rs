@@ -59,7 +59,8 @@ impl BackupManager {
         export_path: &Path,
         _app_handle: tauri::AppHandle,
     ) -> Result<(), AppError> {
-        let file = File::create(export_path)?;
+        let tmp_path = export_path.with_extension("zip.tmp");
+        let file = File::create(&tmp_path)?;
         let mut zip = ZipWriter::new(file);
 
         let options = SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
@@ -99,6 +100,7 @@ impl BackupManager {
                 encryption_version: row.get(19).unwrap_or(None),
                 encrypted_blob: row.get(20).unwrap_or(None),
                 nonce: row.get(21).unwrap_or(None),
+                metadata: None, // Or we could fetch it if we update the select query
                 created_at: row.get(22)?,
                 updated_at: row.get(23)?,
                 files: None,
@@ -303,7 +305,11 @@ impl BackupManager {
             .map_err(|e| AppError::Internal(e.to_string()))?;
         zip.write_all(manifest_json.as_bytes())?;
 
-        zip.finish()?;
+        let mut file = zip.finish()?;
+        file.flush()?;
+        drop(file);
+
+        std::fs::rename(&tmp_path, export_path)?;
 
         Ok(())
     }
@@ -411,6 +417,27 @@ impl BackupManager {
         let tx = conn.transaction()?;
 
         if mode == "replace_all" {
+            // Take safety backup before wipe
+            let now = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs();
+            let app_data_dir = {
+                use tauri::Manager;
+                _app_handle
+                    .path()
+                    .app_data_dir()
+                    .unwrap_or_else(|_| PathBuf::from("."))
+            };
+            let safety_backup_path = app_data_dir
+                .join("backups")
+                .join(format!("ornas_safety_backup_{}.zip", now));
+            std::fs::create_dir_all(app_data_dir.join("backups"))?;
+            tracing::info!("Creating safety backup before replace_all");
+            if let Err(e) = self.export(&safety_backup_path, _app_handle.clone()) {
+                tracing::warn!("Failed to create safety backup: {}", e);
+            }
+
             tx.execute("DELETE FROM clips", [])?;
             tx.execute("DELETE FROM collections", [])?;
             tx.execute("DELETE FROM tags", [])?;
@@ -482,6 +509,7 @@ impl BackupManager {
                     clip.encryption_version,
                     clip.encrypted_blob,
                     clip.nonce,
+                    clip.metadata,
                     clip.created_at,
                     clip.updated_at
                 ])?;
@@ -597,6 +625,109 @@ impl BackupManager {
                     let dest = self.image_store_path.join(filename);
                     if let Ok(mut out) = File::create(dest) {
                         std::io::copy(&mut file, &mut out)?;
+                    }
+                }
+            }
+        }
+
+        Ok(())
+    }
+}
+
+impl BackupManager {
+    /// Validates a backup archive by extracting just the manifest and parsing it
+    pub fn validate_backup(&self, path: &Path) -> Result<Manifest, AppError> {
+        let file = File::open(path)?;
+        let mut archive = ZipArchive::new(file)
+            .map_err(|e| AppError::Internal(format!("Invalid ZIP archive: {}", e)))?;
+
+        let mut manifest_file = archive
+            .by_name("manifest.json")
+            .map_err(|_| AppError::Internal("manifest.json missing from backup archive".into()))?;
+
+        let mut manifest_contents = String::new();
+        manifest_file.read_to_string(&mut manifest_contents)?;
+
+        let manifest: Manifest = serde_json::from_str(&manifest_contents)
+            .map_err(|e| AppError::Internal(format!("Invalid manifest format: {}", e)))?;
+
+        Ok(manifest)
+    }
+}
+
+impl BackupManager {
+    /// Creates an automatic background backup if one hasn't been created in the last 24 hours.
+    pub fn run_automatic_backup_if_needed(
+        &self,
+        app_handle: tauri::AppHandle,
+    ) -> Result<(), AppError> {
+        let app_data_dir = {
+            use tauri::Manager;
+            app_handle
+                .path()
+                .app_data_dir()
+                .unwrap_or_else(|_| PathBuf::from("."))
+        };
+        let backups_dir = app_data_dir.join("backups");
+        std::fs::create_dir_all(&backups_dir)?;
+
+        let mut latest_backup_time = 0;
+
+        // Find existing backups
+        if let Ok(entries) = std::fs::read_dir(&backups_dir) {
+            let mut backup_files = Vec::new();
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.extension().and_then(|e| e.to_str()) == Some("zip") {
+                    if let Ok(metadata) = entry.metadata() {
+                        if let Ok(modified) = metadata.modified() {
+                            let timestamp = modified
+                                .duration_since(std::time::UNIX_EPOCH)
+                                .unwrap_or_default()
+                                .as_secs();
+                            backup_files.push((path, timestamp));
+                            if timestamp > latest_backup_time {
+                                latest_backup_time = timestamp;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Check if 24 hours have passed
+            let now = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs();
+
+            if now - latest_backup_time < 24 * 3600 {
+                // Not enough time has passed
+                tracing::info!("Skipping automatic backup (last backup was less than 24h ago)");
+                return Ok(());
+            }
+
+            // Create a new backup
+            let backup_name = format!("ornas_auto_backup_{}.zip", now);
+            let backup_path = backups_dir.join(backup_name);
+
+            tracing::info!(path = %backup_path.display(), "Starting automatic background backup");
+            if let Err(e) = self.export(&backup_path, app_handle) {
+                tracing::error!("Automatic backup failed: {}", e);
+                return Err(e);
+            }
+
+            tracing::info!("Automatic backup completed successfully");
+
+            // Cleanup old backups (keep 7)
+            backup_files.push((backup_path, now));
+            backup_files.sort_by_key(|&(_, t)| std::cmp::Reverse(t));
+
+            if backup_files.len() > 7 {
+                for (path, _) in backup_files.iter().skip(7) {
+                    if let Err(e) = std::fs::remove_file(path) {
+                        tracing::warn!("Failed to delete old backup {}: {}", path.display(), e);
+                    } else {
+                        tracing::info!("Deleted old automatic backup: {}", path.display());
                     }
                 }
             }

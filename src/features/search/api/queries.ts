@@ -7,7 +7,7 @@ import type { ListParams } from '../../../shared/types';
 /** Fetches search results. */
 export function useSearchQuery(query: string, params?: ListParams) {
   return useQuery({
-    queryKey: clipboardKeys.search(query, params?.limit),
+    queryKey: clipboardKeys.search(query, params),
     queryFn: () => searchClips(query, params),
     enabled: query.length > 0,
   });

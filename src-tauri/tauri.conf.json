@@ -1,7 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "ORNAS",
-  "version": "0.9.0-beta",
   "identifier": "io.ornas",
   "build": {
     "beforeDevCommand": "npm run dev",

@@ -47,7 +47,7 @@ blob-report/
 .vscode/*.log
 .history/
 
-# AI assistant workspace
+# Local development workspace
 .ai/
 
 # Vim / Neovim

@@ -42,10 +42,14 @@
 
 @import "tailwindcss";
 
+/* ── Design Tokens ── */
+
 @theme {
+  /* ── Semantic Colors ── */
   --color-background: hsl(var(--background));
   --color-app: hsl(var(--app));
   --color-surface: hsl(var(--surface));
+  --color-sidebar: hsl(var(--sidebar));
   --color-elevated: hsl(var(--elevated));
   --color-border: hsl(var(--border));
   --color-primary: hsl(var(--primary));
@@ -57,21 +61,30 @@
   --color-hover: hsl(var(--hover));
   --color-selection: hsl(var(--selection));
   --color-focus-ring: hsl(var(--focus-ring));
-  
+
+  /* ── Status Colors ── */
   --color-success: hsl(var(--success));
   --color-warning: hsl(var(--warning));
   --color-danger: hsl(var(--danger));
   --color-info: hsl(var(--info));
 
-  --spacing-micro: 0.25rem;
-  --spacing-standard: 0.5rem;
-  --spacing-component: 1rem;
-  --spacing-layout: 1.5rem;
+  /* ── Strict Spacing Scale ── */
+  --spacing-1: 0.25rem;   /* 4px  */
+  --spacing-2: 0.5rem;    /* 8px  */
+  --spacing-3: 0.75rem;   /* 12px */
+  --spacing-4: 1rem;      /* 16px */
+  --spacing-6: 1.5rem;    /* 24px */
+  --spacing-8: 2rem;      /* 32px */
+  --spacing-10: 2.5rem;   /* 40px */
+  --spacing-12: 3rem;     /* 48px */
+  --spacing-16: 4rem;     /* 64px */
 
-  --radius-sm: 0.25rem;
-  --radius-md: 0.375rem;
-  --radius-lg: 0.75rem;
+  /* ── Radii ── */
+  --radius-sm: 0.25rem;   /* 4px  */
+  --radius-md: 0.375rem;  /* 6px  — primary interactive elements */
+  --radius-lg: 0.75rem;   /* 12px — dialogs, panels */
 
+  /* ── Z-index Scale ── */
   --z-base: 0;
   --z-sticky: 10;
   --z-dropdown: 20;
@@ -79,83 +92,139 @@
   --z-dialog: 40;
   --z-toast: 50;
   --z-tooltip: 60;
-  
+  --z-index-base: 0;
+  --z-index-sticky: 10;
+  --z-index-dropdown: 20;
+  --z-index-overlay: 30;
+  --z-index-dialog: 40;
+  --z-index-toast: 50;
+  --z-index-tooltip: 60;
+
+  /* ── Motion ── */
   --default-transition-duration: 150ms;
   --default-transition-timing-function: ease-out;
-
   --ease-snappy: cubic-bezier(0.16, 1, 0.3, 1);
+  /* Spring: slightly overshoots for tactile feel on panel transitions */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
+  /* Animation durations — keep short and consistent */
+  --duration-instant: 80ms;   /* Button press, badge pop */
+  --duration-fast: 120ms;     /* Hover state changes */
+  --duration-base: 200ms;     /* Dialog, panel slide, selection */
+  --duration-slow: 300ms;     /* Toast entrance */
+
+  /* ── Typography ── */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  --font-display: 'Outfit', 'Inter', sans-serif;
 }
 
-/* Light theme (default fallback) */
+/*
+ * ── Light Theme ──
+ *
+ * Zinc-based monochromatic neutrals + Indigo accent.
+ * Design System: DESIGN_SYSTEM_FINAL.md
+ *
+ * Light palette reference:
+ *   Zinc-50:  #FAFAFA  (bg-app)
+ *   Zinc-100: #F4F4F5  (sidebar, muted)
+ *   Zinc-200: #E4E4E7  (border)
+ *   Zinc-300: #D4D4D8  (hover)
+ *   Zinc-400: #A1A1AA  (text-tertiary)
+ *   Zinc-500: #71717A  (text-secondary)
+ *   Zinc-900: #18181B  (text-primary)
+ *   White:    #FFFFFF  (surface)
+ *   Indigo-600: #4F46E5 (primary)
+ */
 :root, [data-theme="light"] {
-  --background: 0 0% 100%;
-  --app: 0 0% 97.5%;
-  --surface: 0 0% 100%;
-  --elevated: 0 0% 100%;
-  --border: 0 0% 91%;
-  --text-primary: 0 0% 9%;
-  --text-secondary: 0 0% 45%;
-  --text-tertiary: 0 0% 65%;
-  --primary: 238 85% 53%;
-  --primary-foreground: 0 0% 100%;
-  --selection: 238 85% 96%;
-  --hover: 0 0% 93%;
-  --muted: 0 0% 96%;
-  --focus-ring: 238 85% 65%;
-  
+  --background: 0 0% 100%;            /* #FFFFFF */
+  --app: 240 5% 96%;                  /* #F4F4F5  — Zinc-100 */
+  --surface: 0 0% 100%;               /* #FFFFFF */
+  --sidebar: 240 5% 96%;              /* #F4F4F5  — Zinc-100 */
+  --elevated: 0 0% 100%;              /* #FFFFFF */
+  --border: 240 5% 90%;               /* #E4E4E7  — Zinc-200 */
+  --text-primary: 240 6% 10%;         /* #18181B  — Zinc-900 */
+  --text-secondary: 240 4% 46%;       /* #71717A  — Zinc-500 */
+  --text-tertiary: 240 4% 65%;        /* #A1A1AA  — Zinc-400 */
+  --primary: 239 84% 67%;             /* #6366F1  — Indigo-500 (slightly brighter for light bg) */
+  --primary-foreground: 0 0% 100%;    /* #FFFFFF */
+  --selection: 239 84% 97%;           /* Indigo-50  tint */
+  --hover: 240 5% 93%;                /* Zinc-200 lightened */
+  --muted: 240 5% 96%;                /* Zinc-100 */
+  --focus-ring: 239 84% 67%;          /* Indigo-500 */
+
   --success: 160 84% 39%;
   --warning: 38 92% 50%;
-  --danger: 348 83% 60%;
+  --danger: 0 72% 51%;                /* Red-600 — better contrast than pink */
   --info: 217 91% 60%;
 }
 
-/* Dark theme */
+/*
+ * ── Dark Theme ──
+ *
+ * Deep charcoal Zinc palette + brighter Indigo accent.
+ *
+ * Dark palette reference:
+ *   Zinc-950: #09090B  (sidebar)
+ *   Zinc-900: #18181B  (app, background)
+ *   Zinc-800: #27272A  (surface)
+ *   Zinc-700: #3F3F46  (border, elevated)
+ *   Zinc-600: #52525B  (hover)
+ *   Zinc-400: #A1A1AA  (text-secondary)
+ *   Zinc-500: #71717A  (text-tertiary)
+ *   Zinc-50:  #FAFAFA  (text-primary)
+ *   Indigo-500: #6366F1 (primary)
+ */
 [data-theme="dark"] {
-  --background: 240 5% 8%;
-  --app: 240 5% 8%;
-  --surface: 240 5% 11%;
-  --elevated: 240 5% 15%;
-  --border: 240 5% 18%;
-  --text-primary: 0 0% 93%;
-  --text-secondary: 0 0% 60%;
-  --text-tertiary: 0 0% 45%;
-  --primary: 238 100% 75%;
-  --primary-foreground: 240 5% 8%;
-  --selection: 238 50% 20%;
-  --hover: 240 5% 15%;
-  --muted: 240 5% 15%;
-  --focus-ring: 238 100% 75%;
+  --background: 240 6% 10%;           /* #18181B  — Zinc-900 */
+  --app: 240 6% 10%;                  /* #18181B  — Zinc-900 */
+  --surface: 240 4% 16%;              /* #27272A  — Zinc-800 */
+  --sidebar: 240 10% 4%;              /* #09090B  — Zinc-950 */
+  --elevated: 240 4% 16%;             /* #27272A  — Zinc-800 */
+  --border: 240 4% 26%;               /* #3F3F46  — Zinc-700 */
+  --text-primary: 0 0% 98%;           /* #FAFAFA  — Zinc-50 */
+  --text-secondary: 240 5% 65%;       /* #A1A1AA  — Zinc-400 */
+  --text-tertiary: 240 4% 46%;        /* #71717A  — Zinc-500 */
+  --primary: 239 84% 67%;             /* #6366F1  — Indigo-500 */
+  --primary-foreground: 0 0% 98%;     /* #FAFAFA */
+  --selection: 239 50% 20%;           /* Indigo-900 deep tint */
+  --hover: 240 4% 22%;                /* Zinc-700 lightened */
+  --muted: 240 4% 16%;                /* Zinc-800 */
+  --focus-ring: 239 84% 67%;          /* Indigo-500 */
 
   --success: 160 84% 39%;
   --warning: 38 92% 50%;
-  --danger: 348 83% 60%;
+  --danger: 0 72% 51%;
   --info: 217 91% 60%;
 }
 
-/* System theme dark override */
+/* ── System Theme (dark override) ── */
 @media (prefers-color-scheme: dark) {
   [data-theme="system"] {
-    --background: 240 5% 8%;
-    --app: 240 5% 8%;
-    --surface: 240 5% 11%;
-    --elevated: 240 5% 15%;
-    --border: 240 5% 18%;
-    --text-primary: 0 0% 93%;
-    --text-secondary: 0 0% 60%;
-    --text-tertiary: 0 0% 45%;
-    --primary: 238 100% 75%;
-    --primary-foreground: 240 5% 8%;
-    --selection: 238 50% 20%;
-    --hover: 240 5% 15%;
-    --muted: 240 5% 15%;
-    --focus-ring: 238 100% 75%;
+    --background: 240 6% 10%;
+    --app: 240 6% 10%;
+    --surface: 240 4% 16%;
+    --sidebar: 240 10% 4%;
+    --elevated: 240 4% 16%;
+    --border: 240 4% 26%;
+    --text-primary: 0 0% 98%;
+    --text-secondary: 240 5% 65%;
+    --text-tertiary: 240 4% 46%;
+    --primary: 239 84% 67%;
+    --primary-foreground: 0 0% 98%;
+    --selection: 239 50% 20%;
+    --hover: 240 4% 22%;
+    --muted: 240 4% 16%;
+    --focus-ring: 239 84% 67%;
+
+    --success: 160 84% 39%;
+    --warning: 38 92% 50%;
+    --danger: 0 72% 51%;
+    --info: 217 91% 60%;
   }
 }
 
-/* Base */
+/* ── Base Reset ── */
 * {
   margin: 0;
   padding: 0;
@@ -166,25 +235,38 @@ body {
   font-family: var(--font-sans);
   background-color: var(--color-background);
   color: var(--color-text-primary);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  font-size: 14px;
+  line-height: 1.5;
   overflow: hidden;
   user-select: none;
 }
 
-/* Scrollbar (WebKit) */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--color-text-secondary); }
+/* ── Scrollbar (WebKit) ── */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
 
-/* Focus styles */
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--text-tertiary) / 0.3);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--text-tertiary) / 0.5);
+}
+
+/* ── Focus Styles ── */
 :focus-visible {
   outline: 2px solid var(--color-focus-ring);
   outline-offset: 2px;
 }
 
-/* Reduced motion */
+/* ── Reduced Motion ── */
 @media (prefers-reduced-motion: reduce) {
   *,
   ::before,
@@ -196,7 +278,181 @@ body {
   }
 }
 
-/* Global Lucide Icon overrides for thinner, more premium native feel */
+/* ── Global Lucide Icon Overrides ── */
 svg.lucide {
   stroke-width: 1.5 !important;
+}
+
+/*
+ * ── Micro-interaction Animation System ──
+ *
+ * Keyframes used throughout ORNAS for purposeful, short motion.
+ * All animations are disabled under prefers-reduced-motion via the global
+ * override above (animation-duration: 0.01ms !important).
+ *
+ * Duration vocabulary:
+ *   instant  80ms  — button press, icon swap
+ *   fast    120ms  — hover bg, border color
+ *   base    200ms  — dialog enter, selection, sidebar
+ *   slow    300ms  — toast slide-in
+ */
+
+/* ── Keyframes ── */
+
+@keyframes ornas-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Slides up 4px — used for toast entrance and panel content */
+@keyframes ornas-slide-in-up {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Scales from 97% — dialog and overlay entrance */
+@keyframes ornas-scale-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Scales from 103% downward — used for press/pop feedback */
+@keyframes ornas-pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+/* ── Sidebar animated width ── */
+/*
+ * The sidebar uses a CSS width transition for smooth collapse/expand.
+ * Applied as an inline style override via JS — the transition here
+ * ensures the width change is animated regardless of the JS-set value.
+ *
+ * NOTE: We keep the JS conditional render for isCollapsed=true (width=0)
+ * but animate the transition width change.
+ */
+.ornas-sidebar-panel {
+  transition: width var(--duration-base) var(--ease-snappy),
+              opacity var(--duration-fast) ease-out;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.ornas-sidebar-panel[data-collapsed="true"] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── Search bar focus-within ring ── */
+/*
+ * The search bar container gets a bottom border accent on focus-within,
+ * providing a clear visual signal that the search is active without
+ * replacing the default border.
+ */
+.ornas-search-bar {
+  position: relative;
+}
+
+.ornas-search-bar::after {
+  content: '';
+  position: absolute;
+  inset-x: 0;
+  bottom: 0;
+  height: 1px;
+  background: hsl(var(--primary));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--duration-fast) var(--ease-snappy);
+}
+
+.ornas-search-bar:focus-within::after {
+  transform: scaleX(1);
+}
+
+/* ── Clipboard item selection border ── */
+/*
+ * The left accent border on selected clipboard items.
+ * Achieved via opacity transition on a pseudo-element — avoids the
+ * browser limitation that border-width transitions cause layout shifts.
+ */
+.ornas-item-selection-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: hsl(var(--primary));
+  opacity: 0;
+  transition: opacity var(--duration-fast) ease-out;
+}
+
+.ornas-item-selection-bar[data-selected="true"] {
+  opacity: 1;
+}
+
+/* ── Toast entrance ── */
+/*
+ * Overrides the `starting:` pseudo-class approach for broader
+ * browser compat (Tauri's WebView may not have Chrome 117 `@starting-style`).
+ * Use `animate-[ornas-slide-in-up]` Tailwind utility on toast items.
+ */
+.ornas-toast-enter {
+  animation: ornas-slide-in-up var(--duration-slow) var(--ease-snappy) both;
+}
+
+/* ── Button press feedback ── */
+/*
+ * Applied globally to all interactive elements to give tactile press feedback.
+ * Scale transforms are compositor-layer operations — zero layout cost.
+ */
+.ornas-pressable:active {
+  transform: scale(0.97);
+}
+
+/*
+ * ── Modal backdrop atmosphere ──
+ *
+ * Design goal: the application should remain spatially recognizable behind
+ * the dialog, but clearly inactive. The dialog must be the single focal point.
+ *
+ * Values:
+ *   background: rgba(0,0,0,0.5)
+ *     — 50% black veil. Panel colors (sidebar zinc-950, list zinc-800/900)
+ *       remain faintly visible through the overlay, preserving spatial context
+ *       without competing with the dialog for attention.
+ *
+ *   backdrop-filter: blur(4px)
+ *     — Softens background text enough to prevent eye-tracking behind the
+ *       dialog, without the jarring visual weight of values above ~10px.
+ *
+ * Performance:
+ *   backdrop-filter is compositor-promoted in Chromium (Tauri's WebView).
+ *   It runs off the main thread and does not cause layout.
+ *   The filter is only active while the dialog is mounted (portalled).
+ */
+.ornas-dialog-backdrop {
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* ── Modal card elevation ──
+ *
+ * Adds two shadow layers:
+ *   1. A wide ambient shadow that separates the card from the blurred bg.
+ *   2. A tight crisp shadow for the perceptual "lift".
+ * The combined result reads as ≈ 32 px elevation — firmly on top.
+ *
+ * The ring (1 px border) reinforces the card edge at high-contrast
+ * display settings and makes the boundary unambiguous in both themes.
+ */
+.ornas-dialog-card {
+  box-shadow:
+    0 2px 8px  rgba(0, 0, 0, 0.18),
+    0 8px 24px rgba(0, 0, 0, 0.28),
+    0 24px 64px rgba(0, 0, 0, 0.24);
+  /* Thin ring gives edge definition without adding visual weight */
+  outline: 1px solid rgba(255, 255, 255, 0.06);
+  outline-offset: 0;
 }

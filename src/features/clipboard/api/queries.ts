@@ -1,7 +1,7 @@
 /** TanStack Query queries for clipboard data fetching. */
 
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
-import { listClips, getClip } from '../../../services/clipboard';
+import { listClips, getClip, getFilterCounts } from '../../../services/clipboard';
 import { CollectionService } from '../../../services/collection-service';
 import { TagService } from '../../../services/tag-service';
 import { VaultService } from '../../../services/vault';
@@ -25,6 +25,15 @@ export function useClipsQuery(params?: ListParams) {
         cursor_id: lastClip.id,
       } as Partial<ListParams>;
     },
+  });
+}
+
+/** Fetches aggregated counts for sidebar smart filters. */
+export function useFilterCountsQuery() {
+  return useQuery({
+    queryKey: clipboardKeys.counts(),
+    queryFn: () => getFilterCounts(),
+    staleTime: 5000,
   });
 }
 
