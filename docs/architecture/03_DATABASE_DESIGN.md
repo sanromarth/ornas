@@ -39,7 +39,7 @@ All timestamps are stored as `INTEGER` Unix epoch seconds via `DEFAULT (unixepoc
 | `created_at` | `INTEGER` | `NOT NULL DEFAULT (unixepoch())` | Unix epoch seconds when clip was first captured. |
 | `updated_at` | `INTEGER` | `NOT NULL DEFAULT (unixepoch())` | Unix epoch seconds of last modification (dedup bump, favorite toggle, etc.). |
 
-### `collections` Table (Schema ready — UI deferred to V1.1)
+### `collections` Table
 
 | Column | Type | Constraints | Purpose |
 |--------|------|------------|---------|
@@ -58,7 +58,7 @@ All timestamps are stored as `INTEGER` Unix epoch seconds via `DEFAULT (unixepoc
 | `collection_id` | `INTEGER` | `NOT NULL`, `FK → collections(id) ON DELETE CASCADE` | References the collection. |
 | — | — | `PRIMARY KEY (clip_id, collection_id)` | Composite PK prevents duplicates. |
 
-### `tags` Table (Schema ready — UI deferred to V1.1)
+### `tags` Table
 
 | Column | Type | Constraints | Purpose |
 |--------|------|------------|---------|

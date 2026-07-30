@@ -30,7 +30,7 @@ export function SecurityTransparencyPanel() {
       <div className="space-y-4">
         <div className="flex justify-between items-center text-sm">
           <span className="text-text-secondary">Encryption</span>
-          <span className="font-mono font-medium text-text-primary text-[13px]">AES-256-GCM</span>
+          <span className="font-mono font-medium text-text-primary text-[13px]">XChaCha20-Poly1305</span>
         </div>
         <div className="h-px bg-border" />
         <div className="flex justify-between items-center text-sm">

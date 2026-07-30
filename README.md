@@ -5,7 +5,7 @@
 </div>
 
 <p align="center">
-  The open-source, offline-first clipboard manager for desktop.
+  The open-source, offline-first clipboard manager for Linux, macOS, and Windows.
 </p>
 
 <p align="center">
@@ -37,9 +37,9 @@ Most clipboard managers are either too simple (no search, no images) or too inva
 | 🔍 **Instant Search** | Sub-millisecond full-text search powered by SQLite FTS5. |
 | 🎨 **Code Preview** | Syntax highlighting for 20+ languages. |
 | 🖼️ **Image History** | Captures and previews clipboard images natively. |
-| ⭐ **Favorites & Pins** | Mark important clips for quick access. |
-| 🏷️ **Collections & Tags** | Organize clips into custom groups. |
-| 🔒 **Encrypted Vault** | XChaCha20-Poly1305 encryption for sensitive clips. |
+| ⭐ **Favorites & Pins** | Mark important clipboard items for quick access. |
+| 🏷️ **Collections & Tags** | Organize clipboard items into custom groups. |
+| 🔒 **Vault** | XChaCha20-Poly1305 encryption for sensitive items. |
 | ⌨️ **Keyboard-First** | Command palette, customizable shortcuts, full list navigation. |
 | ☑️ **Bulk Actions** | Multi-select with Shift/Ctrl, bulk delete, pin, or favorite. |
 | 💾 **Automated Backups** | Background backups and one-click restore. |
@@ -117,8 +117,8 @@ Most clipboard managers are either too simple (no search, no images) or too inva
 | Platform | Status |
 |----------|--------|
 | Linux | ✅ Fully Supported |
-| Windows | ✅ Supported (unsigned — see [SIGNING.md](SIGNING.md)) |
 | macOS | ✅ Supported (unsigned, Gatekeeper warning expected — see [SIGNING.md](SIGNING.md)) |
+| Windows | ✅ Supported (unsigned — see [SIGNING.md](SIGNING.md)) |
 
 ---
 
@@ -131,10 +131,10 @@ Download the latest release for your OS from the **[Releases page](https://githu
 | Linux (Debian/Ubuntu) | `.deb` |
 | Linux (Fedora/RHEL) | `.rpm` |
 | Linux (Universal) | `.AppImage` |
-| Windows | `.msi` or `.exe` |
 | macOS | `.dmg` |
+| Windows | `.msi` or `.exe` |
 
-> **Windows & macOS users**: The binary is currently unsigned. Your OS may display a security warning (SmartScreen on Windows, Gatekeeper on macOS). This is expected. See [SIGNING.md](SIGNING.md) for details and bypass instructions.
+> **macOS & Windows users**: The binary is currently unsigned. Your OS may display a security warning (Gatekeeper on macOS, SmartScreen on Windows). This is expected. See [SIGNING.md](SIGNING.md) for details and bypass instructions.
 
 ### Quick Start
 
@@ -172,7 +172,7 @@ Full shortcut reference is available in-app via the Cheat Sheet (`Ctrl/Cmd + /`)
 - No analytics, no crash reporting, no usage tracking.
 - No cloud sync, no uploads, no external servers.
 - All data lives in a local SQLite database on your machine.
-- Sensitive clips can be encrypted with XChaCha20-Poly1305.
+- Sensitive clipboard items can be encrypted with XChaCha20-Poly1305.
 
 See [PRIVACY.md](PRIVACY.md) and [SECURITY.md](SECURITY.md) for the complete security model.
 

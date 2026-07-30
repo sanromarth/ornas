@@ -26,7 +26,7 @@ export function VaultWizard({ onSetup }: VaultWizardProps) {
     setIsSubmitting(true);
     try {
       await onSetup(password);
-    } catch (_e) {
+    } catch {
       // Parent handles error toast
       setIsSubmitting(false);
     }

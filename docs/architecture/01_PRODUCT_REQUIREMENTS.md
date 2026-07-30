@@ -99,6 +99,36 @@
 |----------|-----------|---------------------|---------|
 | US-13.1 | As a user, I want to configure retention, theme, hotkey, and exclusions. | Settings panel with configurable values per §10 of ARCHITECTURE_FINAL.md. | All |
 
+### Feature 14: Collections UI
+
+| Story ID | User Story | Acceptance Criteria | Persona |
+|----------|-----------|---------------------|---------|
+| US-14.1 | As a user, I want to create, rename, and delete collections. | Manage collections from sidebar. | All |
+
+### Feature 15: Tags UI
+
+| Story ID | User Story | Acceptance Criteria | Persona |
+|----------|-----------|---------------------|---------|
+| US-15.1 | As a user, I want to add tags to organize items flexibly. | Assign tags from UI; filter by tags in sidebar. | All |
+
+### Feature 16: Vault
+
+| Story ID | User Story | Acceptance Criteria | Persona |
+|----------|-----------|---------------------|---------|
+| US-16.1 | As a user, I want to securely store sensitive items. | Password-protected Vault, XChaCha20-Poly1305 encryption, Zeroize. | All |
+
+### Feature 17: Syntax Highlighting
+
+| Story ID | User Story | Acceptance Criteria | Persona |
+|----------|-----------|---------------------|---------|
+| US-17.1 | As a user, I want code snippets to be syntax highlighted. | Shiki/Prism integration in preview panel. | Alex |
+
+### Feature 18: Bulk Actions
+
+| Story ID | User Story | Acceptance Criteria | Persona |
+|----------|-----------|---------------------|---------|
+| US-18.1 | As a user, I want to perform actions on multiple items at once. | Shift/Ctrl multi-select for bulk delete, favorite, or pin. | All |
+
 ---
 
 ## 3. Non-Functional Requirements
@@ -130,7 +160,7 @@
 
 ```mermaid
 graph LR
-    A[All 13 features implemented] --> G{V1.0 Release}
+    A[All 18 features implemented] --> G{V1.0 Release}
     B[All NFRs met] --> G
     C[Zero critical bugs] --> G
     D[Cross-platform builds pass] --> G

@@ -6,9 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
-## [1.0.0-rc1] — 2026-07-29
+## [1.0.0-rc1] — 2026-07-30
 
-First public Release Candidate. The application is feature-complete, architecturally stable, and considered production-quality.
+First public Release Candidate intended for community testing and feedback before the stable v1.0.0 release. The application is feature-complete, architecturally stable, and considered production-quality.
 
 ### Architecture
 
@@ -54,9 +54,9 @@ First public Release Candidate. The application is feature-complete, architectur
 ### Collections & Tags
 
 - Create, rename, and delete collections and tags from the sidebar.
-- Assign clips to multiple collections and tags from the preview panel.
+- Assign clipboard items to multiple collections and tags from the preview panel.
 - Filter the clipboard list by a single collection or tag with item count badges.
-- Bulk assign selected clips to a collection or tag in one action.
+- Bulk assign selected clipboard items to a collection or tag in one action.
 
 ### Performance
 

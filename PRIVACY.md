@@ -27,7 +27,7 @@ ORNAS **never** collects, transmits, or uploads any of the following to our serv
 ORNAS stores all data **locally** on your machine. This data is necessary for the application to function:
 - **Clipboard History:** Text, rich text/HTML, and file paths.
 - **Application State:** Your settings, theme preferences, and window positions.
-- **Metadata:** Your collections, tags, and favorite status for clips.
+- **Metadata:** Your collections, tags, and favorite status for clipboard items.
 
 ## Clipboard Data
 
@@ -40,8 +40,8 @@ When you copy text, images, or files, ORNAS detects this activity via your opera
 
 ## Encryption
 
-ORNAS includes an **Encrypted Vault** feature to protect sensitive clips.
-- When you enable the Vault, your selected clips are encrypted locally using XChaCha20-Poly1305 with encryption keys derived using Argon2id.
+ORNAS includes a **Vault** feature to protect sensitive clipboard items.
+- When you enable the Vault, your selected clipboard items are encrypted locally using XChaCha20-Poly1305 with encryption keys derived using Argon2id.
 - The encryption keys are derived from a master password that you set, and these keys remain strictly on your machine.
 - **Important:** Because everything is local and we have no servers, **we cannot recover your data if you lose your master password**. 
 
@@ -75,7 +75,7 @@ ORNAS is an open-source project. This means our source code is publicly availabl
 You have complete control over your data.
 - **Pause Monitoring:** You can pause clipboard monitoring at any time from the system tray or application settings.
 - **Selective Retention:** You can configure ORNAS to automatically prune data older than a certain timeframe (e.g., 30 days). *(Note: Auto-pruning is actively being enhanced in future updates)*.
-- **Search and Delete:** You can easily search for and delete specific clips.
+- **Search and Delete:** You can easily search for and delete specific clipboard items.
 
 ## Data Deletion
 

@@ -164,7 +164,7 @@ Monochromatic foundations (grays/blacks) with a single, highly deliberate accent
 2. An infinite loop (`∞`) made of paper clips.
 3. A stack of paper layers glowing from beneath.
 4. A vault door with a copy symbol (`⌘C`).
-5. A timeline with distinct nodes representing past clips.
+5. A timeline with distinct nodes representing past clipboard items.
 6. A stylized 'O' that looks like a magnetic tape reel.
 7. Two overlapping squares (the universal copy icon) with a trailing motion blur.
 8. A filing cabinet rendered in isometric minimalist lines.
@@ -233,7 +233,7 @@ The color system is designed for a **Dark-Mode-First** premium application, with
 | **Focus Ring** | `#818CF8` | A lighter indigo for accessibility focus rings, ensuring keyboard navigation is highly visible. |
 | **Success** | `#10B981` | Emerald green. Used for success toasts or "Copied!" feedback. |
 | **Warning** | `#F59E0B` | Amber. Used for warning states (e.g., approaching database limits). |
-| **Danger** | `#EF4444` | Red. Used exclusively for destructive actions like "Delete Clip" or "Clear History". |
+| **Danger** | `#EF4444` | Red. Used exclusively for destructive actions like "Delete Item" or "Clear History". |
 | **Info** | `#3B82F6` | Blue. Used for informational badges or updates. |
 
 ---

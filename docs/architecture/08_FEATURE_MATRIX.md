@@ -21,34 +21,39 @@ and what's planned.
 
 ---
 
-## V1.0 — Core Clipboard Manager (13 Features)
+## V1.0 — Core Clipboard Manager (18 Features)
 
 | # | Feature | Priority | Complexity | Status | Rust Module | React Feature |
 |---|---------|----------|-----------|--------|-------------|---------------|
-| 1 | Clipboard monitoring + history | P0 | L | planned | `infrastructure/clipboard/monitor.rs`, `native.rs`, `wayland.rs` | `features/clipboard/` |
-| 2 | FTS5 instant search | P0 | M | planned | `infrastructure/database/search_repo.rs` | `features/search/` |
-| 3 | Smart categorization (16+ types) | P0 | M | planned | `domain/category.rs`, `infrastructure/pipeline/categorizer.rs` | — (auto, backend only) |
-| 4 | Duplicate detection | P0 | S | planned | `infrastructure/pipeline/dedup.rs`, `infrastructure/pipeline/hasher.rs` | — (auto, backend only) |
-| 5 | Favorites (star/unstar) | P1 | S | planned | `commands/clipboard.rs` (favorite cmd) | `ClipboardItem.tsx`, `useClipboardActions.ts` |
-| 6 | Pinned items (stay at top) | P1 | S | planned | `commands/clipboard.rs` (pin cmd) | `ClipboardItem.tsx`, `useClipboardActions.ts` |
-| 7 | Quick preview panel | P0 | M | planned | — (data from existing queries) | `ClipboardPreview.tsx` |
-| 8 | Image clipboard support | P0 | M | planned | `infrastructure/image_store.rs`, `infrastructure/clipboard/` | `ClipboardPreview.tsx` (image display) |
-| 9 | Global search window (Raycast-style) | P0 | L | planned | — (uses existing search backend) | `shared/layouts/SearchWindowLayout.tsx` |
-| 10 | Command palette | P1 | M | planned | — (frontend only) | `features/command-palette/` |
-| 11 | Keyboard shortcuts (full navigation) | P0 | M | planned | — (frontend only) | `shared/hooks/useHotkey.ts` |
-| 12 | Dark mode + light mode | P1 | S | planned | — (frontend only) | `shared/hooks/useTheme.ts`, `styles/globals.css` |
-| 13 | Settings (retention, theme, hotkey) | P1 | M | planned | `commands/settings.rs`, `services/settings_service.rs` | `features/settings/` |
+| 1 | Clipboard monitoring + history | P0 | L | complete | `infrastructure/clipboard/monitor.rs`, `native.rs`, `wayland.rs` | `features/clipboard/` |
+| 2 | FTS5 instant search | P0 | M | complete | `infrastructure/database/search_repo.rs` | `features/search/` |
+| 3 | Smart categorization (16+ types) | P0 | M | complete | `domain/category.rs`, `infrastructure/pipeline/categorizer.rs` | — (auto, backend only) |
+| 4 | Duplicate detection | P0 | S | complete | `infrastructure/pipeline/dedup.rs`, `infrastructure/pipeline/hasher.rs` | — (auto, backend only) |
+| 5 | Favorites (star/unstar) | P1 | S | complete | `commands/clipboard.rs` (favorite cmd) | `ClipboardItem.tsx`, `useClipboardActions.ts` |
+| 6 | Pinned items (stay at top) | P1 | S | complete | `commands/clipboard.rs` (pin cmd) | `ClipboardItem.tsx`, `useClipboardActions.ts` |
+| 7 | Quick preview panel | P0 | M | complete | — (data from existing queries) | `ClipboardPreview.tsx` |
+| 8 | Image clipboard support | P0 | M | complete | `infrastructure/image_store.rs`, `infrastructure/clipboard/` | `ClipboardPreview.tsx` (image display) |
+| 9 | Global search window (Raycast-style) | P0 | L | complete | — (uses existing search backend) | `shared/layouts/SearchWindowLayout.tsx` |
+| 10 | Command palette | P1 | M | complete | — (frontend only) | `features/command-palette/` |
+| 11 | Keyboard shortcuts (full navigation) | P0 | M | complete | — (frontend only) | `shared/hooks/useHotkey.ts` |
+| 12 | Dark mode + light mode | P1 | S | complete | — (frontend only) | `shared/hooks/useTheme.ts`, `styles/globals.css` |
+| 13 | Settings (retention, theme, hotkey) | P1 | M | complete | `commands/settings.rs`, `services/settings_service.rs` | `features/settings/` |
+| 14 | Collections UI (CRUD) | P1 | M | complete | `commands/collections.rs`, `services/collection_service.rs`, `database/collection_repo.rs` | `features/collections/` |
+| 15 | Tags UI (CRUD) | P1 | M | complete | `commands/tags.rs`, `services/tag_service.rs`, `database/tag_repo.rs` | `features/tags/` |
+| 16 | Vault (XChaCha20-Poly1305 encryption)| P0 | L | complete | `domain/vault.rs`, `infrastructure/crypto/` | `features/vault/` |
+| 17 | Syntax highlighting | P2 | M | complete | — (frontend only) | `shiki` or `prism` integration in `ClipboardPreview.tsx` |
+| 18 | Bulk Actions | P1 | S | complete | `commands/clipboard.rs` (bulk cmds) | `ClipboardList.tsx`, `useClipboardActions.ts` |
 
 ### V1.0 Summary
 
 | Metric | Count |
 |--------|-------|
-| Total features | 13 |
-| P0 (must-have) | 8 |
-| P1 (should-have) | 5 |
-| P2 (nice-to-have) | 0 |
-| Small (S) | 4 |
-| Medium (M) | 6 |
+| Total features | 18 |
+| P0 (must-have) | 10 |
+| P1 (should-have) | 7 |
+| P2 (nice-to-have) | 1 |
+| Small (S) | 5 |
+| Medium (M) | 10 |
 | Large (L) | 3 |
 
 ---
@@ -70,34 +75,24 @@ Listed separately for implementation tracking.
 
 ---
 
-## V1.1 — Organization (5 Features)
+## V1.1 — Organization (4 Features)
 
 | # | Feature | Priority | Complexity | Status | Rust Module | React Feature |
 |---|---------|----------|-----------|--------|-------------|---------------|
-| 14 | Collections UI (CRUD) | P1 | M | planned | `commands/collections.rs`, `services/collection_service.rs`, `database/collection_repo.rs` | `features/collections/` |
-| 15 | Tags UI (CRUD) | P1 | M | planned | `commands/tags.rs`, `services/tag_service.rs`, `database/tag_repo.rs` | `features/tags/` |
-| 16 | Syntax highlighting | P2 | M | planned | — (frontend only) | `shiki` or `prism` integration in `ClipboardPreview.tsx` |
-| 17 | File clipboard support | P1 | L | planned | `infrastructure/clipboard/` (file list detection) | `ClipboardItem.tsx` (file icon/path) |
-| 18 | Import / export (JSON) | P1 | M | planned | `commands/export.rs`, `services/export_service.rs` | `features/settings/` (export button) |
-
-### V1.1 Schema Readiness
-
-| Entity | Table Exists in V1.0? | UI in V1.0? | UI Planned |
-|--------|----------------------|------------|------------|
-| Collections | ✅ `collections`, `clip_collections` | ❌ | V1.1 |
-| Tags | ✅ `tags`, `clip_tags` | ❌ | V1.1 |
+| 19 | Timeline view | P2 | M | planned | — (uses existing clip queries with date grouping) | `features/timeline/` |
+| 20 | Tag Colors | P1 | S | planned | `commands/tags.rs` (update color) | `features/tags/` |
+| 21 | File clipboard support | P1 | L | planned | `infrastructure/clipboard/` (file list detection) | `ClipboardItem.tsx` (file icon/path) |
+| 22 | Import / export (JSON) | P1 | M | planned | `commands/export.rs`, `services/export_service.rs` | `features/settings/` (export button) |
 
 ---
 
-## V1.2 — Productivity (5 Features)
+## V1.2 — Productivity (3 Features)
 
 | # | Feature | Priority | Complexity | Status | Rust Module | React Feature |
 |---|---------|----------|-----------|--------|-------------|---------------|
-| 19 | Snippet manager | P1 | L | planned | `domain/snippet.rs`, `commands/snippets.rs`, `database/snippet_repo.rs` | `features/snippets/` |
-| 20 | Timeline view | P2 | M | planned | — (uses existing clip queries with date grouping) | `features/timeline/` |
-| 21 | Backup / restore | P1 | M | planned | `services/backup_service.rs` (SQLite backup API) | `features/settings/` (backup button) |
-| 22 | Sensitive item auto-expiry | P1 | S | planned | `domain/clip.rs` (add `expires_at`), `services/clipboard_service.rs` (expiry task) | `ClipboardItem.tsx` (expiry badge) |
-| 23 | Encrypted favorites | P2 | L | planned | OS keyring + SQLCipher integration | — (transparent to UI) |
+| 23 | Snippet manager | P1 | L | planned | `domain/snippet.rs`, `commands/snippets.rs`, `database/snippet_repo.rs` | `features/snippets/` |
+| 24 | Backup / restore | P1 | M | planned | `services/backup_service.rs` (SQLite backup API) | `features/settings/` (backup button) |
+| 25 | File System Integration | P1 | L | planned | `infrastructure/clipboard/` (bidirectional files) | `features/clipboard/` |
 
 ---
 
@@ -105,10 +100,10 @@ Listed separately for implementation tracking.
 
 | Version | Features | P0 | P1 | P2 | S | M | L |
 |---------|----------|----|----|----|----|---|---|
-| **V1.0** | 13 | 8 | 5 | 0 | 4 | 6 | 3 |
-| **V1.1** | 5 | 0 | 4 | 1 | 0 | 4 | 1 |
-| **V1.2** | 5 | 0 | 3 | 2 | 1 | 2 | 2 |
-| **Total** | **23** | **8** | **12** | **3** | **5** | **12** | **6** |
+| **V1.0** | 18 | 10 | 7 | 1 | 5 | 10 | 3 |
+| **V1.1** | 4 | 0 | 3 | 1 | 1 | 2 | 1 |
+| **V1.2** | 3 | 0 | 3 | 0 | 0 | 1 | 2 |
+| **Total** | **25** | **10** | **13** | **2** | **6** | **13** | **6** |
 
 ---
 
@@ -172,8 +167,8 @@ graph LR
 | Favorites | `clips.is_favorite` | `clips.is_favorite` |
 | Pinned items | `clips.is_pinned` | `clips.is_pinned` |
 | Settings | `settings` | `settings` |
-| Collections (V1.1) | `collections`, `clip_collections` | `collections`, `clip_collections` |
-| Tags (V1.1) | `tags`, `clip_tags` | `tags`, `clip_tags` |
+| Collections | `collections`, `clip_collections` | `collections`, `clip_collections` |
+| Tags | `tags`, `clip_tags` | `tags`, `clip_tags` |
 
 ---
 

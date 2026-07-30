@@ -23,7 +23,7 @@ threat, and mitigation for V1.0.
 | T2 | **Tampering** | Clipboard content mutated between capture and storage | Low | Race condition in pipeline | Pipeline processes immutable snapshot; debounce prevents partial reads | ✅ Mitigated |
 | R1 | **Repudiation** | User denies deleting clip history | Low | No audit log | Out of scope for V1.0; structured `tracing` logs record destructive operations | ⚠️ Accepted |
 | I1 | **Info Disclosure** | Passwords captured from clipboard | **High** | User copies from password manager | App exclusion list (1Password, Bitwarden, KeePass, LastPass); configurable in Settings | ✅ Mitigated |
-| I2 | **Info Disclosure** | Database file exfiltrated | Medium | Malware reads `~/.local/share/ornas/` | OS file permissions (`0600`); V1.2 adds SQLCipher encryption | ⚠️ Partial |
+| I2 | **Info Disclosure** | Database file exfiltrated | Medium | Malware reads `~/.local/share/ornas/` | OS file permissions (`0600`); V1.0 Vault encrypts sensitive clipboard items | ✅ Mitigated |
 | I3 | **Info Disclosure** | Clipboard content visible in memory dump | Low | Memory forensics | Data cleared from Rust buffers after pipeline; OS memory protections apply | ⚠️ Accepted |
 | D1 | **Denial of Service** | Extremely large clipboard content exhausts memory | Medium | Copy 100MB+ text to clipboard | `max_image_size_bytes` cap (10 MB); text truncated at pipeline normalizer stage | ✅ Mitigated |
 | D2 | **Denial of Service** | Rapid clipboard spam fills database | Low | Automated clipboard scripts | Debounce (100ms); dedup via xxHash64 LRU cache (500 entries); pruning task | ✅ Mitigated |
@@ -227,12 +227,12 @@ flowchart LR
 
 ## 8. Database File Security
 
-| Aspect | V1.0 | V1.2 (Planned) |
-|--------|------|----------------|
-| File permissions | `0600` (owner read/write only) | Same |
-| Encryption | XChaCha20-Poly1305 with Argon2id for Vault clips | Same |
-| Key storage | Derived from master password (no persistent storage) | Same |
-| Backup encryption | Vault clips encrypted at rest | Full database encryption |
+| Aspect | Implementation (V1.0) |
+|--------|-----------------------|
+| File permissions | `0600` (owner read/write only) |
+| Encryption | XChaCha20-Poly1305 with Argon2id for Vault clipboard items |
+| Key storage | Derived from master password (no persistent storage) |
+| Backup encryption | Vault clipboard items encrypted at rest |
 
 ### File Permission Enforcement
 

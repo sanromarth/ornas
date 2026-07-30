@@ -63,7 +63,7 @@ export function AboutSection() {
         setUpdateStatus({ message: `⬆ ORNAS ${latestTag} is available.`, type: 'info' });
         setIsUpdateDialogOpen(true);
       }
-    } catch (_e) {
+    } catch {
       setUpdateStatus({ message: 'Unable to reach GitHub. Please try again later.', type: 'error' });
     } finally {
       setCheckingUpdates(false);
@@ -73,7 +73,7 @@ export function AboutSection() {
   const openUrlFunc = async (url: string) => {
     try {
       await openUrl(url);
-    } catch (_error) {
+    } catch {
       setFallbackUrl(url);
     }
   };

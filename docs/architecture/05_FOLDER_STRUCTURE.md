@@ -30,8 +30,8 @@ ORNAS/
 │   │   ├── domain/                          # ▸ DOMAIN LAYER: Pure business rules
 │   │   │   ├── mod.rs                      #   Module re-exports
 │   │   │   ├── clip.rs                     #   Clip, NewClip, ClipUpdate structs
-│   │   │   ├── collection.rs              #   Collection struct (V1.1 UI)
-│   │   │   ├── tag.rs                      #   Tag struct (V1.1 UI)
+│   │   │   ├── collection.rs              #   Collection struct
+│   │   │   ├── tag.rs                      #   Tag struct
 │   │   │   ├── config.rs                   #   AppConfig struct + defaults
 │   │   │   ├── category.rs                 #   ContentCategory enum + detection fns
 │   │   │   ├── pipeline.rs                 #   PipelineStage trait + StageAction

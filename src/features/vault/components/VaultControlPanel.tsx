@@ -28,7 +28,7 @@ export function VaultControlPanel({ isUnlocked, onLock, onUnlock }: VaultControl
       setUnlockDialogOpen(false);
       setPassword('');
       addToast({ title: 'Vault unlocked', variant: 'success' });
-    } catch (_err) {
+    } catch {
       addToast({ title: 'Incorrect password', description: 'Please try again.', variant: 'error' });
     } finally {
       setIsUnlocking(false);

@@ -38,9 +38,9 @@ ORNAS is a **native desktop application**, not a web application. This fundament
 The design system exists within a strict document hierarchy. When documents conflict, defer upward.
 
 ```
-docs/brand/BRAND_FOUNDATION.md            ← Immutable brand identity
+branding/BRAND_FOUNDATION.md            ← Immutable brand identity
     │
-    ├── docs/brand/ICON_*.md               ← Icon exploration archive
+    ├── docs/internal/branding/ICON_*.md   ← Icon exploration archive
     │
     └── docs/design/                       ← Implementable design system
             │
@@ -57,7 +57,7 @@ docs/brand/BRAND_FOUNDATION.md            ← Immutable brand identity
 
 ### Relationship with Brand Documentation
 
-`docs/brand/BRAND_FOUNDATION.md` defines **what** ORNAS looks and feels like — personality, color philosophy, typography choices, and design principles. The design system documents define **how** to implement those choices — exact hex values, CSS variables, component specifications, and Tailwind configuration.
+`branding/BRAND_FOUNDATION.md` defines **what** ORNAS looks and feels like — personality, color philosophy, typography choices, and design principles. The design system documents define **how** to implement those choices — exact hex values, CSS variables, component specifications, and Tailwind configuration.
 
 Brand documentation is immutable. Design system documents may evolve as new components are added, but must never contradict the brand foundation.
 
@@ -105,7 +105,7 @@ Brand documentation is immutable. Design system documents may evolve as new comp
 
 ### For contributors modifying the design system:
 
-1. Changes to `BRAND_FOUNDATION.md` require explicit project owner approval.
+1. Changes to `branding/BRAND_FOUNDATION.md` require explicit project owner approval.
 2. Changes to design tokens must cascade correctly through all downstream documents.
 3. All documents must maintain their version headers.
 4. Breaking changes (renamed tokens, removed components) must be documented in the PR description with a migration path.
@@ -121,7 +121,7 @@ Brand documentation is immutable. Design system documents may evolve as new comp
 
 ## See Also
 
-- [BRAND_FOUNDATION.md](../brand/BRAND_FOUNDATION.md) — Immutable brand identity
+- [BRAND_FOUNDATION.md](../../branding/BRAND_FOUNDATION.md) — Immutable brand identity
 - [DESIGN_TOKENS.md](DESIGN_TOKENS.md) — CSS variables, Tailwind config, z-index scale
 - [COLOR_SYSTEM.md](COLOR_SYSTEM.md) — Color palette, theming architecture
 - [TYPOGRAPHY.md](TYPOGRAPHY.md) — Font stack and typographic scale

@@ -69,20 +69,21 @@ These are non-negotiable. Every design decision is measured against them.
 | 11 | Keyboard shortcuts (full keyboard navigation) | Core UX | Medium |
 | 12 | Dark mode + light mode | Theme system | Low |
 | 13 | Settings (retention, theme, hotkey, exclusions) | Configuration | Medium |
+| 14 | Collections | CRUD UI | Medium |
+| 15 | Tags | CRUD UI | Medium |
+| 16 | Vault (XChaCha20-Poly1305 encryption) | Security | High |
+| 17 | Syntax Highlighting | UI | Medium |
+| 18 | Bulk Actions | UI | Low |
 
 ### What was removed from V1.0 and why
 
 | Feature | Moved To | Reason |
 |---------|----------|--------|
-| Syntax highlighting | V1.1 | Adds a heavy frontend dependency. Monospace font is sufficient for V1.0. |
-| Collections (CRUD UI) | V1.1 | Requires full CRUD interface. Schema is ready; UI is deferred. |
-| Tags (CRUD UI) | V1.1 | Same as collections. |
 | File clipboard | V1.1 | Complex cross-platform file handling. |
 | Import / export | V1.1 | Data portability is important but not for first impression. |
-| Timeline view | V1.2 | Visual enhancement. List view is sufficient. |
+| Timeline view | V1.1 | Visual enhancement. List view is sufficient. |
 | Snippet manager | V1.2 | Significant standalone feature with its own CRUD UI. |
 | Backup / restore | V1.2 | Manual DB file copy is a workaround until this ships. |
-| Encrypted storage | V1.2 | Complex key management. Requires OS keyring integration. |
 
 ---
 
@@ -215,7 +216,6 @@ tauri-build = "2"
 
 **Removed dependencies:**
 - ~~`framer-motion`~~ (~30KB) — CSS transitions handle all V1 animations
-- ~~syntax highlighting library~~ — deferred to V1.1
 
 ---
 
@@ -1267,9 +1267,8 @@ Activated via `Ctrl+Shift+P`. Follows VS Code pattern:
 
 | Feature | Depends On |
 |---------|-----------|
-| Collections UI (create, manage, assign clips) | Schema ready in V1.0 |
-| Tags UI (create, assign, filter) | Schema ready in V1.0 |
-| Syntax highlighting in preview | Add `shiki` or `prism` frontend dep |
+| Timeline view | New visualization component |
+| Tag Colors | Schema update for color column |
 | File clipboard support | clipboard-rs file list reading |
 | Import / export (JSON format) | ClipRepository::list_all |
 
@@ -1278,10 +1277,8 @@ Activated via `Ctrl+Shift+P`. Follows VS Code pattern:
 | Feature | Depends On |
 |---------|-----------|
 | Snippet manager (CRUD UI + shortcuts) | New `snippets` table + feature module |
-| Timeline view | New visualization component |
 | Backup / restore (automated) | SQLite backup API |
-| Sensitive item auto-expiry | New `expires_at` column + background task |
-| Encrypted Vault storage | XChaCha20-Poly1305 with Argon2id |
+| File System Integration | Full bidirectional clipboard |
 
 ### Future Considerations
 
@@ -1312,8 +1309,7 @@ Every item below was consciously evaluated and rejected for V1.0.
 | Omission | Reason |
 |----------|--------|
 | **Framer Motion** | CSS transitions handle all V1.0 animations. 30KB saved. |
-| **Syntax highlighting library** | Deferred to V1.1. Monospace font is acceptable for V1.0. |
-| **SQLCipher** | Database encryption deferred to V1.2. Adds build complexity. |
+| **SQLCipher** | Database encryption deferred/rejected. XChaCha20-Poly1305 is used for Vault payload encryption instead. |
 | **i18n library** | V1.0 is English only. i18n adds string management overhead. |
 | **E2E testing framework** | V1.0 tests at unit and integration level. E2E adds CI complexity. |
 | **Storybook** | 13 shared components don't justify a Storybook setup. |
